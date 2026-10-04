@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rewloy"
+dynamic = ["version"]
+description = "The official Python library for the Rewloy API: digital loyalty cards, typed from the OpenAPI document."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+authors = [{ name = "Rewloy" }]
+keywords = ["rewloy", "loyalty", "wallet", "api", "openapi", "sdk"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+httpx = ["httpx>=0.27"]
+dev = ["pytest>=8", "mypy>=1.11", "build>=1.2", "httpx>=0.27"]
+
+[project.urls]
+Homepage = "https://rewloy.com/gelistiriciler"
+Documentation = "https://rewloy.com/gelistiriciler/api"
+Repository = "https://github.com/Rewloy/rewloy-python"
+Changelog = "https://github.com/Rewloy/rewloy-python/blob/main/CHANGELOG.md"
+
+[tool.hatch.version]
+path = "src/rewloy/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rewloy"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/tests", "/scripts", "/docs", "/openapi", "/README.md", "/CHANGELOG.md", "/LICENSE", "/SECURITY.md", "/pyproject.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["scripts"]
+addopts = "-ra"
+filterwarnings = ["error::pytest.PytestUnraisableExceptionWarning"]
+
+[tool.mypy]
+strict = true
+files = ["src", "scripts", "tests"]
+mypy_path = "src:scripts"
+explicit_package_bases = true
