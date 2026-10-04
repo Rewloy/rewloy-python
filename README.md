@@ -2,7 +2,7 @@
 
 **Rewloy API'nin resmî Python kütüphanesi.**
 
-> **Durum: önizleme (0.x): yayımlanmadı; API kararlı, kütüphane arayüzü 1.0'a kadar değişebilir.**
+> **Durum: önizleme (0.x), PyPI'da yayımlandı. API kararlı; kütüphane arayüzü 1.0'a kadar değişebilir.**
 
 [Rewloy](https://rewloy.com), işletmelerin dijital sadakat kartlarını
 müşterinin telefonuna koyar. Kart türleri damga, puan, VIP, cashback, hediye
@@ -31,16 +31,13 @@ ile de yapılabilir; bu kütüphane onu Python'dan kullanır:
 
 ## Kurulum
 
-PyPI'da yayımlanana kadar GitHub'dan kurun (Python 3.9 ya da üstü ve git
-gerekir):
+Python 3.9 ya da üstü gerekir:
 
 ```sh
-pip install "git+https://github.com/Rewloy/rewloy-python"
+pip install rewloy
 ```
 
-Bir sürüme bağlı kalmak için sona bir commit ekleyin:
-`git+https://github.com/Rewloy/rewloy-python@<commit>`. Yayımlandığında:
-`pip install rewloy` (ve `httpx` taşıması için `pip install "rewloy[httpx]"`).
+`httpx` taşıması için: `pip install "rewloy[httpx]"`.
 
 ## Başlarken
 
@@ -445,7 +442,7 @@ Bir güvenlik açığı bulursanız [SECURITY.md](SECURITY.md) dosyasındaki yol
 
 **The official Python library for the Rewloy API.**
 
-> **Status: preview (0.x), not published yet. The API is stable; the
+> **Status: preview (0.x), published on PyPI. The API is stable; the
 > library's interface may change until 1.0.**
 
 The documentation of the API itself is in Turkish (links above). In short:
@@ -461,11 +458,10 @@ The documentation of the API itself is in Turkish (links above). In short:
 
 ### Install
 
-Until it is on PyPI, install it from GitHub (Python 3.9 or later and git).
-Pin a commit with `@<commit>`.
+Python 3.9 or later:
 
 ```sh
-pip install "git+https://github.com/Rewloy/rewloy-python"
+pip install rewloy
 ```
 
 ### Use
@@ -543,3 +539,9 @@ event = verify_webhook(raw_body, headers.get("Rewloy-Signature"), secret)
 
 Report vulnerabilities privately, as [SECURITY.md](SECURITY.md) says.
 [MIT](LICENSE) licensed.
+
+## Yeni sürüm yayımlamak / Releasing
+
+`src/rewloy/_version.py`'deki sürümü ve CHANGELOG'u güncelleyin, commit'leyin, `v<sürüm>` etiketini gönderin. `release.yml` PyPI'a güvenilir yayıncı (trusted publishing) yoluyla, jetonsuz yayımlar.
+
+Bump the version in `src/rewloy/_version.py` and the changelog, commit, and push a `v<version>` tag. `release.yml` publishes to PyPI through trusted publishing, with no token.

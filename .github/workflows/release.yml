@@ -1,0 +1,48 @@
+# Publishes to PyPI when a version tag (v1.2.3) is pushed, through PyPI's trusted publishing:
+# GitHub proves who is publishing (OIDC), so no PyPI token is stored anywhere. The project's
+# PyPI settings name this repository, this workflow file and the `pypi` environment.
+# The tag must match the package version; mypy and the tests run first.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: The tag matches the package version
+        run: |
+          v="$(python -c "import re;print(re.search(r'__version__ = \"(.+?)\"', open('src/rewloy/_version.py').read()).group(1))")"
+          [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "tag ${GITHUB_REF_NAME} != package v$v"; exit 1; }
+      - run: python -m pip install -e ".[dev]" build
+      - run: python -m mypy
+      - run: python -m pytest
+      - run: python -m build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

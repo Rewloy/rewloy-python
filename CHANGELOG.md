@@ -5,7 +5,7 @@ https://rewloy.com/gelistiriciler/degisiklikler
 
 This library's releases. The API's own changes are listed at the link above.
 
-## 0.1.0 (yayımlanmadı / unreleased)
+## 0.1.0 (2026-10-04)
 
 İlk önizleme. Rewloy API 1.0.0'a göre üretildi (4 Ekim 2026): 195 yol,
 237 işlem.
