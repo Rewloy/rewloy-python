@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List, Mapping, 
 from urllib.parse import quote
 
 from ._version import __version__
-from .common import ApiResponse, AuthKind, Headers, OperationMeta, Page
+from .common import ApiResponse, AuthKind, Headers, OperationMeta, Page, parse_rate_limit
 from .errors import RateLimitError, RewloyConnectionError, RewloyError, RewloyTimeoutError
 from .generated.methods import RewloyMethods
 from .generated.operations import ERROR_TITLES, OPERATION_IDS, OPERATIONS
@@ -321,7 +321,7 @@ class Rewloy(RewloyMethods):
         max_retries: Optional[int] = None,
     ) -> ApiResponse[Any]:
         """Calls an operation and returns the whole answer: ``data``, ``meta`` on paged lists, the status, headers,
-        ``request_id``, ``mode`` and ``replayed``.
+        ``request_id``, ``rate_limit``, ``mode`` and ``replayed``.
 
         ``operation_id`` is the operationId (``sendCampaign``) or the method's name (``send_campaign``); ``path``
         holds the path parameters by their names in the API (``{"serial": "ABCD-EFGH-JKLM"}``). ``data`` is not
@@ -339,7 +339,7 @@ class Rewloy(RewloyMethods):
         return ApiResponse(
             data=ex.data, meta=ex.meta, status=ex.status, headers=ex.headers,
             request_id=ex.headers.get("x-request-id"), mode=ex.headers.get("rewloy-mode"),
-            replayed=ex.headers.get("idempotent-replayed") == "true",
+            replayed=ex.headers.get("idempotent-replayed") == "true", rate_limit=parse_rate_limit(ex.headers),
         )
 
     def stream(
@@ -647,7 +647,7 @@ class Rewloy(RewloyMethods):
         return RewloyError(
             status=status, code="INVALID_RESPONSE",
             detail=f"the answer is not the JSON the API documents ({headers.get('content-type') or 'no content type'})",
-            request_id=headers.get("x-request-id"), body=body, headers=headers, operation=op.id,
+            request_id=headers.get("x-request-id"), body=body, headers=headers, rate_limit=parse_rate_limit(headers), operation=op.id,
         )
 
     @staticmethod
@@ -670,7 +670,7 @@ class Rewloy(RewloyMethods):
             details=e.get("details") if e is not None else None,
             docs=e["docs"] if e is not None and isinstance(e.get("docs"), str) else None,
             request_id=headers.get("x-request-id") or (e["requestId"] if e is not None and isinstance(e.get("requestId"), str) else None),
-            body=parsed, headers=headers, operation=op.id,
+            body=parsed, headers=headers, rate_limit=parse_rate_limit(headers), operation=op.id,
         )
         if status == 429:
             header = parse_retry_after(headers.get("retry-after"))

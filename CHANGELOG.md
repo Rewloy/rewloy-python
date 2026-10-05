@@ -5,6 +5,41 @@ https://rewloy.com/gelistiriciler/degisiklikler
 
 This library's releases. The API's own changes are listed at the link above.
 
+## 0.2.2 (2026-10-05)
+
+Rewloy 1.1.0'a (API sürümü) göre yeniden üretildi: 256 işlem (0.2.1'de 255). Kasa
+için `reverse_action`, `record_sale`'de `occurredAt`, `pass_action`'da
+`reference`; yanıtlarda `RateLimit-*` başlıkları.
+
+Regenerated from Rewloy 1.1.0 (the product version in `info.version`): 256
+operations (255 in 0.2.1).
+
+- **New operation: `reverse_action`** (`POST /v1/passes/{serial}/actions/reverse`,
+  `reverseAction`). Voids a till action made with `pass_action` (`spend`,
+  `spend-points`, `redeem-stamps`, `redeem-reward`, `use`), found by its
+  `actionKey` (the `Idempotency-Key` it was sent with) or its `reference`. It
+  needs no `Idempotency-Key`: an action is voided once and a repeat answers
+  `duplicate: true`. New error codes `ACTION_NOT_FOUND`, `ACTION_AMBIGUOUS`,
+  `ACTION_NOT_REVERSIBLE`.
+- **`record_sale` takes an optional `occurredAt`**: when the sale really
+  happened (ISO 8601 with offset), for a till that queues sales while offline.
+- **`pass_action` takes an optional `reference`**, and its answer is now a
+  `Union` of two `TypedDict`s: the balance-card answer (`balance`, `detail`,
+  `promotion`) or the coupon / discount-card answer (`status`, `uses`,
+  `usesLeft`). The closed members of every `oneOf` are `@final` now, so mypy and
+  pyright narrow the union by `"uses" in answer` (the `final` import sits under
+  `TYPE_CHECKING`: no runtime dependency).
+- **Rate limit headers.** `ApiResponse.rate_limit` (`RateLimit(limit, remaining,
+  reset)`, from `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`;
+  `None` when the answer has none) and `RewloyError.rate_limit` (including
+  `RateLimitError`). `RateLimit` and `parse_rate_limit(headers)` are exported.
+  Additive.
+- Webhook-creation responses may carry `warnings` (a non-live installation whose
+  URL production would refuse); the `Idempotency-Key` parameter documents its
+  8–64 printable ASCII rule; the API's descriptions no longer contain internal
+  `ADR n` references. README: the till example has a void step and a note on
+  `occurredAt` for offline queues.
+
 ## 0.2.1 (2026-10-05)
 
 Dışarıdan geliştiricilerin bulduğu üç sorun düzeltildi.

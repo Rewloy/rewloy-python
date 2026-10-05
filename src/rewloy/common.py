@@ -97,6 +97,33 @@ class Page(Generic[T]):
 
 
 @dataclass(frozen=True)
+class RateLimit:
+    """The request budget the API reports on every answer to an authenticated call (``RateLimit-Limit``,
+    ``RateLimit-Remaining``, ``RateLimit-Reset``)."""
+
+    #: ``RateLimit-Limit``: requests allowed per minute.
+    limit: int
+    #: ``RateLimit-Remaining``: requests left in this minute.
+    remaining: int
+    #: ``RateLimit-Reset``: seconds until the limit renews.
+    reset: int
+
+
+def parse_rate_limit(headers: Optional[Mapping[str, str]]) -> Optional[RateLimit]:
+    """The ``RateLimit-*`` headers as a :class:`RateLimit`; ``None`` unless all three are whole numbers."""
+    if headers is None:
+        return None
+    values: List[int] = []
+    for name in ("ratelimit-limit", "ratelimit-remaining", "ratelimit-reset"):
+        raw = headers.get(name)
+        text = raw.strip() if raw is not None else ""
+        if not text.isascii() or not text.isdigit():
+            return None
+        values.append(int(text))
+    return RateLimit(limit=values[0], remaining=values[1], reset=values[2])
+
+
+@dataclass(frozen=True)
 class ApiResponse(Generic[T]):
     """The whole answer to a call (``Rewloy.request``)."""
 
@@ -114,3 +141,5 @@ class ApiResponse(Generic[T]):
     mode: Optional[str]
     #: ``Idempotent-Replayed: true``: the API replayed the first answer to this ``Idempotency-Key``.
     replayed: bool
+    #: The ``RateLimit-*`` headers; ``None`` when the answer carries none (anonymous calls).
+    rate_limit: Optional[RateLimit] = None

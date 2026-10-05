@@ -204,6 +204,44 @@ Bir satış bir kez geri alınır (tekrar `duplicate: true` döner). Kazanılan
 kullanılmışsa (ödüle ya da harcamaya gitmişse) `409 SALE_ALREADY_SPENT` gelir ve
 hiçbir şey yazılmaz.
 
+**Çevrimdışı kasa kuyruğu: `occurredAt`.** Bağlantı koptuğunda satışı sonra
+yazıyorsanız `occurredAt` ile satışın gerçekten olduğu anı (ISO 8601, saat
+dilimiyle) gönderin; kartın geçmişinde o anla görünür. Gelecekte olamaz (2
+dakikalık saat farkı kabul edilir). `idempotency_key` kuyruktaki kayıtla birlikte
+saklanır, tekrar gönderilince satış ikinci kez yazılmaz.
+
+```python
+rewloy.record_sale(
+    seri,
+    body={"locationId": sube_id, "amountMinor": 4550, "reference": f"fis-{fis_no}", "occurredAt": "2026-10-05T14:32:10+03:00"},
+    idempotency_key=anahtar,
+)
+```
+
+**Kasa işlemini iptal etmek: `reverse_action`.** `pass_action` ile yapılan bir
+harcama, ödül ya da kullanım yanlışlıkla yapıldıysa (`spend`, `spend-points`,
+`redeem-stamps`, `redeem-reward`, `use`) `reverse_action` tamamını geri verir.
+İşlemi, yaparken gönderdiğiniz `Idempotency-Key` (`actionKey`) ya da işlemin
+`reference` değeriyle bulur (`pass_action` artık isteğe bağlı bir `reference`
+alır). `reverse_action` bir `Idempotency-Key` **istemez**: bir işlem bir kez geri
+alınır, tekrar `duplicate: true` döner.
+
+```python
+rewloy.pass_action(
+    seri,
+    body={"action": "spend", "locationId": sube_id, "amountMinor": 2500},
+    idempotency_key=f"kasa3-z0187-iptal{fis_no}",
+)
+iptal = rewloy.reverse_action(seri, body={"actionKey": f"kasa3-z0187-iptal{fis_no}", "locationId": sube_id})
+print(iptal["undone"], iptal["restored"], iptal["balance"], iptal["reopened"], iptal["duplicate"])
+```
+
+`pass_action`ın yanıtı kart türüne göre iki biçimdedir ve bir `Union` türüdür:
+bakiyeli kartlarda `balance` (damga, puan, VIP, cashback, hediye kartı), kupon ve
+indirim kartında `status`, `uses` ve `usesLeft`. mypy ve pyright `"uses" in islem`
+ile ayırır. Kazanımlar (`earn-stamps`, `earn-points`, `visit`) `reverse_action`la
+değil `reverse_sale`la geri alınır.
+
 ### `Idempotency-Key`
 
 `record_sale`, `pass_action`, `send_campaign` ve `refund_shop_redemption` bir
@@ -394,7 +432,9 @@ except RewloyError as err:
 - `body`, `headers`, `docs` ve `operation`.
 
 Alt sınıflar:
-- `RateLimitError`: `429`; `retry_after` saniye;
+- `RateLimitError`: `429`; `retry_after` saniye. Her hata (bu dahil) yanıtın
+  `RateLimit-*` başlıklarını `err.rate_limit` olarak taşır
+  (`RateLimit(limit, remaining, reset)`; başlık yoksa `None`);
 - `RewloyConnectionError`: yanıt gelmedi (`status` 0, `code`
   `CONNECTION_ERROR`);
 - `RewloyTimeoutError`: zaman aşımı (`TIMEOUT`).
@@ -443,13 +483,14 @@ yanit = rewloy.request(
 yanit.status       # 201
 yanit.replayed     # True: aynı anahtarın ilk yanıtı yeniden döndü (Idempotent-Replayed)
 yanit.request_id   # x-request-id
+yanit.rate_limit   # RateLimit(limit=120, remaining=117, reset=41): RateLimit-* başlıkları, yoksa None
 yanit.mode         # Rewloy-Mode
 yanit.data         # kampanya
 ```
 
 `request(işlem, …)` her işlemi çağırır (`operationId` ya da metot adıyla) ve
 yanıtın tamamını döndürür: `data`, sayfalı listede `meta`, `status`,
-`headers`, `request_id`, `mode` ve `replayed`. Adres parametreleri
+`headers`, `request_id`, `rate_limit`, `mode` ve `replayed`. Adres parametreleri
 `path={"serial": …}` ile verilir. `data` burada tipli değildir; `typing.cast`
 ya da metodun kendisi.
 
@@ -611,13 +652,34 @@ sale = rewloy.record_sale(
     body={"locationId": location_id, "amountMinor": 4550, "reference": f"receipt-{receipt_no}"},   # amount in the card's currency, minor units
     idempotency_key=f"till3-z0187-r{receipt_no}",
 )
+
+# A gift-card spend rung up by mistake? Void it by the key it was sent with:
+rewloy.pass_action(
+    created["serial"],
+    body={"action": "spend", "locationId": location_id, "amountMinor": 2500},
+    idempotency_key=f"till3-z0187-s{receipt_no}",
+)
+voided = rewloy.reverse_action(created["serial"], body={"actionKey": f"till3-z0187-s{receipt_no}"})
+print(voided["undone"], voided["restored"], voided["balance"])   # 'spend', 2500, the balance again
 ```
 
 - **Till.** `record_sale` writes a completed sale to a card (the card type and
   the programme's own rule decide what is written); `get_pass` returns the
   card's structured fields (`programName`, `currency`, `stamps`, `points`,
   `money`, `customer`); `reverse_sale` takes a refunded sale back:
-  `rewloy.reverse_sale(serial, body={"saleKey": key})`.
+  `rewloy.reverse_sale(serial, body={"saleKey": key})`. A void is
+  `reverse_action`: it takes back a `pass_action` that was a mistake (`spend`,
+  `spend-points`, `redeem-stamps`, `redeem-reward`, `use`), found by the
+  `Idempotency-Key` you sent with it (`actionKey`) or its `reference`; it needs
+  no `Idempotency-Key` of its own, and a repeat answers `duplicate: True`:
+  `rewloy.reverse_action(serial, body={"actionKey": key})`. A till that queues
+  sales while offline sends `occurredAt` (ISO 8601 with the UTC offset, not in
+  the future) with `record_sale`, so the card's history shows when the sale
+  really happened; the queued `idempotency_key` makes the resend safe.
+  `pass_action` takes an optional `reference` too, and its answer is a `Union`
+  of two `TypedDict`s: the balance-card answer (`balance`) or the coupon /
+  discount-card answer (`status`, `uses`, `usesLeft`); `"uses" in answer`
+  narrows it for mypy and pyright.
 - **Idempotency keys.** `record_sale`, `pass_action`, `send_campaign` and
   `refund_shop_redemption` need an `Idempotency-Key`: the API's OpenAPI document
   marks the header required for them, so `idempotency_key` is a required
@@ -646,7 +708,7 @@ sale = rewloy.record_sale(
   `Page` (`.data`, `.meta`) for paged lists, `None` for 204, `bytes` for files.
   Types are in `rewloy.types` (`from rewloy.types import IssuePassBody`).
 - **The whole answer.** `rewloy.request("sendCampaign", body=…)` returns
-  `status`, `headers`, `request_id`, `mode` (the `Rewloy-Mode` header: `live` or `test`) and `replayed` (`Idempotent-Replayed`) with `data`.
+  `status`, `headers`, `request_id`, `rate_limit` (`RateLimit(limit, remaining, reset)` from the `RateLimit-*` headers, `None` when absent), `mode` (the `Rewloy-Mode` header: `live` or `test`) and `replayed` (`Idempotent-Replayed`) with `data`.
 - **Pagination.** `rewloy.paginate("listCustomers", query=…)` iterates the
   items of every page, lazily.
 - **Streams.** `with rewloy.live_feed() as stream: for event in stream: …`
@@ -679,7 +741,7 @@ event = verify_webhook(raw_body, headers.get("Rewloy-Signature"), secret)
 ### Errors, retries, deprecations
 
 - **Errors.** Failures raise `RewloyError` with `status`, `code` (the API's
-  stable code), `title`, `detail`, `details`, `request_id` and `body`.
+  stable code), `title`, `detail`, `details`, `request_id`, `rate_limit` and `body`.
   Subclasses: `RateLimitError` (`retry_after`), `RewloyConnectionError` and
   `RewloyTimeoutError`. Misuse raises `ValueError` or `TypeError`.
 - **What is retried.** Network errors, timeouts, 429, 502–504 and

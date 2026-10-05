@@ -314,6 +314,16 @@ class TypeEmitter:
         self.defs: List[str] = []
         #: Every public name defined so far, in the order of definition (``__all__``).
         self.exported: List[str] = []
+        #: Object types to decorate with ``@final`` (the closed members of a ``oneOf``).
+        self.finals: Set[str] = set()
+
+    def take_defs(self) -> str:
+        """The definitions so far as text, ``@final`` on those marked; empties ``defs``."""
+        text = "\n\n".join(self.defs)
+        self.defs.clear()
+        for name in sorted(self.finals):
+            text = re.sub(rf"(?m)^class {re.escape(name)}\(", f"@final\nclass {name}(", text)
+        return text
 
     # -- expressions
 
@@ -355,7 +365,13 @@ class TypeEmitter:
             fail("allOf is not supported")
         elif isinstance(schema.get("oneOf"), list) or isinstance(schema.get("anyOf"), list):
             members = as_list(schema.get("oneOf")) or as_list(schema.get("anyOf"))
-            out = self.union([self.type(s, f"{hint}Option{i + 1}") for i, s in enumerate(members)])
+            options = [self.type(s, f"{hint}Option{i + 1}") for i, s in enumerate(members)]
+            # A member that is a closed object (``additionalProperties: false``) is ``@final``, so that a type checker
+            # narrows the union by ``"key" in answer``: without it a TypedDict could always carry more keys.
+            for option, s in zip(options, members):
+                if is_obj(s) and s.get("additionalProperties") is False and self.is_typed_dict(s):
+                    self.finals.add(option)
+            out = self.union(options)
         else:
             declared = schema.get("type")
             if isinstance(declared, list):
@@ -531,7 +547,15 @@ def types_file(version: str, components: Obj, ops: Sequence[Op], codes: Sequence
         '"""The types of the Rewloy API: request bodies, query parameters, answers. Generated; import them from',
         '``rewloy.types``."""',
         "",
-        "from typing import Any, Dict, List, Literal, Optional, TypedDict, Union",
+        "from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, TypedDict, Union",
+        "",
+        "if TYPE_CHECKING:  # the type checkers know it (typeshed); at run time it does nothing, so no dependency",
+        "    from typing_extensions import final",
+        "else:",
+        "",
+        "    def final(f: Any) -> Any:",
+        "        return f",
+        "",
         "",
     ]
     code_lines = ",\n".join(f"    {lit(c)}" for c in codes)
@@ -544,8 +568,7 @@ def types_file(version: str, components: Obj, ops: Sequence[Op], codes: Sequence
             e.declare(ts_name, schema, "The body of an error answer.", nested={"error": "ErrorInfo"})
         else:
             e.declare(ts_name, schema, one_line(schema.get("description")) if is_obj(schema) else "")
-    parts = "\n\n".join(e.defs)
-    e.defs.clear()
+    parts = e.take_defs()
 
     chunks: List[str] = []
     for op in ops:
@@ -569,8 +592,7 @@ def types_file(version: str, components: Obj, ops: Sequence[Op], codes: Sequence
                     e.defs.append(f"{op.type}Data = List[{op.type}Item]\n")
             else:
                 e.declare(f"{op.type}Data", data, f"The `data` of `{op.id}`'s answer.")
-        chunks.append("\n\n".join(e.defs))
-        e.defs.clear()
+        chunks.append(e.take_defs())
     out.append(parts)
     out.extend(chunks)
 

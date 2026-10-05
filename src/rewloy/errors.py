@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional, Tuple, Type
 
-from .common import Headers
+from .common import Headers, RateLimit
 
 
 def _restore(cls: Type[RewloyError], state: Dict[str, Any]) -> RewloyError:
@@ -48,6 +48,8 @@ class RewloyError(Exception):
     #: The parsed answer body (or its text, when it is not JSON).
     body: Any
     headers: Optional[Headers]
+    #: The ``RateLimit-*`` headers of the answer; ``None`` when it carried none.
+    rate_limit: Optional[RateLimit]
     #: The operationId of the call.
     operation: Optional[str]
 
@@ -63,6 +65,7 @@ class RewloyError(Exception):
         request_id: Optional[str] = None,
         body: Any = None,
         headers: Optional[Headers] = None,
+        rate_limit: Optional[RateLimit] = None,
         operation: Optional[str] = None,
     ) -> None:
         where = ", ".join(x for x in (operation, f"request_id {request_id}" if request_id else None) if x)
@@ -76,6 +79,7 @@ class RewloyError(Exception):
         self.request_id = request_id
         self.body = body
         self.headers = headers
+        self.rate_limit = rate_limit
         self.operation = operation
 
     def __reduce__(self) -> Tuple[Any, ...]:

@@ -6,7 +6,7 @@ from typing import Callable
 
 import pytest
 
-from rewloy import ERROR_TITLES, Headers, RateLimitError, RewloyConnectionError, RewloyError, RewloyTimeoutError
+from rewloy import ERROR_TITLES, Headers, RateLimit, RateLimitError, RewloyConnectionError, RewloyError, RewloyTimeoutError
 
 from .helpers import LOCATION, SERIAL, Ctx, Stub, api_error, make_client
 
@@ -58,6 +58,11 @@ def test_makes_429_a_rate_limit_error_with_retry_after_from_the_header_else_from
             make_client(s, max_retries=0).list_programs()
         assert info.value.retry_after == expected[name], name
         assert isinstance(info.value, RewloyError)
+        assert info.value.rate_limit is None
+    s = stub(lambda c: c.json(429, api_error("RATE_LIMITED", 429, "sınır"), {"Retry-After": "9", "RateLimit-Limit": "60", "RateLimit-Remaining": "0", "RateLimit-Reset": "9"}))
+    with pytest.raises(RateLimitError) as info:
+        make_client(s, max_retries=0).list_programs()
+    assert info.value.rate_limit == RateLimit(limit=60, remaining=0, reset=9)
 
 
 def test_names_an_answer_that_is_not_rewloys_by_its_status(stub: StubFactory) -> None:

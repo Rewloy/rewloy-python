@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Rewloy API",
-    "version": "1.0.0",
-    "description": "Rewloy platformunun tamamı: panelde yapılabilen her şey burada da yapılabilir. Yanıtlar `{ \"data\": … }`, sayfalı listeler ek olarak `meta` taşır; hatalar `{ \"error\": { code, message, requestId, status, docs, details? } }`. Hata kodlarının tamamı: https://rewloy.com/gelistiriciler/hatalar",
+    "version": "1.1.0",
+    "description": "Rewloy platformunun tamamı: panelde yapılabilen her şey burada da yapılabilir. Yanıtlar `{ \"data\": … }`, sayfalı listeler ek olarak `meta` taşır; hatalar `{ \"error\": { code, message, requestId, status, docs, details? } }`. Hata kodlarının tamamı: https://rewloy.com/gelistiriciler/hatalar\n\n**Sürüm:** `version` Rewloy'nun ürün sürümüdür (`GET /v1/meta` ve her yanıtın `Rewloy-Version` başlığı ile aynı). API'nin yolu `/v1`'dir ve ürünün sürümünden bağımsızdır: geriye uymayan bir değişiklik ancak `/v2` ile gelir.\n\n**İstek sınırı:** kimlikli her yanıt `RateLimit-Limit` (dakikalık sınır), `RateLimit-Remaining` (bu dakikada kalan) ve `RateLimit-Reset` (sınırın yenilenmesine kalan saniye) başlıklarını taşır; sınır aşılınca `429 RATE_LIMITED` ve `Retry-After`.",
     "contact": {
       "name": "Rewloy geliştiriciler",
       "url": "https://rewloy.com/gelistiriciler"
@@ -109,7 +109,7 @@
           "Kartlar"
         ],
         "summary": "Kart ver",
-        "description": "Bir programdan kart verir. E-posta gönderilirse kart o müşteriye bağlanır (yoksa oluşturulur) ve `kvkkConsent: true` gönderilmelidir: bu, işletmenin müşteriye kendi aydınlatma metnini sunduğunu beyan etmesidir; beyanın doğruluğundan işletme sorumludur. Bir rıza kutusu olarak sormayın. Dönen `cardUrl` müşterinin özel kart bağlantısıdır: müşteriye iletin, kayıtlara yazmayın. Hediye kartında `faceMinor` (kuruş) zorunludur. Yanıtta `created` her zaman vardır.\n- **Idempotency-Key** (isteğe bağlı, önerilir): her çağrı yeni bir kart açar; başlıkla aynı anahtar ve aynı gövdeyle tekrar yeni kart açmaz, ilk yanıtı (aynı kart, aynı bağlantı) `Idempotent-Replayed: true` ile döndürür. Aynı anahtar başka bir gövdeyle `422 IDEMPOTENCY_KEY_REUSED`. Bir siparişe kart açan mağaza için sipariş başına sabit bir anahtar iyi bir seçimdir. Saklanan yanıt şifrelidir ve 7 gün tutulur; tekrar yalnız kimlik o programda hâlâ kart verebiliyorsa döner (yoksa `403 FORBIDDEN`).\n- **`ifExists`** (isteğe bağlı, `email` ile): `\"create\"` (varsayılan) her çağrıda yeni kart açar, bugüne dek olduğu gibi. `\"return\"`: kişinin bu programda açık bir kartı varsa yeni kart açılmaz; `200`, `created: false` ve o kartın `serial`'i döner — mağazanın kendi e-posta → kart tablosu tutması gerekmez. Var olan kartın `cardUrl`'i **görüntüleme anahtarı taşımaz** (`/p/{serial}`, kişiye bir şey göstermez ve bağlantıyı e-postasına istemeyi önerir): adresi yazan kişi kartın sahibi olmayabilir, özel bağlantı yalnız kişinin kendi e-postasına gider (`sendEmail`). Kart yoksa yeni kart açılır (`201`, `created: true`). Yanıt bu adresin bu programda kartı olup olmadığını ve kartın numarasını (kasada kartla işlem yapılan anahtar) söylediği için **kimliğin kartın programında `customers.read` yetkisi olmalı** ve müşteri kimliğin şube kapsamında olmalıdır; yoksa `403 FORBIDDEN` (ADR 182'nin incelemesi). Hediye kartında kullanılamaz (her hediye kartı bir satın almadır; `400 VALIDATION`). Koddan verilen kartlar (kupon, indirim) \"açık kart\" sayılmaz.\n- **`sendEmail: true`** (isteğe bağlı, `email` ile): katılım formunun gönderdiği \"kartınız\" e-postası kişinin adresine gider; yeni kartta yeni kartın bağlantısıyla, var olan kartta (`created: false`) o kart için yeni bir bağlantıyla (eski bağlantılar çalışmaya devam eder). Sınırlar: kişi başına saatte 3 (yeni kart da sayılır; katılım formuyla ortak), işletme başına saatte 50 (deneme süresinde) ya da 500; fazlası gönderilmez, `rate_limited` (kart yine açılır). İşletmenin etkin bir sahibinin e-posta adresi doğrulanmamışsa çağrı `403 OWNER_EMAIL_UNVERIFIED` ile reddedilir, kart açılmaz. Gönderim `kvkkConsent: true` ile kaydedilen beyana dayanır. Test ortamında e-posta gönderilmez, \"Gönderilmeyenler\"e yazılır. Yanıttaki `emailStatus`: `queued` (gönderim sırasına girdi; test ortamında Gönderilmeyenler'e yazıldı), `suppressed` (adres daha önce geri döndüğü ya da şikâyet ettiği için gönderilmedi), `rate_limited`, `not_sent`.\n- **Bir sipariş için kart** (`orderId` ve `shopId` birlikte, `email` ile): kartı kazandıran sipariş de bu karta sayılır, mağazanın sipariş bildirimi karttan önce ya da sonra gelsin. Bildirim henüz gelmediyse (`order.result: waiting`) geldiğinde bu kartı bulur. Önce gelip \"Kartı yok\" diye kaydedildiyse (`resend`) sipariş yeniden açılır: mağaza siparişi 7 gün içinde yeniden gönderdiğinde (aynı imzalı bildirim; WooCommerce eklentisi webhook'unun o siparişi yeniden teslimiyle) siparişin kendi e-postası ve tutarıyla bu karta işlenir. Tutar hiçbir zaman bu çağrıdan alınmaz, siparişten hiçbir şey saklanmaz ve sipariş yine bir kez sayılır. Bağlantı bu işletmenin ve bu programın olmalıdır (`404 SHOP_NOT_FOUND`, `409 SHOP_PROGRAM_MISMATCH`). `ifExists: \"return\"` ile var olan kart döndüğünde de sipariş, e-postasıyla o kartı bulur.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `passes.issue` — Kart verme.",
+        "description": "Bir programdan kart verir. E-posta gönderilirse kart o müşteriye bağlanır (yoksa oluşturulur) ve `kvkkConsent: true` gönderilmelidir: bu, işletmenin müşteriye kendi aydınlatma metnini sunduğunu beyan etmesidir; beyanın doğruluğundan işletme sorumludur. Bir rıza kutusu olarak sormayın. Dönen `cardUrl` müşterinin özel kart bağlantısıdır: müşteriye iletin, kayıtlara yazmayın. Hediye kartında `faceMinor` (kuruş) zorunludur. Yanıtta `created` her zaman vardır.\n- **Idempotency-Key** (isteğe bağlı, önerilir): her çağrı yeni bir kart açar; başlıkla aynı anahtar ve aynı gövdeyle tekrar yeni kart açmaz, ilk yanıtı (aynı kart, aynı bağlantı) `Idempotent-Replayed: true` ile döndürür. Aynı anahtar başka bir gövdeyle `422 IDEMPOTENCY_KEY_REUSED`. Bir siparişe kart açan mağaza için sipariş başına sabit bir anahtar iyi bir seçimdir. Saklanan yanıt şifrelidir ve 7 gün tutulur; tekrar yalnız kimlik o programda hâlâ kart verebiliyorsa döner (yoksa `403 FORBIDDEN`).\n- **`ifExists`** (isteğe bağlı, `email` ile): `\"create\"` (varsayılan) her çağrıda yeni kart açar, bugüne dek olduğu gibi. `\"return\"`: kişinin bu programda açık bir kartı varsa yeni kart açılmaz; `200`, `created: false` ve o kartın `serial`'i döner — mağazanın kendi e-posta → kart tablosu tutması gerekmez. Var olan kartın `cardUrl`'i **görüntüleme anahtarı taşımaz** (`/p/{serial}`, kişiye bir şey göstermez ve bağlantıyı e-postasına istemeyi önerir): adresi yazan kişi kartın sahibi olmayabilir, özel bağlantı yalnız kişinin kendi e-postasına gider (`sendEmail`). Kart yoksa yeni kart açılır (`201`, `created: true`). Yanıt bu adresin bu programda kartı olup olmadığını ve kartın numarasını (kasada kartla işlem yapılan anahtar) söylediği için **kimliğin kartın programında `customers.read` yetkisi olmalı** ve müşteri kimliğin şube kapsamında olmalıdır; yoksa `403 FORBIDDEN`. Hediye kartında kullanılamaz (her hediye kartı bir satın almadır; `400 VALIDATION`). Koddan verilen kartlar (kupon, indirim) \"açık kart\" sayılmaz.\n- **`sendEmail: true`** (isteğe bağlı, `email` ile): katılım formunun gönderdiği \"kartınız\" e-postası kişinin adresine gider; yeni kartta yeni kartın bağlantısıyla, var olan kartta (`created: false`) o kart için yeni bir bağlantıyla (eski bağlantılar çalışmaya devam eder). Sınırlar: kişi başına saatte 3 (yeni kart da sayılır; katılım formuyla ortak), işletme başına saatte 50 (deneme süresinde) ya da 500; fazlası gönderilmez, `rate_limited` (kart yine açılır). İşletmenin etkin bir sahibinin e-posta adresi doğrulanmamışsa çağrı `403 OWNER_EMAIL_UNVERIFIED` ile reddedilir, kart açılmaz. Gönderim `kvkkConsent: true` ile kaydedilen beyana dayanır. Test ortamında e-posta gönderilmez, \"Gönderilmeyenler\"e yazılır. Yanıttaki `emailStatus`: `queued` (gönderim sırasına girdi; test ortamında Gönderilmeyenler'e yazıldı), `suppressed` (adres daha önce geri döndüğü ya da şikâyet ettiği için gönderilmedi), `rate_limited`, `not_sent`.\n- **Bir sipariş için kart** (`orderId` ve `shopId` birlikte, `email` ile): kartı kazandıran sipariş de bu karta sayılır, mağazanın sipariş bildirimi karttan önce ya da sonra gelsin. Bildirim henüz gelmediyse (`order.result: waiting`) geldiğinde bu kartı bulur. Önce gelip \"Kartı yok\" diye kaydedildiyse (`resend`) sipariş yeniden açılır: mağaza siparişi 7 gün içinde yeniden gönderdiğinde (aynı imzalı bildirim; WooCommerce eklentisi webhook'unun o siparişi yeniden teslimiyle) siparişin kendi e-postası ve tutarıyla bu karta işlenir. Tutar hiçbir zaman bu çağrıdan alınmaz, siparişten hiçbir şey saklanmaz ve sipariş yine bir kez sayılır. Bağlantı bu işletmenin ve bu programın olmalıdır (`404 SHOP_NOT_FOUND`, `409 SHOP_PROGRAM_MISMATCH`). `ifExists: \"return\"` ile var olan kart döndüğünde de sipariş, e-postasıyla o kartı bulur.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `passes.issue` — Kart verme.",
         "x-permission": "passes.issue",
         "x-credentials": [
           "key",
@@ -133,9 +133,10 @@
             "schema": {
               "type": "string",
               "minLength": 8,
-              "maxLength": 64
+              "maxLength": 64,
+              "pattern": "^[\\x20-\\x7E]+$"
             },
-            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür."
+            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür. 8–64 yazdırılabilir ASCII karakter (ş, ğ, ı gibi harfler `400 VALIDATION`); bu kimlik için tekil."
           }
         ],
         "requestBody": {
@@ -984,12 +985,12 @@
                         "programName": {
                           "type": "string",
                           "maxLength": 120,
-                          "description": "Programın adı (ADR 182)"
+                          "description": "Programın adı"
                         },
                         "currency": {
                           "type": "string",
                           "maxLength": 3,
-                          "description": "Kartın para birimi (ISO 4217, ör. `TRY`, `EUR`): programın para birimi — cashback ve hediye kartında programın kendi para birimi, öteki türlerde işletmeninki. Bu karttaki satışın ve işlemlerin `amountMinor`'ı bu birimdedir ve `currency` alanları bununla karşılaştırılır (ADR 182)"
+                          "description": "Kartın para birimi (ISO 4217, ör. `TRY`, `EUR`): programın para birimi — cashback ve hediye kartında programın kendi para birimi, öteki türlerde işletmeninki. Bu karttaki satışın ve işlemlerin `amountMinor`'ı bu birimdedir ve `currency` alanları bununla karşılaştırılır"
                         },
                         "balance": {
                           "type": [
@@ -1453,7 +1454,7 @@
           "Kartlar"
         ],
         "summary": "Kartın bir şubedeki kasa kuralları",
-        "description": "Kasada işlem yapmadan önce: kart bu şubede kullanılabilir mi, hangi şubelerde geçerli, şu an burada hangi kasa kampanyası çalışıyor ve kasiyerin göreceği uyarılar (tarayıcıdaki şeritlerin aynısı). `allowed: false` iken işlem `WRONG_LOCATION` ile reddedilir (ADR 139). Şube kartın işletmesinin silinmemiş bir şubesi olmalıdır, değilse `404 LOCATION_NOT_FOUND` (kasa işlemleri gibi).\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `scan.use` — Tarayıcıyı kullanma.",
+        "description": "Kasada işlem yapmadan önce: kart bu şubede kullanılabilir mi, hangi şubelerde geçerli, şu an burada hangi kasa kampanyası çalışıyor ve kasiyerin göreceği uyarılar (tarayıcıdaki şeritlerin aynısı). `allowed: false` iken işlem `WRONG_LOCATION` ile reddedilir. Şube kartın işletmesinin silinmemiş bir şubesi olmalıdır, değilse `404 LOCATION_NOT_FOUND` (kasa işlemleri gibi).\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `scan.use` — Tarayıcıyı kullanma.",
         "x-permission": "scan.use",
         "x-credentials": [
           "key",
@@ -1881,7 +1882,7 @@
           "Kartlar"
         ],
         "summary": "Kasada işlem",
-        "description": "Karta, bir şubede kasa işlemi uygular. **Idempotency-Key zorunludur** (8–64 karakter, bu kimlik için kalıcı olarak tekil): aynı anahtarla aynı isteğin tekrarı bakiyeyi ikinci kez değiştirmez ve ilk sonucu döndürür (`duplicate: true`); bu kartta başka bir işlem için ya da başka bir gövdeyle (başka tutar, şube, sayı) kullanılmış bir anahtar `422 IDEMPOTENCY_KEY_REUSED` alır ve hiçbir şey yazılmaz. `currency` (isteğe bağlı) verilirse kartın para birimiyle karşılaştırılır (`422 CURRENCY_MISMATCH`). Şube işletmenizin silinmemiş bir şubesi olmalıdır (`404 LOCATION_NOT_FOUND`). Salt-okunur hesapta da çalışır: mevcut kartlar çalışmaya devam eder.\n| action | kart | gerekli alan |\n|---|---|---|\n| `earn-stamps` | damga | `count` (varsayılan 1) |\n| `redeem-stamps` | damga | — |\n| `earn-points` | puan | `amountMinor` (harcama, kuruş) |\n| `redeem-reward` | puan | `rewardIndex` |\n| `spend-points` | puan | `points` |\n| `visit` | VIP | — |\n| `spend` | hediye kartı, cashback | `amountMinor` |\n| `accrue` | cashback | `amountMinor` (alışveriş tutarı) |\n| `load` | hediye kartı | `amountMinor` — ayrıca `instruments.issue` yetkisi |\n| `use` | kupon, indirim | — |\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `scan.use` — Tarayıcıyı kullanma.\n\nSalt-okunur hesapta da çalışır.",
+        "description": "Karta, bir şubede kasa işlemi uygular. **Idempotency-Key zorunludur** (8–64 karakter, yalnız ASCII, bu kimlik için kalıcı olarak tekil): aynı anahtarla aynı isteğin tekrarı bakiyeyi ikinci kez değiştirmez ve ilk sonucu döndürür (`duplicate: true`); bu kartta başka bir işlem için ya da başka bir gövdeyle (başka tutar, şube, sayı, not) ya da **başka bir kartta** kullanılmış bir anahtar `422 IDEMPOTENCY_KEY_REUSED` alır ve hiçbir şey yazılmaz (anahtar kimliğindir, kartın değil). Yanıt kartın türüne göre iki biçimdedir: bakiyeli kartlarda `{ balance, duplicate, detail?, promotion? }`, kupon ve indirim kartında (`use`) `{ status, duplicate, uses, usesLeft }`. `reference` (isteğe bağlı, en fazla 80 karakter) fiş numarasıdır: kaydın notuna yazılır ve bir harcamayı, ödülü ya da kullanımı `POST /v1/passes/{serial}/actions/reverse` ile geri alırken işlemi bulur. `currency` (isteğe bağlı) verilirse kartın para birimiyle karşılaştırılır (`422 CURRENCY_MISMATCH`). Şube işletmenizin silinmemiş bir şubesi olmalıdır (`404 LOCATION_NOT_FOUND`). Salt-okunur hesapta da çalışır: mevcut kartlar çalışmaya devam eder.\n| action | kart | gerekli alan |\n|---|---|---|\n| `earn-stamps` | damga | `count` (varsayılan 1) |\n| `redeem-stamps` | damga | — |\n| `earn-points` | puan | `amountMinor` (harcama, kuruş) |\n| `redeem-reward` | puan | `rewardIndex` |\n| `spend-points` | puan | `points` |\n| `visit` | VIP | — |\n| `spend` | hediye kartı, cashback | `amountMinor` |\n| `accrue` | cashback | `amountMinor` (alışveriş tutarı) |\n| `load` | hediye kartı | `amountMinor` — ayrıca `instruments.issue` yetkisi |\n| `use` | kupon, indirim | — |\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `scan.use` — Tarayıcıyı kullanma.\n\nSalt-okunur hesapta da çalışır.",
         "x-permission": "scan.use",
         "x-credentials": [
           "key",
@@ -1916,9 +1917,10 @@
             "schema": {
               "type": "string",
               "minLength": 8,
-              "maxLength": 64
+              "maxLength": 64,
+              "pattern": "^[\\x20-\\x7E]+$"
             },
-            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür."
+            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür. 8–64 yazdırılabilir ASCII karakter (ş, ğ, ı gibi harfler `400 VALIDATION`); bu kimlik için tekil."
           }
         ],
         "requestBody": {
@@ -1973,6 +1975,11 @@
                     "maxLength": 3,
                     "pattern": "^[A-Za-z]{3}$",
                     "description": "İsteğe bağlı: tutarın para birimi (ISO 4217, ör. `TRY`, `EUR`, büyük-küçük harf önemsiz). Tutar **kartın para birimindedir** (programın para birimi: `GET /v1/passes/{serial}` → `currency`, `GET /v1/programs/{id}`); verilirse onunla karşılaştırılır, farklıysa `422 CURRENCY_MISMATCH` (`details.currency` kartınki) ve hiçbir şey yazılmaz. Tutar çevrilmez."
+                  },
+                  "reference": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "description": "İsteğe bağlı: fiş ya da sipariş numarası. Kaydın notuna yazılır (müşterinin geçmişi, işlem dökümü); işlemi `POST /v1/passes/{serial}/actions/reverse` ile geri alırken onu bulmanın bir yolu. Kişisel bilgi yazmayın."
                   }
                 },
                 "required": [
@@ -1995,49 +2002,93 @@
                   ],
                   "properties": {
                     "data": {
-                      "type": "object",
-                      "additionalProperties": false,
-                      "properties": {
-                        "balance": {
-                          "type": "number"
-                        },
-                        "duplicate": {
-                          "type": "boolean"
-                        },
-                        "detail": {
-                          "type": "string",
-                          "maxLength": 120,
-                          "description": "Damga: ödül hazır oldu · puan: karşılanabilen en yüksek ödül · VIP: seviye"
-                        },
-                        "promotion": {
+                      "oneOf": [
+                        {
                           "type": "object",
                           "additionalProperties": false,
                           "properties": {
-                            "id": {
-                              "type": "string",
-                              "format": "uuid"
+                            "balance": {
+                              "type": "number",
+                              "description": "İşlemden sonra kartın bakiyesi: damga, puan, ziyaret ya da kuruş"
                             },
-                            "name": {
-                              "type": "string",
-                              "maxLength": 60
+                            "duplicate": {
+                              "type": "boolean"
                             },
-                            "factor": {
-                              "type": "integer",
-                              "minimum": 2,
-                              "maximum": 5
+                            "detail": {
+                              "type": "string",
+                              "maxLength": 120,
+                              "description": "Damga: ödül hazır oldu (`reward-ready`) · puan: karşılanabilen en yüksek ödül · VIP: seviye · hediye kartı: bakiye bitti, kart kapandı (`ended`)"
+                            },
+                            "promotion": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "maxLength": 60
+                                },
+                                "factor": {
+                                  "type": "integer",
+                                  "minimum": 2,
+                                  "maximum": 5
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "factor"
+                              ],
+                              "description": "Bu kazanımı katlayan kasa kampanyası"
                             }
                           },
                           "required": [
-                            "id",
-                            "name",
-                            "factor"
+                            "balance",
+                            "duplicate"
                           ],
-                          "description": "Bu kazanımı katlayan kasa kampanyası (ADR 139)"
+                          "title": "Bakiyeli kart",
+                          "description": "Damga, puan, VIP, cashback ve hediye kartındaki işlemler: `earn-stamps`, `redeem-stamps`, `earn-points`, `redeem-reward`, `spend-points`, `visit`, `spend`, `accrue`, `load`."
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "maxLength": 20,
+                              "description": "Kartın durumu: `active`, ya da kullanım hakkı bu kullanımla dolduysa `redeemed` (kart kapandı); bir tekrarda kartın şimdiki durumu"
+                            },
+                            "duplicate": {
+                              "type": "boolean"
+                            },
+                            "uses": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 1000000,
+                              "description": "Kartın şimdiye kadarki kullanımı"
+                            },
+                            "usesLeft": {
+                              "type": [
+                                "integer",
+                                "null"
+                              ],
+                              "minimum": 0,
+                              "maximum": 1000000,
+                              "description": "Kalan kullanım; null: sınırsız"
+                            }
+                          },
+                          "required": [
+                            "status",
+                            "duplicate",
+                            "uses",
+                            "usesLeft"
+                          ],
+                          "title": "Kupon ve indirim kartı",
+                          "description": "`use`: kupon ve indirim kartının bakiyesi yoktur; yanıt kullanım sayısını verir."
                         }
-                      },
-                      "required": [
-                        "balance",
-                        "duplicate"
                       ]
                     }
                   }
@@ -2495,7 +2546,7 @@
           "Kartlar"
         ],
         "summary": "Satışı karta yaz",
-        "description": "Kasada ya da kendi yazılımınızda tamamlanan bir satışı karta yazar: ne yazılacağına kartın türü ve programın kendi kuralı karar verir, entegrasyonun türü bilmesi gerekmez (ADR 177). `amountMinor` ödenen toplamdır, **kartın para biriminde** (programın para birimi: cashback ve hediye kartında programın kendi para birimi, öteki türlerde işletmeninki; `GET /v1/passes/{serial}` → `currency`) ve kuruş cinsinden; başka para birimi kabul edilmez ve çevrilmez. `currency` gönderirseniz Rewloy onu kartın para birimiyle karşılaştırır ve farklıysa `422 CURRENCY_MISMATCH` ile hiçbir şey yazmaz.\n| kart | satış ne yazar | `applied` |\n|---|---|---|\n| damga | 1 damga (kasa kampanyası katlar) | `stamps` |\n| puan | programın oranıyla, her 1 birim için `earnRate` puan | `points` |\n| VIP | 1 ziyaret, ziyaret penceresinde bir kez | `visit` |\n| cashback | toplamın `cashbackRate` yüzdesi, kuruş, aşağı yuvarlanır (ör. 45,50 × %5 = 2,27) | `cashback` |\n| hediye kartı, kupon, indirim | hiçbir şey (harcamak ve kullanmak `POST /v1/passes/{serial}/actions` ile) | `none` |\n\nHiçbir şey yazılmadıysa yanıt yine 200'dür, `applied: \"none\"` ve nedeni `reason`: `below_minimum` (tutar bir puan ya da bir kuruş birikim üretmiyor; `amountMinor: 0` dahil), `visit_already_counted` (VIP: bu ziyaret penceresinde ziyaret zaten sayıldı), `card_full` (damga: kart dolu ve program ödülden sonra damga biriktirmiyor; önce ödülü kullanın), `type_does_not_earn`. Damga ve VIP, `amountMinor: 0` olsa da ziyareti sayar.\n- **Idempotency-Key zorunludur**: 8–64 karakter ve bu kimlik için **kalıcı olarak tekil**; defter anahtarları hiç silinmez. Fiş numarası tek başına anahtar olamaz: ÖKC fiş numaraları Z raporundan sonra yeniden başlar. Kasa + Z no + fiş no birleşimi (ör. `kasa3-z0187-fis0042`) ya da satışla birlikte saklanıp tekrarda yeniden gönderilen bir UUID kullanın. Aynı anahtarla **aynı isteğin** tekrarı ikinci kez yazmaz: `duplicate: true`, `credited` ilk isteğin yazdığı, `balance` kartın şimdiki bakiyesi. Aynı anahtar başka bir gövdeyle (başka `amountMinor`, `locationId`, `reference` ya da `currency`) `422 IDEMPOTENCY_KEY_REUSED` alır ve hiçbir şey yazılmaz: satış sessizce kaybolmaz. Anahtar `POST /v1/passes/{serial}/actions` ile aynı alandadır: orada bu kartta kullanılmış bir anahtar da `422 IDEMPOTENCY_KEY_REUSED` alır. Hiçbir şey yazmayan bir satış anahtarı bağlamaz.\n- **`reference`** (isteğe bağlı, en fazla 80 karakter): fiş numarası buraya yazılır. Defter kaydının notuna yazılır: müşterinin geçmişinde (VIP ziyaretleri hariç; onlar ziyaret olarak görünür) ve işlem dökümünün `Not` sütununda görünür. Müşterinin kişisel bilgisini yazmayın.\n- Şube kuralları ve kasa kampanyaları `actions` ile aynıdır: kart bu şubede geçerli değilse `409 WRONG_LOCATION`, kampanya `promotion` ile döner. Salt-okunur hesapta da çalışır.\n- **`locationId` isteğe bağlıdır** (ADR 182): verilmezse satış bir şubeye yazılmaz (online mağaza gibi). O zaman şube kuralı ve kasa kampanyası uygulanmaz (e-ticaret siparişleri gibi), kayıtta şube boş kalır ve kimliğin **her şubede** `scan.use` yetkisi olmalıdır (yoksa `403 FORBIDDEN`); bir şubenin kasası şubesini gönderir. Yeni bir şube açmak gerekmez, hiçbir şey ücretlendirilmez.\n- **Geri almak:** `POST /v1/passes/{serial}/sale/reverse` satışın yazdığını bir kez geri alır.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `scan.use` — Tarayıcıyı kullanma.\n\nSalt-okunur hesapta da çalışır.",
+        "description": "Kasada ya da kendi yazılımınızda tamamlanan bir satışı karta yazar: ne yazılacağına kartın türü ve programın kendi kuralı karar verir, entegrasyonun türü bilmesi gerekmez. `amountMinor` ödenen toplamdır, **kartın para biriminde** (programın para birimi: cashback ve hediye kartında programın kendi para birimi, öteki türlerde işletmeninki; `GET /v1/passes/{serial}` → `currency`) ve kuruş cinsinden; başka para birimi kabul edilmez ve çevrilmez. `currency` gönderirseniz Rewloy onu kartın para birimiyle karşılaştırır ve farklıysa `422 CURRENCY_MISMATCH` ile hiçbir şey yazmaz.\n| kart | satış ne yazar | `applied` |\n|---|---|---|\n| damga | 1 damga (kasa kampanyası katlar) | `stamps` |\n| puan | programın oranıyla, her 1 birim için `earnRate` puan | `points` |\n| VIP | 1 ziyaret, ziyaret penceresinde bir kez | `visit` |\n| cashback | toplamın `cashbackRate` yüzdesi, kuruş, aşağı yuvarlanır (ör. 45,50 × %5 = 2,27) | `cashback` |\n| hediye kartı, kupon, indirim | hiçbir şey (harcamak ve kullanmak `POST /v1/passes/{serial}/actions` ile) | `none` |\n\nHiçbir şey yazılmadıysa yanıt yine 200'dür, `applied: \"none\"` ve nedeni `reason`: `below_minimum` (tutar bir puan ya da bir kuruş birikim üretmiyor; `amountMinor: 0` dahil), `visit_already_counted` (VIP: bu ziyaret penceresinde ziyaret zaten sayıldı), `card_full` (damga: kart dolu ve program ödülden sonra damga biriktirmiyor; önce ödülü kullanın), `type_does_not_earn`. Damga ve VIP, `amountMinor: 0` olsa da ziyareti sayar.\n- **Idempotency-Key zorunludur**: 8–64 karakter ve bu kimlik için **kalıcı olarak tekil**; defter anahtarları hiç silinmez. Fiş numarası tek başına anahtar olamaz: ÖKC fiş numaraları Z raporundan sonra yeniden başlar. Kasa + Z no + fiş no birleşimi (ör. `kasa3-z0187-fis0042`) ya da satışla birlikte saklanıp tekrarda yeniden gönderilen bir UUID kullanın. Aynı anahtarla **aynı isteğin** tekrarı ikinci kez yazmaz: `duplicate: true`, `credited` ilk isteğin yazdığı, `balance` kartın şimdiki bakiyesi. Aynı anahtar başka bir gövdeyle (başka `amountMinor`, `locationId`, `reference` ya da `currency`) `422 IDEMPOTENCY_KEY_REUSED` alır ve hiçbir şey yazılmaz: satış sessizce kaybolmaz. Anahtar `POST /v1/passes/{serial}/actions` ile aynı alandadır: orada bu kartta kullanılmış bir anahtar da `422 IDEMPOTENCY_KEY_REUSED` alır. Anahtar **kimliğindir, kartın değil**: başka bir kartta bir şey yazmış bir anahtar bu kartta da `422 IDEMPOTENCY_KEY_REUSED` alır (yanıt öteki kartı söylemez): yanlış karta okutulan fiş, doğru karta aynı anahtarla yazılamaz; önce yanlış karttaki satışı geri alın (`sale/reverse`), sonra doğru karta yeni bir anahtarla yazın. Hiçbir şey yazmayan bir satış anahtarı bağlamaz. Anahtar yalnız yazdırılabilir ASCII karakterler taşır (`400 VALIDATION`).\n- **Çevrimdışı kasa (`occurredAt`):** bağlantısı kopan kasa satışları kendi kuyruğunda tutar ve bağlantı gelince sırayla gönderir. Her satışı kuyruğa **anahtarıyla birlikte** yazın (kasa + Z no + fiş no) ve gönderirken aynı anahtarı kullanın: kayıp bir yanıttan sonra tekrar ikinci kez yazmaz. `occurredAt` satışın olduğu andır: VIP ziyareti o ana göre sayılır (o anın ziyaret penceresinde zaten sayılmış bir ziyaret varsa `applied: \"none\"`, `visit_already_counted`), kasa kampanyası o anda çalışan kampanyadır. Gelecekte olamaz (2 dakika saat farkı kabul edilir), en fazla 72 saat geriye gider ve kartın verildiği andan önce olamaz (`400 VALIDATION`): daha eski bir kuyruğu elle düzeltin. Kasa kampanyası, o anda çalışan ve o anda zaten açılmış olandır: sonradan geçmiş bir başlangıçla açılan kampanya kuyruktaki satışı katlamaz. Kartın son kullanım tarihi ve şube kuralı gönderildiği ana göre denetlenir. Kaydın kendi zamanı (`at`, işlem kaydı ve döküm) yazıldığı andır; olduğu an kayıtta ayrıca durur (işlem kaydında `occurredAt`, webhook'ta `occurredAt`).\n- **`reference`** (isteğe bağlı, en fazla 80 karakter): fiş numarası buraya yazılır. Defter kaydının notuna yazılır: müşterinin geçmişinde (VIP ziyaretleri hariç; onlar ziyaret olarak görünür) ve işlem dökümünün `Not` sütununda görünür. Müşterinin kişisel bilgisini yazmayın.\n- Şube kuralları ve kasa kampanyaları `actions` ile aynıdır: kart bu şubede geçerli değilse `409 WRONG_LOCATION`, kampanya `promotion` ile döner. Salt-okunur hesapta da çalışır.\n- **`locationId` isteğe bağlıdır**: verilmezse satış bir şubeye yazılmaz (online mağaza gibi). O zaman şube kuralı ve kasa kampanyası uygulanmaz (e-ticaret siparişleri gibi), kayıtta şube boş kalır ve kimliğin **her şubede** `scan.use` yetkisi olmalıdır (yoksa `403 FORBIDDEN`); bir şubenin kasası şubesini gönderir. Yeni bir şube açmak gerekmez, hiçbir şey ücretlendirilmez.\n- **Geri almak:** `POST /v1/passes/{serial}/sale/reverse` satışın yazdığını bir kez geri alır.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `scan.use` — Tarayıcıyı kullanma.\n\nSalt-okunur hesapta da çalışır.",
         "x-permission": "scan.use",
         "x-credentials": [
           "key",
@@ -2530,9 +2581,10 @@
             "schema": {
               "type": "string",
               "minLength": 8,
-              "maxLength": 64
+              "maxLength": 64,
+              "pattern": "^[\\x20-\\x7E]+$"
             },
-            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür."
+            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür. 8–64 yazdırılabilir ASCII karakter (ş, ğ, ı gibi harfler `400 VALIDATION`); bu kimlik için tekil."
           }
         ],
         "requestBody": {
@@ -2564,6 +2616,11 @@
                     "maxLength": 3,
                     "pattern": "^[A-Za-z]{3}$",
                     "description": "İsteğe bağlı: tutarın para birimi (ISO 4217, ör. `TRY`, `EUR`, büyük-küçük harf önemsiz). Tutar **kartın para birimindedir** (programın para birimi: `GET /v1/passes/{serial}` → `currency`, `GET /v1/programs/{id}`); verilirse onunla karşılaştırılır, farklıysa `422 CURRENCY_MISMATCH` (`details.currency` kartınki) ve hiçbir şey yazılmaz. Tutar çevrilmez."
+                  },
+                  "occurredAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "İsteğe bağlı: satışın gerçekten olduğu an (ISO 8601, saat dilimiyle), satış sonradan yazılıyorsa (çevrimdışı kasanın kuyruğu). Gelecekte olamaz (2 dakika saat farkı kabul edilir), en fazla 72 saat geriye gider ve kartın verildiği andan önce olamaz; değilse `400 VALIDATION`. VIP ziyareti bu ana göre sayılır, kasa kampanyası bu anda çalışan (ve o anda zaten açılmış) kampanyadır; kaydın kendi zamanı yazıldığı andır. Idempotency değişmez: aynı anahtar ve aynı gövde, `occurredAt` farklı olsa da tekrardır."
                   }
                 },
                 "required": [
@@ -2663,7 +2720,7 @@
                             "name",
                             "factor"
                           ],
-                          "description": "Bu kazanımı katlayan kasa kampanyası (ADR 139)"
+                          "description": "Bu kazanımı katlayan kasa kampanyası"
                         },
                         "rewardReady": {
                           "type": "boolean"
@@ -3055,7 +3112,7 @@
           "Kartlar"
         ],
         "summary": "Satışı geri al",
-        "description": "İade ya da iptal edilen bir satışın karta yazdığını geri alır (ADR 182): o satışın yazdığı damga, puan, ziyaret ya da cashback'in tamamı, kasa kampanyasının katladığı dahil. Defter düzeltilmez; karta yeni bir düzeltme kaydı (`adjust`) yazılır ve müşterinin cüzdanı güncellenir.\n- **Hangi satış:** `saleKey`, satışı yazarken gönderdiğiniz `Idempotency-Key`'dir (aynı kimlikle; anahtarlar kimlik başına tutulur), ya da `reference`, satışın `reference`'ı (bu kartta yalnız bir satışta varsa; birden çoksa `409 SALE_AMBIGUOUS`, `saleKey` gönderin). İkisinden yalnız biri. `recordSale` ile ya da kazandıran bir kasa işlemiyle (`earn-stamps`, `earn-points`, `visit`, `accrue`) yazılan kayıtlar geri alınır; harcama, ödül ve kullanım geri alınmaz.\n- **Bir kez:** bir satış bir kez geri alınır, kim isterse istesin; tekrar `200` ve `duplicate: true` döner, hiçbir şey yazılmaz. Bu yüzden `Idempotency-Key` gerekmez.\n- **Ne geri alınabilir:** kartın bakiyesi satışın yazdığını hâlâ tutuyorsa. Kazanılan kullanıldıysa (damgalar ödüle, puanlar ödüle ya da harcamaya, cashback harcamaya ya da online bir siparişe gittiyse) bakiye yetmez: `409 SALE_ALREADY_SPENT`, `details: { credited, balance }`, hiçbir şey yazılmaz. Kısmi geri alma yoktur; bakiye eksiye düşmez. Hiçbir şey yazmamış bir satış (`applied: \"none\"`), hediye kartı, kupon ve indirim kartı `404 SALE_NOT_FOUND`.\n- **Kim geri alabilir:** satışın yapıldığı yerde kart işleyebilen: kimliğin **satışın şubesinde** `scan.use` yetkisi olmalıdır; şubesiz (online) bir satış için, onu yazarken olduğu gibi, her şubede (`403 FORBIDDEN`). `locationId` isteğe bağlıdır: geri almanın yapıldığı şube, düzeltme kaydına yazılır; verilirse işletmenin silinmemiş bir şubesi olmalı ve kimliğin orada da `scan.use` yetkisi olmalıdır. Geri alma bir ziyaret ya da okutma sayılmaz. Kapanmış ya da süresi dolmuş kartta da çalışır. Salt-okunur hesapta da çalışır.\n- **`reference` ile** yalnız satışı yazan çağrının gönderdiği `reference` eşleşir (kasa kampanyasının nota eklediği ad değil); 1.0.5'ten önce yazılmış satışlar yalnız `saleKey` ile bulunur.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `scan.use` — Tarayıcıyı kullanma.\n\nSalt-okunur hesapta da çalışır.",
+        "description": "İade ya da iptal edilen bir satışın karta yazdığını geri alır: o satışın yazdığı damga, puan, ziyaret ya da cashback'in tamamı, kasa kampanyasının katladığı dahil. Defter düzeltilmez; karta yeni bir düzeltme kaydı (`adjust`) yazılır ve müşterinin cüzdanı güncellenir.\n- **Hangi satış:** `saleKey`, satışı yazarken gönderdiğiniz `Idempotency-Key`'dir (aynı kimlikle; anahtarlar kimlik başına tutulur), ya da `reference`, satışın `reference`'ı (**aynı kimliğin** bu karttaki satışları arasında yalnız birinde varsa; birden çoksa `409 SALE_AMBIGUOUS`, `saleKey` gönderin). İkisinden yalnız biri. `recordSale` ile ya da kazandıran bir kasa işlemiyle (`earn-stamps`, `earn-points`, `visit`, `accrue`) yazılan kayıtlar geri alınır; harcama, ödül ve kullanım burada değil, `POST /v1/passes/{serial}/actions/reverse` ile geri alınır.\n- **Bir kez:** bir satış bir kez geri alınır, kim isterse istesin; tekrar `200` ve `duplicate: true` döner, hiçbir şey yazılmaz. Bu yüzden `Idempotency-Key` gerekmez.\n- **Ne geri alınabilir:** kartın bakiyesi satışın yazdığını hâlâ tutuyorsa. Kazanılan kullanıldıysa (damgalar ödüle, puanlar ödüle ya da harcamaya, cashback harcamaya ya da online bir siparişe gittiyse) bakiye yetmez: `409 SALE_ALREADY_SPENT`, `details: { credited, balance }`, hiçbir şey yazılmaz. Kısmi geri alma yoktur; bakiye eksiye düşmez. Hiçbir şey yazmamış bir satış (`applied: \"none\"`), hediye kartı, kupon ve indirim kartı `404 SALE_NOT_FOUND`.\n- **Kim geri alabilir:** satışın yapıldığı yerde kart işleyebilen: kimliğin **satışın şubesinde** `scan.use` yetkisi olmalıdır; şubesiz (online) bir satış için, onu yazarken olduğu gibi, her şubede (`403 FORBIDDEN`). `locationId` isteğe bağlıdır: geri almanın yapıldığı şube, düzeltme kaydına yazılır; verilirse işletmenin silinmemiş bir şubesi olmalı ve kimliğin orada da `scan.use` yetkisi olmalıdır. Geri alma bir ziyaret ya da okutma sayılmaz. Kapanmış ya da süresi dolmuş kartta da çalışır. Salt-okunur hesapta da çalışır.\n- **`reference` ile** yalnız satışı yazan çağrının gönderdiği `reference` eşleşir (kasa kampanyasının nota eklediği ad değil); 1.0.5'ten önce yazılmış satışlar yalnız `saleKey` ile bulunur.\n- **VIP ziyareti** geri alınınca ziyaret penceresi yeniden açılır: iptal edilip yeniden kesilen fişin satışı ziyareti yeniden sayar.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `scan.use` — Tarayıcıyı kullanma.\n\nSalt-okunur hesapta da çalışır.",
         "x-permission": "scan.use",
         "x-credentials": [
           "key",
@@ -3102,7 +3159,7 @@
                     "type": "string",
                     "maxLength": 80,
                     "minLength": 1,
-                    "description": "Satışın `reference`'ı; bu kartta tek bir satışta olmalı"
+                    "description": "Satışın `reference`'ı; bu kartta bu kimliğin tek bir satışında olmalı"
                   },
                   "locationId": {
                     "type": "string",
@@ -3409,6 +3466,490 @@
                         "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
                         "status": 409,
                         "docs": "https://rewloy.com/gelistiriciler/hatalar#SALE_ALREADY_SPENT"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 410,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`RATE_LIMITED` — İstek sınırı aşıldı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "RATE_LIMITED": {
+                    "summary": "İstek sınırı aşıldı",
+                    "value": {
+                      "error": {
+                        "code": "RATE_LIMITED",
+                        "message": "İstek sınırı aşıldı",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 429,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#RATE_LIMITED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`INTERNAL` — Beklenmeyen hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "INTERNAL": {
+                    "summary": "Beklenmeyen hata",
+                    "value": {
+                      "error": {
+                        "code": "INTERNAL",
+                        "message": "Beklenmeyen hata",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 500,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#INTERNAL"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "staffSession": []
+          }
+        ]
+      }
+    },
+    "/v1/passes/{serial}/actions/reverse": {
+      "post": {
+        "operationId": "reverseAction",
+        "tags": [
+          "Kartlar"
+        ],
+        "summary": "Kasa işlemini geri al",
+        "description": "Yanlışlıkla yapılan ya da iptal edilen bir harcamayı, ödülü veya kullanımı geri alır: `spend` (hediye kartı, cashback), `spend-points`, `redeem-stamps`, `redeem-reward` ya da `use` (kupon, indirim kartı) ile alınanın tamamı geri verilir — bakiye, puan ya da damgalar karta döner, ödül yeniden hazır olur, kuponun ya da indirim kartının kullanım hakkı geri gelir, harcamayla kapanan hediye kartı ya da kullanımla kapanan kupon yeniden açılır. Defter düzeltilmez: karta yeni bir düzeltme kaydı (`adjust`) yazılır (kuponda kullanım kaydı geri alındı olarak işaretlenir) ve müşterinin cüzdanı güncellenir.\n- **Hangi işlem:** `actionKey`, işlemi yaparken (`POST /v1/passes/{serial}/actions`) gönderdiğiniz `Idempotency-Key`'dir, ya da `reference`, işlemin `reference`'ı (bu kartta bu kimliğin yalnız bir işleminde varsa; birden çoksa `409 ACTION_AMBIGUOUS`). İkisinden yalnız biri. **Yalnız aynı kimliğin** işlemleri bulunur: başka bir anahtarın, panelin tarayıcısının ya da bir e-ticaret siparişinin işlemi `404 ACTION_NOT_FOUND`. Kazanımlar (`earn-stamps`, `earn-points`, `visit`, `accrue`) burada değil, `POST /v1/passes/{serial}/sale/reverse` ile geri alınır.\n- **Online ödeme:** ödeme adımında çekilen bir tutar burada geri alınmaz; onun kendi iadesi vardır (`POST /v1/shops/{id}/orders/{orderId}/refund`).\n- **Bir kez:** bir işlem bir kez geri alınır, kim, kaç kez isterse istesin; tekrar `200` ve `duplicate: true` döner, hiçbir şey yazılmaz. Bu yüzden `Idempotency-Key` gerekmez. Geri alınan işlemin anahtarı yanmıştır: aynı anahtarla gelen istek ilk sonucu döndürür (`duplicate: true`), yeni bir işlem için yeni anahtar gönderin.\n- **Geri alınamayanlar:** kart iptal edilmiş ya da başka bir nedenle kapanmışsa, ya da kartın müşterisi silinmiş, programı arşivde ya da müşterisi engellenmişse (`details.reason: \"card_closed\"`), süresi dolmuşsa (`\"card_expired\"`), ya da damga ödülü geri verildiğinde kart programın en çok damgasını aşacaksa ve program ödülden sonra damga biriktirmiyorsa (`\"stamps_do_not_fit\"`): `409 ACTION_NOT_REVERSIBLE`, hiçbir şey yazılmaz. Harcamayla ya da kullanımla kapanan kart bu kurala girmez: geri alma onu yeniden açar.\n- **Kim geri alabilir:** satışın geri alınmasındaki kural: kimliğin **işlemin yapıldığı şubede** `scan.use` yetkisi olmalıdır (`403 FORBIDDEN`). `locationId` isteğe bağlıdır: geri almanın yapıldığı şube; verilirse işletmenin silinmemiş bir şubesi olmalı ve kimliğin orada da `scan.use` yetkisi olmalıdır. Geri alma bir ziyaret ya da okutma sayılmaz. Salt-okunur hesapta da çalışır.\n- **Webhook:** `pass.activity`, `kind: \"adjust\"`, `reason: \"action_reversed\"`, `undone` (`spend`, `redeem` ya da `use`), geri verilen `delta` (pozitif) ve `unit`; işlem `reference` taşıyorsa o da.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `scan.use` — Tarayıcıyı kullanma.\n\nSalt-okunur hesapta da çalışır.",
+        "x-permission": "scan.use",
+        "x-credentials": [
+          "key",
+          "staff"
+        ],
+        "parameters": [
+          {
+            "name": "serial",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$",
+              "description": "Kart seri numarası, XXXX-XXXX-XXXX"
+            },
+            "description": "Kart seri numarası, XXXX-XXXX-XXXX"
+          },
+          {
+            "name": "Rewloy-Merchant",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "actionKey": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "minLength": 8,
+                    "description": "İşlemin `Idempotency-Key`'i (aynı kimlikle gönderilmiş)"
+                  },
+                  "reference": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "description": "İşlemin `reference`'ı; bu kartta bu kimliğin tek bir işleminde olmalı"
+                  },
+                  "locationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Geri almanın yapıldığı şube (isteğe bağlı)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tamam.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "stamp",
+                            "points",
+                            "discount",
+                            "vip",
+                            "giftcard",
+                            "voucher",
+                            "cashback"
+                          ]
+                        },
+                        "undone": {
+                          "type": "string",
+                          "enum": [
+                            "spend",
+                            "redeem",
+                            "use"
+                          ],
+                          "description": "Geri alınan: bir harcama (`spend`), bir ödül ya da puan harcaması (`redeem`: `redeem-stamps`, `redeem-reward`, `spend-points`), bir kullanım (`use`)"
+                        },
+                        "restored": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "description": "Geri verilen: damga, puan ya da kuruş; kullanımda 1"
+                        },
+                        "balance": {
+                          "type": [
+                            "number",
+                            "null"
+                          ],
+                          "description": "Geri almadan sonra kartın bakiyesi; kupon ve indirim kartında null"
+                        },
+                        "uses": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0,
+                          "maximum": 1000000,
+                          "description": "Kupon ve indirim kartı: kullanım sayısı; öteki kartlarda null"
+                        },
+                        "usesLeft": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0,
+                          "maximum": 1000000,
+                          "description": "Kupon ve indirim kartı: kalan kullanım (null: sınırsız ya da bakiyeli kart)"
+                        },
+                        "status": {
+                          "type": "string",
+                          "maxLength": 20,
+                          "description": "Kartın şimdiki durumu"
+                        },
+                        "reopened": {
+                          "type": "boolean",
+                          "description": "true: kart bu işlemle kapanmıştı (hediye kartı sıfıra indi, kuponun hakkı doldu) ve yeniden açıldı"
+                        },
+                        "duplicate": {
+                          "type": "boolean",
+                          "description": "true: işlem daha önce geri alınmıştı; şimdi hiçbir şey yazılmadı"
+                        },
+                        "rewardReady": {
+                          "type": "boolean"
+                        },
+                        "rewardsReady": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 1000
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "undone",
+                        "restored",
+                        "balance",
+                        "uses",
+                        "usesLeft",
+                        "status",
+                        "reopened",
+                        "duplicate",
+                        "rewardReady",
+                        "rewardsReady"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`VALIDATION` — Gönderilen bilgiler geçersiz<br>`MERCHANT_REQUIRED` — Hangi işletme?",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "VALIDATION": {
+                    "summary": "Gönderilen bilgiler geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "VALIDATION",
+                        "message": "Gönderilen bilgiler geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#VALIDATION"
+                      }
+                    }
+                  },
+                  "MERCHANT_REQUIRED": {
+                    "summary": "Hangi işletme?",
+                    "value": {
+                      "error": {
+                        "code": "MERCHANT_REQUIRED",
+                        "message": "Hangi işletme?",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#MERCHANT_REQUIRED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`UNAUTHENTICATED` — Kimlik gerekli<br>`INVALID_API_KEY` — API anahtarı geçersiz<br>`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz<br>`MFA_REQUIRED` — İki adımlı doğrulama kodu gerekli",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "summary": "Kimlik gerekli",
+                    "value": {
+                      "error": {
+                        "code": "UNAUTHENTICATED",
+                        "message": "Kimlik gerekli",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#UNAUTHENTICATED"
+                      }
+                    }
+                  },
+                  "INVALID_API_KEY": {
+                    "summary": "API anahtarı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "INVALID_API_KEY",
+                        "message": "API anahtarı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#INVALID_API_KEY"
+                      }
+                    }
+                  },
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  },
+                  "MFA_REQUIRED": {
+                    "summary": "İki adımlı doğrulama kodu gerekli",
+                    "value": {
+                      "error": {
+                        "code": "MFA_REQUIRED",
+                        "message": "İki adımlı doğrulama kodu gerekli",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#MFA_REQUIRED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`FORBIDDEN` — Yetki yok<br>`PLAN_FEATURE_MISSING` — Planınızda yok<br>`CREDENTIAL_NOT_ALLOWED` — Bu kimlik türü bu uç noktayı kullanamaz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "FORBIDDEN": {
+                    "summary": "Yetki yok",
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Yetki yok",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#FORBIDDEN"
+                      }
+                    }
+                  },
+                  "PLAN_FEATURE_MISSING": {
+                    "summary": "Planınızda yok",
+                    "value": {
+                      "error": {
+                        "code": "PLAN_FEATURE_MISSING",
+                        "message": "Planınızda yok",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#PLAN_FEATURE_MISSING"
+                      }
+                    }
+                  },
+                  "CREDENTIAL_NOT_ALLOWED": {
+                    "summary": "Bu kimlik türü bu uç noktayı kullanamaz",
+                    "value": {
+                      "error": {
+                        "code": "CREDENTIAL_NOT_ALLOWED",
+                        "message": "Bu kimlik türü bu uç noktayı kullanamaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#CREDENTIAL_NOT_ALLOWED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`PASS_NOT_FOUND` — Kart bulunamadı<br>`LOCATION_NOT_FOUND` — Şube bulunamadı<br>`ACTION_NOT_FOUND` — Geri alınacak işlem yok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "PASS_NOT_FOUND": {
+                    "summary": "Kart bulunamadı",
+                    "value": {
+                      "error": {
+                        "code": "PASS_NOT_FOUND",
+                        "message": "Kart bulunamadı",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 404,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#PASS_NOT_FOUND"
+                      }
+                    }
+                  },
+                  "LOCATION_NOT_FOUND": {
+                    "summary": "Şube bulunamadı",
+                    "value": {
+                      "error": {
+                        "code": "LOCATION_NOT_FOUND",
+                        "message": "Şube bulunamadı",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 404,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#LOCATION_NOT_FOUND"
+                      }
+                    }
+                  },
+                  "ACTION_NOT_FOUND": {
+                    "summary": "Geri alınacak işlem yok",
+                    "value": {
+                      "error": {
+                        "code": "ACTION_NOT_FOUND",
+                        "message": "Geri alınacak işlem yok",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 404,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#ACTION_NOT_FOUND"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`ACTION_AMBIGUOUS` — Bu notla birden çok işlem var<br>`ACTION_NOT_REVERSIBLE` — İşlem geri alınamaz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "ACTION_AMBIGUOUS": {
+                    "summary": "Bu notla birden çok işlem var",
+                    "value": {
+                      "error": {
+                        "code": "ACTION_AMBIGUOUS",
+                        "message": "Bu notla birden çok işlem var",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 409,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#ACTION_AMBIGUOUS"
+                      }
+                    }
+                  },
+                  "ACTION_NOT_REVERSIBLE": {
+                    "summary": "İşlem geri alınamaz",
+                    "value": {
+                      "error": {
+                        "code": "ACTION_NOT_REVERSIBLE",
+                        "message": "İşlem geri alınamaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 409,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#ACTION_NOT_REVERSIBLE"
                       }
                     }
                   }
@@ -6208,7 +6749,7 @@
                                   "live",
                                   "test"
                                 ],
-                                "description": "`test`: bir test ortamı (ADR 173). Buna `Rewloy-Merchant` başlığıyla açıkça seçerek ulaşılır; başlıksız istek onu seçmez."
+                                "description": "`test`: bir test ortamı. Buna `Rewloy-Merchant` başlığıyla açıkça seçerek ulaşılır; başlıksız istek onu seçmez."
                               },
                               "testOf": {
                                 "type": [
@@ -6221,7 +6762,7 @@
                               "currency": {
                                 "type": "string",
                                 "maxLength": 3,
-                                "description": "İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir (ADR 182)"
+                                "description": "İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir"
                               }
                             },
                             "required": [
@@ -7027,7 +7568,7 @@
                                       "live",
                                       "test"
                                     ],
-                                    "description": "`test`: bir test ortamı (ADR 173). Buna `Rewloy-Merchant` başlığıyla açıkça seçerek ulaşılır; başlıksız istek onu seçmez."
+                                    "description": "`test`: bir test ortamı. Buna `Rewloy-Merchant` başlığıyla açıkça seçerek ulaşılır; başlıksız istek onu seçmez."
                                   },
                                   "testOf": {
                                     "type": [
@@ -7040,7 +7581,7 @@
                                   "currency": {
                                     "type": "string",
                                     "maxLength": 3,
-                                    "description": "İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir (ADR 182)"
+                                    "description": "İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir"
                                   }
                                 },
                                 "required": [
@@ -7146,7 +7687,7 @@
                                       "till"
                                     ]
                                   },
-                                  "description": "Bir eklentinin ekranlarını açıp kapatmak için, yetkilerden okunur (ADR 178): `view` = `passes.read` ve `analytics.read` (kart durumu, programın sayıları ve son işlemleri; müşterinin kişisel bilgisi yok); `till` = `scan.use` tam olarak bir şubede (o şubenin kasası: `getPassTill`, `recordSale`, `passAction`). Birden çok şubede ya da her yerde `scan.use` taşıyan anahtarın tek bir kasası olmadığından `till` yazılmaz."
+                                  "description": "Bir eklentinin ekranlarını açıp kapatmak için, yetkilerden okunur: `view` = `passes.read` ve `analytics.read` (kart durumu, programın sayıları ve son işlemleri; müşterinin kişisel bilgisi yok); `till` = `scan.use` tam olarak bir şubede (o şubenin kasası: `getPassTill`, `recordSale`, `passAction`). Birden çok şubede ya da her yerde `scan.use` taşıyan anahtarın tek bir kasası olmadığından `till` yazılmaz."
                                 },
                                 "tillLocationId": {
                                   "type": [
@@ -7194,7 +7735,7 @@
                                 "currency": {
                                   "type": "string",
                                   "maxLength": 3,
-                                  "description": "İşletmenin para birimi (ISO 4217, ör. `TRY`, `EUR`): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir. Varsayılan `TRY`; para kartı verilene dek `PATCH /v1/business` ile değişir (ADR 182)"
+                                  "description": "İşletmenin para birimi (ISO 4217, ör. `TRY`, `EUR`): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir. Varsayılan `TRY`; para kartı verilene dek `PATCH /v1/business` ile değişir"
                                 }
                               },
                               "required": [
@@ -7467,7 +8008,7 @@
           "Kimlik"
         ],
         "summary": "Kart sahibine giriş kodu gönder",
-        "description": "Rewloy Cüzdan girişi: adrese 6 haneli bir kod (ve bir bağlantı) gider; ya da telefon numarasına WhatsApp'tan ya da SMS ile 6 haneli kod (bağlantı yok; `channel`). İkisi de 15 dakika geçerli ve tek kullanımlık. Gövdede `email` ya da `phone`dan yalnız biri.\n- Yanıttaki `request`, bu girişin uygulamadaki karşılığıdır (tarayıcıdaki çerezin yerine). Kodu **aynı `request`** ile `POST /v1/holder/sessions` gönderin: kod başka bir `request` ile ya da başka bir cihazda çalışmaz.\n- Yanıt, adresin ya da numaranın kayıtlı olup olmadığını **söylemez**: her biri için aynı 202 ve yeni bir `request`. Kartı ya da cüzdan hesabı olmayan adrese e-posta, hesabı ya da bir işletmede doğrulanmış kaydı olmayan numaraya mesaj gitmez; o `request` ile hiçbir kod tutmaz.\n- Beş yanlış kod adımı kapatır. Bir adrese saatte en fazla 10 kod gider; bir numaraya saatte 3, günde 6 kod, WhatsApp ve SMS birlikte (fazlası sessizce gönderilmez). IP başına saatte 20 istek; telefon için ayrıca IP başına saatte 10.\n- `phone`: telefonla giriş açık değilse `501 NOT_ENABLED`; Türkiye cep telefonu değilse `400 INVALID_PHONE`. `channel` (`whatsapp` ya da `sms`) verilmezse şu an açık olan ilk yol kullanılır (önce WhatsApp); istenen yol açık değilse `501 NOT_ENABLED`, bugünkü bütçesi dolduysa `503 PHONE_BUSY` — ikisinde de `details.channels` şu an açık olanlar (boşsa e-postayla girin). Yanıttaki `channel` kodun gittiği yoldur: WhatsApp kodu kendiliğinden dolmaz, kişiye \"Kodu kopyala\" ile yapıştırmasını söyleyin.\n- `previousToken`: bu kurulumun daha önceki `rwh_` oturumu (süresi dolmuş olsa da). Adres ya da numara o hesabınsa adres ve numara başına sınırlar uygulanmaz, böylece başkaları sizin kodlarınızı tüketemez. Çıkış yapılmış ya da kaldırılmış bir oturum bir şey kanıtlamaz.\n- `deviceName`: açılacak oturumun Cihazlarım'daki adı.\n- **Idempotency-Key** (isteğe bağlı, önerilir; 8–64 karakter, her yeni istek için yeni bir UUID): aynı anahtar ve aynı gövdeyle tekrar yeni kod GÖNDERMEZ, ilk yanıtı (aynı `request`) `Idempotent-Replayed: true` ile döndürür ve sınırlardan düşmez — bağlantısı kopan uygulama güvenle yineler. Aynı anahtar başka bir gövdeyle `422 IDEMPOTENCY_KEY_REUSED`; ilk istek sürerken `409 IDEMPOTENCY_IN_PROGRESS` (bir şey gönderilmez). Yanıt şifreli saklanır, 7 gün tekrar edilir; kodun kendisi 15 dakika geçerlidir, yeni kod için yeni anahtar gönderin. Oturumsuz çağrıda anahtar istemcinin IP adresine bağlıdır. Başlık yoksa her çağrı yeni bir kod ve yeni bir `request` demektir.\n- **Sözleşme değişikliği (ADR 150):** `request` yeni. E-postadaki bağlantı artık oturumu tek başına açmaz; bağlantıyı uygulamanız yakalarsa `linkToken` olarak yine aynı `request` ile gönderin.\n\n**Kimlik:** kimlik gerekmez.",
+        "description": "Rewloy Cüzdan girişi: adrese 6 haneli bir kod (ve bir bağlantı) gider; ya da telefon numarasına WhatsApp'tan ya da SMS ile 6 haneli kod (bağlantı yok; `channel`). İkisi de 15 dakika geçerli ve tek kullanımlık. Gövdede `email` ya da `phone`dan yalnız biri.\n- Yanıttaki `request`, bu girişin uygulamadaki karşılığıdır (tarayıcıdaki çerezin yerine). Kodu **aynı `request`** ile `POST /v1/holder/sessions` gönderin: kod başka bir `request` ile ya da başka bir cihazda çalışmaz.\n- Yanıt, adresin ya da numaranın kayıtlı olup olmadığını **söylemez**: her biri için aynı 202 ve yeni bir `request`. Kartı ya da cüzdan hesabı olmayan adrese e-posta, hesabı ya da bir işletmede doğrulanmış kaydı olmayan numaraya mesaj gitmez; o `request` ile hiçbir kod tutmaz.\n- Beş yanlış kod adımı kapatır. Bir adrese saatte en fazla 10 kod gider; bir numaraya saatte 3, günde 6 kod, WhatsApp ve SMS birlikte (fazlası sessizce gönderilmez). IP başına saatte 20 istek; telefon için ayrıca IP başına saatte 10.\n- `phone`: telefonla giriş açık değilse `501 NOT_ENABLED`; Türkiye cep telefonu değilse `400 INVALID_PHONE`. `channel` (`whatsapp` ya da `sms`) verilmezse şu an açık olan ilk yol kullanılır (önce WhatsApp); istenen yol açık değilse `501 NOT_ENABLED`, bugünkü bütçesi dolduysa `503 PHONE_BUSY` — ikisinde de `details.channels` şu an açık olanlar (boşsa e-postayla girin). Yanıttaki `channel` kodun gittiği yoldur: WhatsApp kodu kendiliğinden dolmaz, kişiye \"Kodu kopyala\" ile yapıştırmasını söyleyin.\n- `previousToken`: bu kurulumun daha önceki `rwh_` oturumu (süresi dolmuş olsa da). Adres ya da numara o hesabınsa adres ve numara başına sınırlar uygulanmaz, böylece başkaları sizin kodlarınızı tüketemez. Çıkış yapılmış ya da kaldırılmış bir oturum bir şey kanıtlamaz.\n- `deviceName`: açılacak oturumun Cihazlarım'daki adı.\n- **Idempotency-Key** (isteğe bağlı, önerilir; 8–64 karakter, her yeni istek için yeni bir UUID): aynı anahtar ve aynı gövdeyle tekrar yeni kod GÖNDERMEZ, ilk yanıtı (aynı `request`) `Idempotent-Replayed: true` ile döndürür ve sınırlardan düşmez — bağlantısı kopan uygulama güvenle yineler. Aynı anahtar başka bir gövdeyle `422 IDEMPOTENCY_KEY_REUSED`; ilk istek sürerken `409 IDEMPOTENCY_IN_PROGRESS` (bir şey gönderilmez). Yanıt şifreli saklanır, 7 gün tekrar edilir; kodun kendisi 15 dakika geçerlidir, yeni kod için yeni anahtar gönderin. Oturumsuz çağrıda anahtar istemcinin IP adresine bağlıdır. Başlık yoksa her çağrı yeni bir kod ve yeni bir `request` demektir.\n- **Sözleşme değişikliği:** `request` yeni. E-postadaki bağlantı artık oturumu tek başına açmaz; bağlantıyı uygulamanız yakalarsa `linkToken` olarak yine aynı `request` ile gönderin.\n\n**Kimlik:** kimlik gerekmez.",
         "x-credentials": [
           "public"
         ],
@@ -7479,9 +8020,10 @@
             "schema": {
               "type": "string",
               "minLength": 8,
-              "maxLength": 64
+              "maxLength": 64,
+              "pattern": "^[\\x20-\\x7E]+$"
             },
-            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür."
+            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür. 8–64 yazdırılabilir ASCII karakter (ş, ğ, ı gibi harfler `400 VALIDATION`); bu kimlik için tekil."
           }
         ],
         "requestBody": {
@@ -9596,7 +10138,7 @@
                                   "live",
                                   "test"
                                 ],
-                                "description": "`test`: bir test ortamı (ADR 173). Buna `Rewloy-Merchant` başlığıyla açıkça seçerek ulaşılır; başlıksız istek onu seçmez."
+                                "description": "`test`: bir test ortamı. Buna `Rewloy-Merchant` başlığıyla açıkça seçerek ulaşılır; başlıksız istek onu seçmez."
                               },
                               "testOf": {
                                 "type": [
@@ -9609,7 +10151,7 @@
                               "currency": {
                                 "type": "string",
                                 "maxLength": 3,
-                                "description": "İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir (ADR 182)"
+                                "description": "İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir"
                               }
                             },
                             "required": [
@@ -10537,7 +11079,7 @@
           "Kimlik"
         ],
         "summary": "Davet",
-        "description": "Davet e-postasındaki bağlantının son parçası (`/davet/<code>`): hangi işletme, hangi adres. Adresin Rewloy hesabı olup olmadığını söylemez (bağlantı daveti yapanda da vardır, ADR 181): hesabı olan kişi o hesapla giriş yapıp oturumuyla kabul eder, olmayan şifre belirleyerek.\n\n**Kimlik:** kimlik gerekmez.",
+        "description": "Davet e-postasındaki bağlantının son parçası (`/davet/<code>`): hangi işletme, hangi adres. Adresin Rewloy hesabı olup olmadığını söylemez (bağlantı daveti yapanda da vardır): hesabı olan kişi o hesapla giriş yapıp oturumuyla kabul eder, olmayan şifre belirleyerek.\n\n**Kimlik:** kimlik gerekmez.",
         "x-credentials": [
           "public"
         ],
@@ -10695,7 +11237,7 @@
           "Kimlik"
         ],
         "summary": "Daveti kabul et",
-        "description": "Koltuk ve roller verilir — daveti yapanın o anki yetkileriyle yeniden denetlenerek — ve oturum döner. Daveti yapan işletme sahiplerine bildirilir. **Davet hiçbir zaman mevcut bir hesabın şifresini sormaz** (bağlantı daveti yapanda da vardır; ADR 181):\n- **Adresin hesabı varsa:** kişi o hesapla girer (`POST /v1/auth/login`) ve bu çağrıyı kendi `rws_` oturumuyla, gövdesiz yapar; yanıt aynı oturumu güncel işletmeleriyle döndürür. Başka bir adresin oturumu `403 INVITE_OTHER_ACCOUNT`. Oturumsuz çağrı, şifreyle de olsa, `409 INVITE_SIGN_IN`.\n- **Hesabı yoksa:** oturumsuz, `password` (en az 10 karakter) ile hesap açılır ve yeni oturum döner. Adres davetle doğrulanmış sayılmaz: doğrulama bağlantısı e-postayla gider (kayıttaki gibi).\n- IP başına 15 dakikada 20 deneme.\n\n**Kimlik:** kimlik gerekmez, ekip oturumu.\n\nSalt-okunur hesapta da çalışır.",
+        "description": "Koltuk ve roller verilir — daveti yapanın o anki yetkileriyle yeniden denetlenerek — ve oturum döner. Daveti yapan işletme sahiplerine bildirilir. **Davet hiçbir zaman mevcut bir hesabın şifresini sormaz** (bağlantı daveti yapanda da vardır):\n- **Adresin hesabı varsa:** kişi o hesapla girer (`POST /v1/auth/login`) ve bu çağrıyı kendi `rws_` oturumuyla, gövdesiz yapar; yanıt aynı oturumu güncel işletmeleriyle döndürür. Başka bir adresin oturumu `403 INVITE_OTHER_ACCOUNT`. Oturumsuz çağrı, şifreyle de olsa, `409 INVITE_SIGN_IN`.\n- **Hesabı yoksa:** oturumsuz, `password` (en az 10 karakter) ile hesap açılır ve yeni oturum döner. Adres davetle doğrulanmış sayılmaz: doğrulama bağlantısı e-postayla gider (kayıttaki gibi).\n- IP başına 15 dakikada 20 deneme.\n\n**Kimlik:** kimlik gerekmez, ekip oturumu.\n\nSalt-okunur hesapta da çalışır.",
         "x-credentials": [
           "public",
           "staff"
@@ -10821,7 +11363,7 @@
                                   "live",
                                   "test"
                                 ],
-                                "description": "`test`: bir test ortamı (ADR 173). Buna `Rewloy-Merchant` başlığıyla açıkça seçerek ulaşılır; başlıksız istek onu seçmez."
+                                "description": "`test`: bir test ortamı. Buna `Rewloy-Merchant` başlığıyla açıkça seçerek ulaşılır; başlıksız istek onu seçmez."
                               },
                               "testOf": {
                                 "type": [
@@ -10834,7 +11376,7 @@
                               "currency": {
                                 "type": "string",
                                 "maxLength": 3,
-                                "description": "İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir (ADR 182)"
+                                "description": "İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir"
                               }
                             },
                             "required": [
@@ -15737,7 +16279,7 @@
                       "format": "uuid"
                     },
                     "maxItems": 100,
-                    "description": "Kasanın bu programın kartlarında işlem yapabileceği şubeler (ADR 139); boş = hepsi. Başka şubede `WRONG_LOCATION` döner; online siparişler etkilenmez."
+                    "description": "Kasanın bu programın kartlarında işlem yapabileceği şubeler; boş = hepsi. Başka şubede `WRONG_LOCATION` döner; online siparişler etkilenmez."
                   },
                   "signupFields": {
                     "type": "array",
@@ -16089,7 +16631,7 @@
                       "kind",
                       "value"
                     ],
-                    "description": "Kupon: online mağazada kullanıldığında değeri (ADR 179). Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer."
+                    "description": "Kupon: online mağazada kullanıldığında değeri. Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer."
                   }
                 },
                 "required": [
@@ -17565,7 +18107,7 @@
                       "format": "uuid"
                     },
                     "maxItems": 100,
-                    "description": "Kasanın bu programın kartlarında işlem yapabileceği şubeler (ADR 139); boş = hepsi. Başka şubede `WRONG_LOCATION` döner; online siparişler etkilenmez."
+                    "description": "Kasanın bu programın kartlarında işlem yapabileceği şubeler; boş = hepsi. Başka şubede `WRONG_LOCATION` döner; online siparişler etkilenmez."
                   },
                   "signupFields": {
                     "type": "array",
@@ -17917,7 +18459,7 @@
                       "kind",
                       "value"
                     ],
-                    "description": "Kupon: online mağazada kullanıldığında değeri (ADR 179). Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer."
+                    "description": "Kupon: online mağazada kullanıldığında değeri. Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer."
                   }
                 },
                 "minProperties": 1
@@ -18854,7 +19396,7 @@
                           "format": "uuid"
                         },
                         "maxItems": 100,
-                        "description": "Kasanın bu programın kartlarında işlem yapabileceği şubeler (ADR 139); boş = hepsi. Başka şubede `WRONG_LOCATION` döner; online siparişler etkilenmez."
+                        "description": "Kasanın bu programın kartlarında işlem yapabileceği şubeler; boş = hepsi. Başka şubede `WRONG_LOCATION` döner; online siparişler etkilenmez."
                       },
                       "signupFields": {
                         "type": "array",
@@ -19206,7 +19748,7 @@
                           "kind",
                           "value"
                         ],
-                        "description": "Kupon: online mağazada kullanıldığında değeri (ADR 179). Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer."
+                        "description": "Kupon: online mağazada kullanıldığında değeri. Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer."
                       }
                     },
                     "required": [
@@ -22551,7 +23093,7 @@
           "Müşteriler"
         ],
         "summary": "Müşteriler",
-        "description": "Kimliğin şube kapsamındaki müşteriler, kartlarıyla. Paneldeki bütün süzgeçler burada da vardır. Bir müşteri, kapsamınızdaki bir şubede kartı ya da ziyareti varsa görünür. Her müşterinin adresleri ve numaraları `identifiers` içinde, durumlarıyla: doğrulanmış olanı yalnız müşteri değiştirir; API bir adresi ya da numarayı değiştirmez (ADR 168).\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `customers.read` — Müşterileri görüntüleme.",
+        "description": "Kimliğin şube kapsamındaki müşteriler, kartlarıyla. Paneldeki bütün süzgeçler burada da vardır. Bir müşteri, kapsamınızdaki bir şubede kartı ya da ziyareti varsa görünür. Her müşterinin adresleri ve numaraları `identifiers` içinde, durumlarıyla: doğrulanmış olanı yalnız müşteri değiştirir; API bir adresi ya da numarayı değiştirmez.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `customers.read` — Müşterileri görüntüleme.",
         "x-permission": "customers.read",
         "x-credentials": [
           "key",
@@ -22760,7 +23302,7 @@
                                 "verifiedAt"
                               ]
                             },
-                            "description": "Kişinin bu işletmedeki adresleri ve numaraları, durumlarıyla: önce adresler, sonra numaralar. Yalnız bu işletmenin kaydı; kişinin Rewloy Cüzdan hesabı ya da başka işletmeleri hiçbir zaman (ADR 168)"
+                            "description": "Kişinin bu işletmedeki adresleri ve numaraları, durumlarıyla: önce adresler, sonra numaralar. Yalnız bu işletmenin kaydı; kişinin Rewloy Cüzdan hesabı ya da başka işletmeleri hiçbir zaman"
                           },
                           "firstName": {
                             "type": [
@@ -23167,7 +23709,7 @@
           "Müşteriler"
         ],
         "summary": "Müşteriler, kart kart",
-        "description": "Aynı süzgeçlerle, her satırda bir kart (panelde \"kart kart\" görünüm). `q` bir kişiyi bulur ve kişinin bütün kartları gelir; `q` bir kart numarası (ya da başı, en az 4 karakter, tire ve büyük-küçük harf önemsiz) olarak da okunur: numarası onunla başlayan kart `matched: true` taşır ve listenin başına gelir, tam eşleşen en başa (ADR 182). Bir kartı numarasıyla okumak için `GET /v1/passes/{serial}` daha doğrudur.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `customers.read` — Müşterileri görüntüleme.",
+        "description": "Aynı süzgeçlerle, her satırda bir kart (panelde \"kart kart\" görünüm). `q` bir kişiyi bulur ve kişinin bütün kartları gelir; `q` bir kart numarası (ya da başı, en az 4 karakter, tire ve büyük-küçük harf önemsiz) olarak da okunur: numarası onunla başlayan kart `matched: true` taşır ve listenin başına gelir, tam eşleşen en başa. Bir kartı numarasıyla okumak için `GET /v1/passes/{serial}` daha doğrudur.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `customers.read` — Müşterileri görüntüleme.",
         "x-permission": "customers.read",
         "x-credentials": [
           "key",
@@ -23429,7 +23971,7 @@
                                 "verifiedAt"
                               ]
                             },
-                            "description": "Kişinin bu işletmedeki adresleri ve numaraları, durumlarıyla: önce adresler, sonra numaralar. Yalnız bu işletmenin kaydı; kişinin Rewloy Cüzdan hesabı ya da başka işletmeleri hiçbir zaman (ADR 168)"
+                            "description": "Kişinin bu işletmedeki adresleri ve numaraları, durumlarıyla: önce adresler, sonra numaralar. Yalnız bu işletmenin kaydı; kişinin Rewloy Cüzdan hesabı ya da başka işletmeleri hiçbir zaman"
                           },
                           "matched": {
                             "type": "boolean",
@@ -23816,7 +24358,7 @@
                               "verifiedAt"
                             ]
                           },
-                          "description": "Kişinin bu işletmedeki adresleri ve numaraları, durumlarıyla: önce adresler, sonra numaralar. Yalnız bu işletmenin kaydı; kişinin Rewloy Cüzdan hesabı ya da başka işletmeleri hiçbir zaman (ADR 168)"
+                          "description": "Kişinin bu işletmedeki adresleri ve numaraları, durumlarıyla: önce adresler, sonra numaralar. Yalnız bu işletmenin kaydı; kişinin Rewloy Cüzdan hesabı ya da başka işletmeleri hiçbir zaman"
                         },
                         "phone": {
                           "type": [
@@ -23858,7 +24400,7 @@
                               "verifiedAt"
                             ]
                           },
-                          "description": "**Kullanımdan kalkıyor:** 5 Nisan 2027 tarihine kadar gelir; yerine `identifiers`. Kişinin gelen kodla doğruladığı numaralar (Rewloy Cüzdan, ADR 164): `phone`dan ayrı; `identifiers` içindeki numaraların aynısı",
+                          "description": "**Kullanımdan kalkıyor:** 5 Nisan 2027 tarihine kadar gelir; yerine `identifiers`. Kişinin gelen kodla doğruladığı numaralar (Rewloy Cüzdan): `phone`dan ayrı; `identifiers` içindeki numaraların aynısı",
                           "deprecated": true,
                           "x-deprecation": {
                             "since": "2026-10-03",
@@ -24519,7 +25061,7 @@
                           "kind": {
                             "type": "string",
                             "maxLength": 60,
-                            "description": "earn, redeem, spend, load, …; hold, release, refund (online ödeme kodu, ADR 179); visit; campaign, automation:<tür>, sequence; issued; verified:phone; changed:email, changed:phone"
+                            "description": "earn, redeem, spend, load, …; hold, release, refund (online ödeme kodu); visit; campaign, automation:<tür>, sequence; issued; verified:phone; changed:email, changed:phone"
                           },
                           "group": {
                             "type": "string",
@@ -25238,7 +25780,7 @@
           "Müşteriler"
         ],
         "summary": "Müşteriyi engelle",
-        "description": "Müşterinin e-postasını ve doğrulanmış numaralarını engelli listesine ekler (ADR 168): bunlardan biriyle yeni kart alınamaz; Rewloy Cüzdan'da aynı hesap, bunlardan birini tuttuğu sürece, başka bir adresi ya da numarasıyla da alamaz. Yazılan (doğrulanmamış) telefon engellenmez: kimse kanıtlamadı, başkasının olabilir. `endCards: true` ile açık kartları da kapatılır (her cüzdana bir kez haber gider). Neden kayda geçer; adres ya da numara değil, özeti saklanır. Ne engellendiyse `entries` içinde; kaldırmak: `DELETE /v1/blocked-emails/{hash}` ya da `DELETE /v1/blocked-phones/{hash}`.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `customers.manage` — Müşteri yönetimi.",
+        "description": "Müşterinin e-postasını ve doğrulanmış numaralarını engelli listesine ekler: bunlardan biriyle yeni kart alınamaz; Rewloy Cüzdan'da aynı hesap, bunlardan birini tuttuğu sürece, başka bir adresi ya da numarasıyla da alamaz. Yazılan (doğrulanmamış) telefon engellenmez: kimse kanıtlamadı, başkasının olabilir. `endCards: true` ile açık kartları da kapatılır (her cüzdana bir kez haber gider). Neden kayda geçer; adres ya da numara değil, özeti saklanır. Ne engellendiyse `entries` içinde; kaldırmak: `DELETE /v1/blocked-emails/{hash}` ya da `DELETE /v1/blocked-phones/{hash}`.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `customers.manage` — Müşteri yönetimi.",
         "x-permission": "customers.manage",
         "x-credentials": [
           "key",
@@ -27243,7 +27785,7 @@
           "Müşteriler"
         ],
         "summary": "Engellenen numaralar",
-        "description": "Yeniden eskiye (ADR 168). Numaralar anahtarlı özet ve maskeli ipucuyla görünür; bir numaranın listede olup olmadığını `GET /v1/blocked-phones/check` ile sorun.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `customers.read` — Müşterileri görüntüleme.",
+        "description": "Yeniden eskiye. Numaralar anahtarlı özet ve maskeli ipucuyla görünür; bir numaranın listede olup olmadığını `GET /v1/blocked-phones/check` ile sorun.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `customers.read` — Müşterileri görüntüleme.",
         "x-permission": "customers.read",
         "x-credentials": [
           "key",
@@ -28930,7 +29472,7 @@
           "Kodlar"
         ],
         "summary": "Kod üret",
-        "description": "Bir kod üretir; müşteri kodu girerek ya da QR'ı okutarak kartını kendisi alır (`claimUrl`). Türe göre alanlar:\n| tür | alanlar |\n|---|---|\n| hediye kartı | `valueMinor` zorunlu (100 – 100.000.000 kuruş); kullanım her zaman sınırsız, bakiye bitene kadar |\n| kupon | ya `offerText` (ör. \"1 tatlı\") ya `valueMinor` (100 – 10.000.000 kuruş indirim); `usage`; isteğe bağlı `onlineValue` (online mağazadaki değeri: `{ kind: amount, value: kuruş }` ya da `{ kind: percent, value: 1–100 }`, ADR 179) |\n| indirim kartı | `percent` (yoksa programın oranı); `usage` |\n\n`usage`: `once` tek kullanım, `limited` + `usageLimit` (2–1000), `unlimited`. `validUntil` bir gün (YYYY-AA-GG) ise o günün sonuna kadar (Türkiye saati) geçerlidir. Başka türün alanı reddedilir. Planda `instruments` özelliği gerekir.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `instruments.issue` — Hediye kartı ve kupon üretme.",
+        "description": "Bir kod üretir; müşteri kodu girerek ya da QR'ı okutarak kartını kendisi alır (`claimUrl`). Türe göre alanlar:\n| tür | alanlar |\n|---|---|\n| hediye kartı | `valueMinor` zorunlu (100 – 100.000.000 kuruş); kullanım her zaman sınırsız, bakiye bitene kadar |\n| kupon | ya `offerText` (ör. \"1 tatlı\") ya `valueMinor` (100 – 10.000.000 kuruş indirim); `usage`; isteğe bağlı `onlineValue` (online mağazadaki değeri: `{ kind: amount, value: kuruş }` ya da `{ kind: percent, value: 1–100 }`) |\n| indirim kartı | `percent` (yoksa programın oranı); `usage` |\n\n`usage`: `once` tek kullanım, `limited` + `usageLimit` (2–1000), `unlimited`. `validUntil` bir gün (YYYY-AA-GG) ise o günün sonuna kadar (Türkiye saati) geçerlidir. Başka türün alanı reddedilir. Planda `instruments` özelliği gerekir.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `instruments.issue` — Hediye kartı ve kupon üretme.",
         "x-permission": "instruments.issue",
         "x-credentials": [
           "key",
@@ -29058,7 +29600,7 @@
                       "format": "uuid"
                     },
                     "maxItems": 100,
-                    "description": "Kartların kasada kabul edileceği şubeler (ADR 139); boş ya da yok = programın kuralı. Şube kapsamlı bir kimlik yalnız kendi şubelerini seçebilir."
+                    "description": "Kartların kasada kabul edileceği şubeler; boş ya da yok = programın kuralı. Şube kapsamlı bir kimlik yalnız kendi şubelerini seçebilir."
                   }
                 }
               }
@@ -29248,7 +29790,7 @@
                             "type": "string",
                             "format": "uuid"
                           },
-                          "description": "Kodun kendi şube listesi; null = programın kuralı (ADR 139)"
+                          "description": "Kodun kendi şube listesi; null = programın kuralı"
                         },
                         "branchNames": {
                           "type": "array",
@@ -29290,7 +29832,7 @@
                             "kind",
                             "value"
                           ],
-                          "description": "Kupon: online mağazada kullanıldığındaki değeri (ADR 179); null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada"
+                          "description": "Kupon: online mağazada kullanıldığındaki değeri; null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada"
                         }
                       },
                       "required": [
@@ -29866,7 +30408,7 @@
                             "type": "string",
                             "format": "uuid"
                           },
-                          "description": "Kodun kendi şube listesi; null = programın kuralı (ADR 139)"
+                          "description": "Kodun kendi şube listesi; null = programın kuralı"
                         },
                         "branchNames": {
                           "type": "array",
@@ -29908,7 +30450,7 @@
                             "kind",
                             "value"
                           ],
-                          "description": "Kupon: online mağazada kullanıldığındaki değeri (ADR 179); null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada"
+                          "description": "Kupon: online mağazada kullanıldığındaki değeri; null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada"
                         }
                       },
                       "required": [
@@ -30202,7 +30744,7 @@
           "Kodlar"
         ],
         "summary": "Koddan verilen kartlar",
-        "description": "Yeniden eskiye; `status` ile süzülür. Hediye kartında `balance` kalan tutardır (kuruş). Kimliğin `customers.read` yetkisi de varsa kartı alanın bu işletmedeki adresleri ve numaraları `identifiers` içinde gelir, durumlarıyla: numarayla alınan kartın kişisi numarasıyla tanınır (ADR 168). Bu yetki yoksa ya da kişi kimliğin şube kapsamı dışındaysa `identifiers` gelmez: müşterinin iletişim bilgisi müşteri okuma yetkisiyle görülür.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `instruments.read` — Hediye kartı ve kuponları görüntüleme.",
+        "description": "Yeniden eskiye; `status` ile süzülür. Hediye kartında `balance` kalan tutardır (kuruş). Kimliğin `customers.read` yetkisi de varsa kartı alanın bu işletmedeki adresleri ve numaraları `identifiers` içinde gelir, durumlarıyla: numarayla alınan kartın kişisi numarasıyla tanınır. Bu yetki yoksa ya da kişi kimliğin şube kapsamı dışındaysa `identifiers` gelmez: müşterinin iletişim bilgisi müşteri okuma yetkisiyle görülür.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `instruments.read` — Hediye kartı ve kuponları görüntüleme.",
         "x-permission": "instruments.read",
         "x-credentials": [
           "key",
@@ -30301,7 +30843,7 @@
                               "null"
                             ],
                             "maxLength": 254,
-                            "description": "**Kullanımdan kalkıyor:** 5 Nisan 2027 tarihine kadar gelir; yerine `identifiers`. Kartı alanın adresi; `identifiers` gibi yalnız `customers.read` yetkisiyle ve kimliğin şube kapsamındaki kişiler için gelir, yoksa null (ADR 181). Yerine geçen `identifiers`.",
+                            "description": "**Kullanımdan kalkıyor:** 5 Nisan 2027 tarihine kadar gelir; yerine `identifiers`. Kartı alanın adresi; `identifiers` gibi yalnız `customers.read` yetkisiyle ve kimliğin şube kapsamındaki kişiler için gelir, yoksa null. Yerine geçen `identifiers`.",
                             "deprecated": true,
                             "x-deprecation": {
                               "since": "2026-10-03",
@@ -30349,7 +30891,7 @@
                                 "verifiedAt"
                               ]
                             },
-                            "description": "Kişinin bu işletmedeki adresleri ve numaraları, durumlarıyla: önce adresler, sonra numaralar. Yalnız bu işletmenin kaydı; kişinin Rewloy Cüzdan hesabı ya da başka işletmeleri hiçbir zaman (ADR 168). Yalnız `customers.read` yetkisiyle, kimliğin şube kapsamındaki kişiler için gelir"
+                            "description": "Kişinin bu işletmedeki adresleri ve numaraları, durumlarıyla: önce adresler, sonra numaralar. Yalnız bu işletmenin kaydı; kişinin Rewloy Cüzdan hesabı ya da başka işletmeleri hiçbir zaman. Yalnız `customers.read` yetkisiyle, kimliğin şube kapsamındaki kişiler için gelir"
                           },
                           "status": {
                             "type": "string",
@@ -31222,7 +31764,7 @@
                             "type": "string",
                             "format": "uuid"
                           },
-                          "description": "Kodun kendi şube listesi; null = programın kuralı (ADR 139)"
+                          "description": "Kodun kendi şube listesi; null = programın kuralı"
                         },
                         "branchNames": {
                           "type": "array",
@@ -31264,7 +31806,7 @@
                             "kind",
                             "value"
                           ],
-                          "description": "Kupon: online mağazada kullanıldığındaki değeri (ADR 179); null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada"
+                          "description": "Kupon: online mağazada kullanıldığındaki değeri; null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada"
                         }
                       },
                       "required": [
@@ -36955,9 +37497,10 @@
             "schema": {
               "type": "string",
               "minLength": 8,
-              "maxLength": 64
+              "maxLength": 64,
+              "pattern": "^[\\x20-\\x7E]+$"
             },
-            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür."
+            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür. 8–64 yazdırılabilir ASCII karakter (ş, ğ, ı gibi harfler `400 VALIDATION`); bu kimlik için tekil."
           }
         ],
         "requestBody": {
@@ -49086,7 +49629,7 @@
           "Analitik"
         ],
         "summary": "Analitik",
-        "description": "Son 7, 30 ya da 90 günün göstergeleri: açık kartlar, yeni kartlar, ziyaretler, ziyaret eden kişiler ve bunlardan dönen (2+ ziyaret), ödüller; günlük ziyaretler; haftalık yeni ve dönen ziyaretçiler; program başına kart → kullanım → ödül hunisi; şubeler; en sık gelen müşteriler (yalnız `customers.read` ile). Apple Cüzdan'daki kartlar ve konum hatırlatması taşıyanlar. `programId` ile tek bir programın sayıları (ADR 178); kapsamı programlarla sınırlı bir kimlik yalnız kendi programlarını görür. Bir mağaza eklentisinin anahtarına müşteri adı gelmez.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `analytics.read` — Analitik görüntüleme.",
+        "description": "Son 7, 30 ya da 90 günün göstergeleri: açık kartlar, yeni kartlar, ziyaretler, ziyaret eden kişiler ve bunlardan dönen (2+ ziyaret), ödüller; günlük ziyaretler; haftalık yeni ve dönen ziyaretçiler; program başına kart → kullanım → ödül hunisi; şubeler; en sık gelen müşteriler (yalnız `customers.read` ile). Apple Cüzdan'daki kartlar ve konum hatırlatması taşıyanlar. `programId` ile tek bir programın sayıları; kapsamı programlarla sınırlı bir kimlik yalnız kendi programlarını görür. Bir mağaza eklentisinin anahtarına müşteri adı gelmez.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `analytics.read` — Analitik görüntüleme.",
         "x-permission": "analytics.read",
         "x-credentials": [
           "key",
@@ -49699,7 +50242,7 @@
           "Analitik"
         ],
         "summary": "İşlem kaydı: kasa",
-        "description": "Kartlarda yapılan her işlem, yeniden eskiye: damga, puan, ödül, harcama, yükleme, ziyaret, kupon kullanımı… kim (ekip üyesi, API anahtarı ya da sistem), nerede, hangi kart. `day` işletmenin takvim günüdür. Planda `auditlog` özelliği gerekir. `limit` en fazla 100. Kapsamı programlarla sınırlı bir kimlik (ör. mağaza eklentisinin anahtarı) yalnız kendi programlarının kartlarını görür (ADR 178). Bir mağaza eklentisinin anahtarına kişisel veri gelmez: ekip üyesi `actor` yerine \"ekip üyesi\" yazar, `personId` null'dır.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `analytics.read` — Analitik görüntüleme.",
+        "description": "Kartlarda yapılan her işlem, yeniden eskiye: damga, puan, ödül, harcama, yükleme, ziyaret, kupon kullanımı… kim (ekip üyesi, API anahtarı ya da sistem), nerede, hangi kart. `day` işletmenin takvim günüdür. Planda `auditlog` özelliği gerekir. `limit` en fazla 200. `at` Rewloy'nun kaydı yazdığı andır (sıra da ona göredir); sonradan yazılan bir satışın olduğu an `occurredAt`'tadır. Bir geri alma `kind: \"adjust\"` olarak görünür (kuponun ya da indirim kartının geri verilen kullanımı: `delta: 1`, `unit: null`). Kapsamı programlarla sınırlı bir kimlik (ör. mağaza eklentisinin anahtarı) yalnız kendi programlarının kartlarını görür. Bir mağaza eklentisinin anahtarına kişisel veri gelmez: ekip üyesi `actor` yerine \"ekip üyesi\" yazar, `personId` null'dır.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `analytics.read` — Analitik görüntüleme.",
         "x-permission": "analytics.read",
         "x-credentials": [
           "key",
@@ -49802,7 +50345,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 100,
+              "maximum": 200,
               "default": 50
             }
           },
@@ -49895,6 +50438,14 @@
                           "actorKind": {
                             "type": "string",
                             "maxLength": 20
+                          },
+                          "occurredAt": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date-time",
+                            "description": "Satış sonradan yazıldıysa (`recordSale`'in `occurredAt`'ı) olduğu an; değilse null (olduğu an `at`)."
                           }
                         },
                         "required": [
@@ -51178,7 +51729,7 @@
           "Analitik"
         ],
         "summary": "CSV indir",
-        "description": "Kişisel verinin sistemden çıktığı an; bu yüzden **yalnız ekip oturumuyla** ve oturumu açan kişinin şifresiyle (`password`) yapılır — API anahtarıyla yapılamaz. Saatte en fazla 20; her biri kayda geçer (satır sayısı, kapsam, dönem).\n- `kind: customers` müşteri listesi (`customers.export`), `kind: ledger` son `days` günün işlemleri (`analytics.export`, 1–366).\n- Müşteri listesinde e-posta ve telefon durumlarıyla ayrı sütunlardadır (ADR 168): `E-posta doğrulandı` (evet/hayır: müşteri adresi kendi koduyla doğruladı mı), `Doğrulanmış telefon` (yalnız müşterinin kendi koduyla doğruladığı numaralar), `Yazılan telefon (doğrulanmamış)` (formda, kasada ya da API ile yazılan; doğrulanmış bir numarayla aynıysa boş). Numaralar 0532 123 45 67 biçiminde.\n- Türkçe Excel için: UTF-8 BOM, `;` ayraç, CRLF. `=`, `+`, `-`, `@` ile başlayan hücreler formül olarak çalışmasın diye `'` ile başlar.\n\n**Kimlik:** ekip oturumu.\n\n**Yetki:** `customers.export` — Müşteri verisini dışa aktarma.",
+        "description": "Kişisel verinin sistemden çıktığı an; bu yüzden **yalnız ekip oturumuyla** ve oturumu açan kişinin şifresiyle (`password`) yapılır — API anahtarıyla yapılamaz. Saatte en fazla 20; her biri kayda geçer (satır sayısı, kapsam, dönem).\n- `kind: customers` müşteri listesi (`customers.export`), `kind: ledger` son `days` günün işlemleri (`analytics.export`, 1–366).\n- Müşteri listesinde e-posta ve telefon durumlarıyla ayrı sütunlardadır: `E-posta doğrulandı` (evet/hayır: müşteri adresi kendi koduyla doğruladı mı), `Doğrulanmış telefon` (yalnız müşterinin kendi koduyla doğruladığı numaralar), `Yazılan telefon (doğrulanmamış)` (formda, kasada ya da API ile yazılan; doğrulanmış bir numarayla aynıysa boş). Numaralar 0532 123 45 67 biçiminde.\n- Türkçe Excel için: UTF-8 BOM, `;` ayraç, CRLF. `=`, `+`, `-`, `@` ile başlayan hücreler formül olarak çalışmasın diye `'` ile başlar.\n\n**Kimlik:** ekip oturumu.\n\n**Yetki:** `customers.export` — Müşteri verisini dışa aktarma.",
         "x-permission": "customers.export",
         "x-credentials": [
           "staff"
@@ -58670,7 +59221,7 @@
                                     "till"
                                   ]
                                 },
-                                "description": "Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
+                                "description": "Anahtarın bağlantının dışında yapabildikleri: `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
                               },
                               "tillLocationId": {
                                 "type": [
@@ -58773,7 +59324,7 @@
                               "refundReverses",
                               "holdDays"
                             ],
-                            "description": "Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."
+                            "description": "Ödeme adımındaki kart kodlarının ayarları. `PATCH /v1/shops/{id}/settings` değiştirir."
                           },
                           "accepts": {
                             "type": "object",
@@ -59391,7 +59942,7 @@
                                   "till"
                                 ]
                               },
-                              "description": "Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
+                              "description": "Anahtarın bağlantının dışında yapabildikleri: `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
                             },
                             "tillLocationId": {
                               "type": [
@@ -59494,7 +60045,7 @@
                             "refundReverses",
                             "holdDays"
                           ],
-                          "description": "Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."
+                          "description": "Ödeme adımındaki kart kodlarının ayarları. `PATCH /v1/shops/{id}/settings` değiştirir."
                         },
                         "accepts": {
                           "type": "object",
@@ -60164,7 +60715,7 @@
                                   "till"
                                 ]
                               },
-                              "description": "Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
+                              "description": "Anahtarın bağlantının dışında yapabildikleri: `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
                             },
                             "tillLocationId": {
                               "type": [
@@ -60267,7 +60818,7 @@
                             "refundReverses",
                             "holdDays"
                           ],
-                          "description": "Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."
+                          "description": "Ödeme adımındaki kart kodlarının ayarları. `PATCH /v1/shops/{id}/settings` değiştirir."
                         },
                         "accepts": {
                           "type": "object",
@@ -60885,7 +61436,7 @@
                                   "till"
                                 ]
                               },
-                              "description": "Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
+                              "description": "Anahtarın bağlantının dışında yapabildikleri: `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
                             },
                             "tillLocationId": {
                               "type": [
@@ -60988,7 +61539,7 @@
                             "refundReverses",
                             "holdDays"
                           ],
-                          "description": "Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."
+                          "description": "Ödeme adımındaki kart kodlarının ayarları. `PATCH /v1/shops/{id}/settings` değiştirir."
                         },
                         "accepts": {
                           "type": "object",
@@ -62123,7 +62674,7 @@
                           },
                           "view": {
                             "type": "boolean",
-                            "description": "Kurulacak anahtar Görüntüleme yetkisini alır mı (ADR 178)"
+                            "description": "Kurulacak anahtar Görüntüleme yetkisini alır mı"
                           },
                           "tillLocationId": {
                             "type": [
@@ -62131,7 +62682,7 @@
                               "null"
                             ],
                             "format": "uuid",
-                            "description": "Kurulacak anahtarın kasası bu şubede açılır; null = kasa kapalı (ADR 178)"
+                            "description": "Kurulacak anahtarın kasası bu şubede açılır; null = kasa kapalı"
                           },
                           "tillLocationName": {
                             "type": [
@@ -62380,7 +62931,7 @@
           "Entegrasyonlar"
         ],
         "summary": "Mağaza eklentisi için bağlantı kodu al",
-        "description": "WooCommerce'teki Rewloy eklentisine yapıştırılacak **tek kullanımlık** kod. Eklenti onu `POST /v1/shops/connect` ile bir kez verir ve bir yanıtta bağlantıyı, bağlantının sırrını ve yalnız bu bağlantıya bağlı dar yetkili bir API anahtarını (\"E-ticaret\" rolü) alır; mağazada güçlü bir anahtar durmaz.\n- Kod **yalnız bu yanıtta** görünür; Rewloy yalnız özetini saklar. 15 dakika geçerlidir.\n- Kodu bir kişi alır (ekip oturumu; bir anahtar anahtar üretemez), `apikeys.manage`, kartın programında mağaza bağlantısı yetkisi ve — elle anahtar oluştururken olduğu gibi — `team.manage` ile (anahtarın yetkisi o kişiden verilen bir roldür; kişi E-ticaret rolünün yetkilerini tüm şubelerde taşımalıdır), `api` ve `ecommerce` özellikli bir planda. Kod bir API anahtarı ürettiği için kişinin şifresi yeniden istenir (`password`), anahtar oluştururken olduğu gibi. Bağlantı ve anahtar, kod kullanıldığı anda bu kişinin yetkileriyle kurulur: kişi o arada yetkisini kaybettiyse hiçbir şey kurulmaz.\n- Kural alanları `POST /v1/shops` ile aynıdır. En fazla 5 bağlantı ve aynı anda en fazla 5 bekleyen kod.\n- **Eklentinin yetkileri** (ADR 178), kodu alan kişi seçer; sonra bağlantının sayfasından ya da `PUT /v1/shops/{id}/plugin-abilities` ile değişir:\n  - `view` (Görüntüleme; bu çağrıda gönderilmezse kapalı, panelin formunda işaretli gelir): bağlantının programında `passes.read` ve `analytics.read` — kartın durumu (`GET /v1/passes/{serial}`), programın sayıları (`GET /v1/analytics?programId=`) ve kartlardaki son işlemler (`GET /v1/activity`). Müşterinin adı, e-postası ya da telefonu gelmez; ekip üyesinin e-postası da.\n  - `tillLocationId` (Kasa, varsayılan kapalı): bu tek şubede ve bağlantının programında `scan.use` — `GET /v1/passes/{serial}/till`, `POST …/sale`, `POST …/actions`. Hediye kartı yüklemek (`load`) yine `instruments.issue` ister ve verilmez. Kapalı başlar: açıkken WooCommerce'i yönetebilen herkes o şubede müşterilerin bakiyesini harcatabilir.\n  - Kişi bu yetkileri verebilmelidir (`team.manage` ve alt küme kuralı: Görüntüleme yetkilerini tüm şubelerde, `scan.use`'u o şubede taşımalı).\n\n**Kimlik:** ekip oturumu.\n\n**Yetki:** `apikeys.manage` — API anahtarı yönetimi.",
+        "description": "WooCommerce'teki Rewloy eklentisine yapıştırılacak **tek kullanımlık** kod. Eklenti onu `POST /v1/shops/connect` ile bir kez verir ve bir yanıtta bağlantıyı, bağlantının sırrını ve yalnız bu bağlantıya bağlı dar yetkili bir API anahtarını (\"E-ticaret\" rolü) alır; mağazada güçlü bir anahtar durmaz.\n- Kod **yalnız bu yanıtta** görünür; Rewloy yalnız özetini saklar. 15 dakika geçerlidir.\n- Kodu bir kişi alır (ekip oturumu; bir anahtar anahtar üretemez), `apikeys.manage`, kartın programında mağaza bağlantısı yetkisi ve — elle anahtar oluştururken olduğu gibi — `team.manage` ile (anahtarın yetkisi o kişiden verilen bir roldür; kişi E-ticaret rolünün yetkilerini tüm şubelerde taşımalıdır), `api` ve `ecommerce` özellikli bir planda. Kod bir API anahtarı ürettiği için kişinin şifresi yeniden istenir (`password`), anahtar oluştururken olduğu gibi. Bağlantı ve anahtar, kod kullanıldığı anda bu kişinin yetkileriyle kurulur: kişi o arada yetkisini kaybettiyse hiçbir şey kurulmaz.\n- Kural alanları `POST /v1/shops` ile aynıdır. En fazla 5 bağlantı ve aynı anda en fazla 5 bekleyen kod.\n- **Eklentinin yetkileri**, kodu alan kişi seçer; sonra bağlantının sayfasından ya da `PUT /v1/shops/{id}/plugin-abilities` ile değişir:\n  - `view` (Görüntüleme; bu çağrıda gönderilmezse kapalı, panelin formunda işaretli gelir): bağlantının programında `passes.read` ve `analytics.read` — kartın durumu (`GET /v1/passes/{serial}`), programın sayıları (`GET /v1/analytics?programId=`) ve kartlardaki son işlemler (`GET /v1/activity`). Müşterinin adı, e-postası ya da telefonu gelmez; ekip üyesinin e-postası da.\n  - `tillLocationId` (Kasa, varsayılan kapalı): bu tek şubede ve bağlantının programında `scan.use` — `GET /v1/passes/{serial}/till`, `POST …/sale`, `POST …/actions`. Hediye kartı yüklemek (`load`) yine `instruments.issue` ister ve verilmez. Kapalı başlar: açıkken WooCommerce'i yönetebilen herkes o şubede müşterilerin bakiyesini harcatabilir.\n  - Kişi bu yetkileri verebilmelidir (`team.manage` ve alt küme kuralı: Görüntüleme yetkilerini tüm şubelerde, `scan.use`'u o şubede taşımalı).\n\n**Kimlik:** ekip oturumu.\n\n**Yetki:** `apikeys.manage` — API anahtarı yönetimi.",
         "x-permission": "apikeys.manage",
         "x-credentials": [
           "staff"
@@ -62433,7 +62984,7 @@
                   "view": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Görüntüleme: kartlar, durumları, programın sayıları ve son işlemleri. Gönderilmezse kapalı (ADR 178'in incelemesi): eski istemcinin anahtarı eskisi gibi kalır"
+                    "description": "Görüntüleme: kartlar, durumları, programın sayıları ve son işlemleri. Gönderilmezse kapalı: eski istemcinin anahtarı eskisi gibi kalır"
                   },
                   "tillLocationId": {
                     "type": [
@@ -62515,7 +63066,7 @@
                         },
                         "view": {
                           "type": "boolean",
-                          "description": "Kurulacak anahtar Görüntüleme yetkisini alır mı (ADR 178)"
+                          "description": "Kurulacak anahtar Görüntüleme yetkisini alır mı"
                         },
                         "tillLocationId": {
                           "type": [
@@ -62523,7 +63074,7 @@
                             "null"
                           ],
                           "format": "uuid",
-                          "description": "Kurulacak anahtarın kasası bu şubede açılır; null = kasa kapalı (ADR 178)"
+                          "description": "Kurulacak anahtarın kasası bu şubede açılır; null = kasa kapalı"
                         },
                         "tillLocationName": {
                           "type": [
@@ -63160,7 +63711,7 @@
           "Entegrasyonlar"
         ],
         "summary": "Bağlantı koduyla mağazayı bağla",
-        "description": "Mağaza eklentisinin tek adımı: paneldeki bağlantı kodunu (`rwc_…`) verir, karşılığında **bir kez** şunları alır: bağlantı (`shop`), bağlantının sırrı (`secret`, WooCommerce webhook'una yazılır) ve yalnız bu bağlantıya bağlı API anahtarı (`apiKey.token`). Kimlik istemez; kod kimliktir.\n- Kod **tek kullanımlıktır**: ikinci kez, süresi dolmuşken ya da iptal edilmişken aynı yanıtı alır: `404 CONNECT_TOKEN_INVALID` (hangisi olduğu söylenmez). Kurulum yarıda reddedilirse (ör. 5 bağlantı sınırı) kod harcanmaz.\n- Anahtar \"E-ticaret\" rolündedir ve bağlantının programıyla sınırlıdır: kartları ve ayarları görür, yalnız kendi bağlantısını görür ve yönetir, o programdan kart verir. Kodu alan kişi Görüntüleme ve Kasa'yı seçtiyse anahtar onları da alır (`apiKey.abilities`, ADR 178); `GET /v1/me` her an yeniden söyler. Bağlantı silinince anahtar da iptal edilir. Test ortamının kodu `rwk_test_` anahtarı verir (`mode`).\n- `shopName` anahtarın panelde görünen adına eklenir (\"WooCommerce · …\"). IP başına 10 dakikada 20 istek.\n\n**Kimlik:** kimlik gerekmez.",
+        "description": "Mağaza eklentisinin tek adımı: paneldeki bağlantı kodunu (`rwc_…`) verir, karşılığında **bir kez** şunları alır: bağlantı (`shop`), bağlantının sırrı (`secret`, WooCommerce webhook'una yazılır) ve yalnız bu bağlantıya bağlı API anahtarı (`apiKey.token`). Kimlik istemez; kod kimliktir.\n- Kod **tek kullanımlıktır**: ikinci kez, süresi dolmuşken ya da iptal edilmişken aynı yanıtı alır: `404 CONNECT_TOKEN_INVALID` (hangisi olduğu söylenmez). Kurulum yarıda reddedilirse (ör. 5 bağlantı sınırı) kod harcanmaz.\n- Anahtar \"E-ticaret\" rolündedir ve bağlantının programıyla sınırlıdır: kartları ve ayarları görür, yalnız kendi bağlantısını görür ve yönetir, o programdan kart verir. Kodu alan kişi Görüntüleme ve Kasa'yı seçtiyse anahtar onları da alır (`apiKey.abilities`); `GET /v1/me` her an yeniden söyler. Bağlantı silinince anahtar da iptal edilir. Test ortamının kodu `rwk_test_` anahtarı verir (`mode`).\n- `shopName` anahtarın panelde görünen adına eklenir (\"WooCommerce · …\"). IP başına 10 dakikada 20 istek.\n\n**Kimlik:** kimlik gerekmez.",
         "x-credentials": [
           "public"
         ],
@@ -63399,7 +63950,7 @@
                                       "till"
                                     ]
                                   },
-                                  "description": "Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
+                                  "description": "Anahtarın bağlantının dışında yapabildikleri: `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
                                 },
                                 "tillLocationId": {
                                   "type": [
@@ -63502,7 +64053,7 @@
                                 "refundReverses",
                                 "holdDays"
                               ],
-                              "description": "Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."
+                              "description": "Ödeme adımındaki kart kodlarının ayarları. `PATCH /v1/shops/{id}/settings` değiştirir."
                             },
                             "accepts": {
                               "type": "object",
@@ -63646,7 +64197,7 @@
                                   "till"
                                 ]
                               },
-                              "description": "Kodu alan kişinin seçtiği yetkiler (ADR 178): `view`, `till`"
+                              "description": "Kodu alan kişinin seçtiği yetkiler: `view`, `till`"
                             },
                             "tillLocationId": {
                               "type": [
@@ -63856,7 +64407,7 @@
           "Entegrasyonlar"
         ],
         "summary": "Eklentinin yetkilerini değiştir",
-        "description": "Bağlantı koduyla kurulmuş bir bağlantının eklenti anahtarının bağlantı dışında yapabildikleri (ADR 178): Görüntüleme (`view`) ve tek bir şubenin Kasası (`tillLocationId`; null = kapalı). Değişiklik mevcut anahtara **hemen** uygulanır; eklentinin yeniden bağlanması gerekmez, eklenti `GET /v1/me` ile okur.\n- Yalnız ekip oturumuyla: bir anahtarın yetkisini değiştirmek, anahtar oluşturmak gibidir. Bağlantının programında `shops.manage` (ya da `apikeys.manage`), ayrıca `apikeys.manage`, `team.manage` ve alt küme kuralı (verilen yetkileri kişi o şubelerde taşımalı) ister; kişinin şifresi (`password`) ve değişikliğin nedeni (`reason`, en fazla 200 karakter, yalnız ekibin gördüğü işlem kaydına yazılır) istenir.\n- Bağlantıyı eklenti kurmadıysa ya da eklentinin anahtarı iptal edildiyse `409 NO_PLUGIN_KEY`.\n- **Eklentinin yetkileri** (ADR 178), kodu alan kişi seçer; sonra bağlantının sayfasından ya da `PUT /v1/shops/{id}/plugin-abilities` ile değişir:\n  - `view` (Görüntüleme; bu çağrıda gönderilmezse kapalı, panelin formunda işaretli gelir): bağlantının programında `passes.read` ve `analytics.read` — kartın durumu (`GET /v1/passes/{serial}`), programın sayıları (`GET /v1/analytics?programId=`) ve kartlardaki son işlemler (`GET /v1/activity`). Müşterinin adı, e-postası ya da telefonu gelmez; ekip üyesinin e-postası da.\n  - `tillLocationId` (Kasa, varsayılan kapalı): bu tek şubede ve bağlantının programında `scan.use` — `GET /v1/passes/{serial}/till`, `POST …/sale`, `POST …/actions`. Hediye kartı yüklemek (`load`) yine `instruments.issue` ister ve verilmez. Kapalı başlar: açıkken WooCommerce'i yönetebilen herkes o şubede müşterilerin bakiyesini harcatabilir.\n  - Kişi bu yetkileri verebilmelidir (`team.manage` ve alt küme kuralı: Görüntüleme yetkilerini tüm şubelerde, `scan.use`'u o şubede taşımalı).\n\n**Kimlik:** ekip oturumu.\n\n**Yetki:** `shops.manage` — Mağaza bağlantısı yönetimi.",
+        "description": "Bağlantı koduyla kurulmuş bir bağlantının eklenti anahtarının bağlantı dışında yapabildikleri: Görüntüleme (`view`) ve tek bir şubenin Kasası (`tillLocationId`; null = kapalı). Değişiklik mevcut anahtara **hemen** uygulanır; eklentinin yeniden bağlanması gerekmez, eklenti `GET /v1/me` ile okur.\n- Yalnız ekip oturumuyla: bir anahtarın yetkisini değiştirmek, anahtar oluşturmak gibidir. Bağlantının programında `shops.manage` (ya da `apikeys.manage`), ayrıca `apikeys.manage`, `team.manage` ve alt küme kuralı (verilen yetkileri kişi o şubelerde taşımalı) ister; kişinin şifresi (`password`) ve değişikliğin nedeni (`reason`, en fazla 200 karakter, yalnız ekibin gördüğü işlem kaydına yazılır) istenir.\n- Bağlantıyı eklenti kurmadıysa ya da eklentinin anahtarı iptal edildiyse `409 NO_PLUGIN_KEY`.\n- **Eklentinin yetkileri**, kodu alan kişi seçer; sonra bağlantının sayfasından ya da `PUT /v1/shops/{id}/plugin-abilities` ile değişir:\n  - `view` (Görüntüleme; bu çağrıda gönderilmezse kapalı, panelin formunda işaretli gelir): bağlantının programında `passes.read` ve `analytics.read` — kartın durumu (`GET /v1/passes/{serial}`), programın sayıları (`GET /v1/analytics?programId=`) ve kartlardaki son işlemler (`GET /v1/activity`). Müşterinin adı, e-postası ya da telefonu gelmez; ekip üyesinin e-postası da.\n  - `tillLocationId` (Kasa, varsayılan kapalı): bu tek şubede ve bağlantının programında `scan.use` — `GET /v1/passes/{serial}/till`, `POST …/sale`, `POST …/actions`. Hediye kartı yüklemek (`load`) yine `instruments.issue` ister ve verilmez. Kapalı başlar: açıkken WooCommerce'i yönetebilen herkes o şubede müşterilerin bakiyesini harcatabilir.\n  - Kişi bu yetkileri verebilmelidir (`team.manage` ve alt küme kuralı: Görüntüleme yetkilerini tüm şubelerde, `scan.use`'u o şubede taşımalı).\n\n**Kimlik:** ekip oturumu.\n\n**Yetki:** `shops.manage` — Mağaza bağlantısı yönetimi.",
         "x-permission": "shops.manage",
         "x-credentials": [
           "staff"
@@ -64127,7 +64678,7 @@
                                   "till"
                                 ]
                               },
-                              "description": "Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
+                              "description": "Anahtarın bağlantının dışında yapabildikleri: `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
                             },
                             "tillLocationId": {
                               "type": [
@@ -64230,7 +64781,7 @@
                             "refundReverses",
                             "holdDays"
                           ],
-                          "description": "Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."
+                          "description": "Ödeme adımındaki kart kodlarının ayarları. `PATCH /v1/shops/{id}/settings` değiştirir."
                         },
                         "accepts": {
                           "type": "object",
@@ -64702,7 +65253,7 @@
                     "type": "string",
                     "maxLength": 100,
                     "pattern": "^[A-Za-z0-9._:-]{1,100}$",
-                    "description": "İsteğe bağlı: kodu soran sipariş. Kod bu siparişteyse `CODE_USED` yerine bu siparişin kullanımı döner (ADR 180)."
+                    "description": "İsteğe bağlı: kodu soran sipariş. Kod bu siparişteyse `CODE_USED` yerine bu siparişin kullanımı döner."
                   }
                 },
                 "required": [
@@ -69737,9 +70288,10 @@
             "schema": {
               "type": "string",
               "minLength": 8,
-              "maxLength": 64
+              "maxLength": 64,
+              "pattern": "^[\\x20-\\x7E]+$"
             },
-            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür."
+            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür. 8–64 yazdırılabilir ASCII karakter (ş, ğ, ı gibi harfler `400 VALIDATION`); bu kimlik için tekil."
           }
         ],
         "requestBody": {
@@ -70604,7 +71156,7 @@
                                   "till"
                                 ]
                               },
-                              "description": "Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
+                              "description": "Anahtarın bağlantının dışında yapabildikleri: `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
                             },
                             "tillLocationId": {
                               "type": [
@@ -70707,7 +71259,7 @@
                             "refundReverses",
                             "holdDays"
                           ],
-                          "description": "Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."
+                          "description": "Ödeme adımındaki kart kodlarının ayarları. `PATCH /v1/shops/{id}/settings` değiştirir."
                         },
                         "accepts": {
                           "type": "object",
@@ -71367,7 +71919,7 @@
                                   "till"
                                 ]
                               },
-                              "description": "Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
+                              "description": "Anahtarın bağlantının dışında yapabildikleri: `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)"
                             },
                             "tillLocationId": {
                               "type": [
@@ -71470,7 +72022,7 @@
                             "refundReverses",
                             "holdDays"
                           ],
-                          "description": "Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."
+                          "description": "Ödeme adımındaki kart kodlarının ayarları. `PATCH /v1/shops/{id}/settings` değiştirir."
                         },
                         "accepts": {
                           "type": "object",
@@ -79703,7 +80255,7 @@
                               "id",
                               "name"
                             ],
-                            "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182)."
+                            "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur."
                           }
                         },
                         "required": [
@@ -79957,7 +80509,7 @@
           "Geliştirici"
         ],
         "summary": "Webhook ekle",
-        "description": "Seçilen olaylar bu adrese imzalı olarak gönderilir; `secret` **yalnız bu yanıtta** döner (imzayı doğrulamak için saklayın). En fazla 10 etkin webhook. Yeni webhook bundan sonraki olayları alır, geçmişi değil.\n- **Adres:** herkese açık bir **https** adresi; iç ağ adresleri (localhost, 127.0.0.1, 10.x, 172.16–31.x, 192.168.x…) ve http kabul edilmez (`422 BAD_WEBHOOK_URL`). Kural **test ortamında da aynıdır**: teslimleri Rewloy'un sunucuları yapar ve sizin bilgisayarınıza ulaşamaz. Yerel geliştirmede sunucunuzu bir tünelle açın (ör. `cloudflared tunnel --url http://localhost:3000` ya da `ngrok http 3000`) ve tünelin https adresini verin. Teslim anında adres yeniden çözülür ve denetlenir.\n- **API anahtarıyla** (ADR 182): `webhooks.manage` yetkisi taşıyan anahtar webhook ekler, açar, kapatır, deneme olayı gönderir ve teslimleri okur. Anahtar yalnız kendisinin okuyabildiği olayları bir adrese gönderebilir: webhook işletmenin her şubesinin ve her programının olaylarını taşıdığı için anahtarın **her şubede ve her programda** `passes.read` yetkisi olmalıdır (yoksa `403 FORBIDDEN`). Her değişiklik, ekip üyesininki gibi, anahtar adına kaydedilir (`GET /v1/activity/access`). Anahtarın eklediği webhook anahtardan uzun yaşamaz: anahtar kaldırılınca, süresi dolunca ya da yetkisi daralınca kendiliğinden kapanır (`createdByKey`, `disabledReason`).\n- **10 etkin webhook** sınırı işletme başınadır: kişilerin ve bütün anahtarların eklediği etkin webhook'lar birlikte sayılır (`409 LIMIT`).\n\n**Kimlik:** ekip oturumu, API anahtarı.\n\n**Yetki:** `webhooks.manage` — Webhook yönetimi.",
+        "description": "Seçilen olaylar bu adrese imzalı olarak gönderilir; `secret` **yalnız bu yanıtta** döner (imzayı doğrulamak için saklayın). En fazla 10 etkin webhook. Yeni webhook bundan sonraki olayları alır, geçmişi değil.\n- **Adres:** herkese açık bir **https** adresi; iç ağ adresleri (localhost, 127.0.0.1, 10.x, 172.16–31.x, 192.168.x…) ve http kabul edilmez (`422 BAD_WEBHOOK_URL`). Kural **test ortamında da aynıdır**: teslimleri Rewloy'un sunucuları yapar ve sizin bilgisayarınıza ulaşamaz. Yerel geliştirmede sunucunuzu bir tünelle açın (ör. `cloudflared tunnel --url http://localhost:3000` ya da `ngrok http 3000`) ve tünelin https adresini verin. Teslim anında adres yeniden çözülür ve denetlenir. Canlı olmayan bir Rewloy kurulumu (geliştirme, staging) http ve iç ağ adreslerini kabul eder; o zaman yanıttaki `warnings` canlı ortamın bu adresi neden reddedeceğini söyler.\n- **API anahtarıyla**: `webhooks.manage` yetkisi taşıyan anahtar webhook ekler, açar, kapatır, deneme olayı gönderir ve teslimleri okur. Anahtar yalnız kendisinin okuyabildiği olayları bir adrese gönderebilir: webhook işletmenin her şubesinin ve her programının olaylarını taşıdığı için anahtarın **her şubede ve her programda** `passes.read` yetkisi olmalıdır (yoksa `403 FORBIDDEN`). Her değişiklik, ekip üyesininki gibi, anahtar adına kaydedilir (`GET /v1/activity/access`). Anahtarın eklediği webhook anahtardan uzun yaşamaz: anahtar kaldırılınca, süresi dolunca ya da yetkisi daralınca kendiliğinden kapanır (`createdByKey`, `disabledReason`).\n- **10 etkin webhook** sınırı işletme başınadır: kişilerin ve bütün anahtarların eklediği etkin webhook'lar birlikte sayılır (`409 LIMIT`).\n\n**Kimlik:** ekip oturumu, API anahtarı.\n\n**Yetki:** `webhooks.manage` — Webhook yönetimi.",
         "x-permission": "webhooks.manage",
         "x-credentials": [
           "staff",
@@ -80126,7 +80678,7 @@
                                 "id",
                                 "name"
                               ],
-                              "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182)."
+                              "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur."
                             }
                           },
                           "required": [
@@ -80146,6 +80698,14 @@
                           "type": "string",
                           "maxLength": 100,
                           "description": "whsec_…; yalnız bu yanıtta"
+                        },
+                        "warnings": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 500
+                          },
+                          "description": "Yalnız canlı olmayan bir kurulumda (geliştirme, staging) ve adres canlı ortamda reddedilecekse: neden. Böyle bir kurulum http ve iç ağ adreslerini kabul eder; canlı ortam etmez (`422 BAD_WEBHOOK_URL`). Canlı ortamda bu alan gelmez."
                         }
                       },
                       "required": [
@@ -80591,7 +81151,7 @@
                             "id",
                             "name"
                           ],
-                          "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182)."
+                          "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur."
                         }
                       },
                       "required": [
@@ -80868,7 +81428,7 @@
           "Geliştirici"
         ],
         "summary": "Aç ya da kapat",
-        "description": "Kapalıyken olaylar gönderilmez; yeniden açılınca açıldığı andan sonraki olaylar gelir ve başarısızlık sayacı sıfırlanır. Bir API anahtarı yalnız olaylarını okuyabildiği bir webhook'u açabilir; yalnız kendi eklediği webhook'ları kapatabilir, başkasınınkini kapatmak için her yerde `passes.read` gerekir (`403 FORBIDDEN`, ADR 182). Bir anahtarın eklediği kapalı bir webhook'u bir kişi açarsa webhook o kişinin olur.\n\n**Kimlik:** ekip oturumu, API anahtarı.\n\n**Yetki:** `webhooks.manage` — Webhook yönetimi.",
+        "description": "Kapalıyken olaylar gönderilmez; yeniden açılınca açıldığı andan sonraki olaylar gelir ve başarısızlık sayacı sıfırlanır. Bir API anahtarı yalnız olaylarını okuyabildiği bir webhook'u açabilir; yalnız kendi eklediği webhook'ları kapatabilir, başkasınınkini kapatmak için her yerde `passes.read` gerekir (`403 FORBIDDEN`). Bir anahtarın eklediği kapalı bir webhook'u bir kişi açarsa webhook o kişinin olur.\n\n**Kimlik:** ekip oturumu, API anahtarı.\n\n**Yetki:** `webhooks.manage` — Webhook yönetimi.",
         "x-permission": "webhooks.manage",
         "x-credentials": [
           "staff",
@@ -81026,7 +81586,7 @@
                             "id",
                             "name"
                           ],
-                          "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182)."
+                          "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur."
                         }
                       },
                       "required": [
@@ -87039,7 +87599,7 @@
           "Kart sahibi"
         ],
         "summary": "Kartlarım",
-        "description": "Hesabın bütün işletmelerdeki kartları: doğrulanmış adreslerinizle verilen kartlar ve hesaba bağlantısıyla eklenenler. Bakiye, ödül durumu, seviye, renkler ve kasada okutulacak değer; kartın QR kodunu `qrValue` ile kendiniz çizin.\n**Sıra** web cüzdanının Kartlarım sırasıdır; kartlar işletme işletme gelir:\n1. yıldızlı kartı olan işletmeler, kişinin kendi sırasında (`GET /v1/holder/favorites`, `PUT /v1/holder/favorites/order`);\n2. ödülü hazır olanlar;\n3. son zamanlarda sık gidilenler: son 90 günün ziyaretleri, yenisi daha ağır (her ziyaret bugün 1, 30 gün önce ½, 60 gün önce ¼ sayılır);\n4. en yeni kart;\nbütün kartları bitmiş işletmeler en sonda. Bir işletmenin içinde önce etkin kartlar, en eskisi önce. Konuma göre sıralamak uygulamanın işidir: her kart işletmesinin şubelerini (`places`) taşır, konum sunucuya gönderilmez; yıldızlılar yine en başta kalsın.\n**Listeden kaldırılan kartlar** (`hidden: true`, ADR 159) bu sıranın ardından, en sonda gelir ve sırayı etkilemez: Kartlarım'ı ve işletme görünümünü onları atlayarak çizin; bütün kartları kaldırılmış işletme Kartlarım'da görünmez. Eski kartlar biten kartlardır (`ended: true`), kaldırılmış olsun olmasın: en son biten önce (`endedAt`, kaydı olmayan en sonda).\n`merchant` (kartlardaki `merchantSlug`) yalnız o işletmenin kartlarını işletme görünümünün sırasıyla verir, listeden kaldırılanlar sonda.\n\n**Kimlik:** kart sahibi oturumu.",
+        "description": "Hesabın bütün işletmelerdeki kartları: doğrulanmış adreslerinizle verilen kartlar ve hesaba bağlantısıyla eklenenler. Bakiye, ödül durumu, seviye, renkler ve kasada okutulacak değer; kartın QR kodunu `qrValue` ile kendiniz çizin.\n**Sıra** web cüzdanının Kartlarım sırasıdır; kartlar işletme işletme gelir:\n1. yıldızlı kartı olan işletmeler, kişinin kendi sırasında (`GET /v1/holder/favorites`, `PUT /v1/holder/favorites/order`);\n2. ödülü hazır olanlar;\n3. son zamanlarda sık gidilenler: son 90 günün ziyaretleri, yenisi daha ağır (her ziyaret bugün 1, 30 gün önce ½, 60 gün önce ¼ sayılır);\n4. en yeni kart;\nbütün kartları bitmiş işletmeler en sonda. Bir işletmenin içinde önce etkin kartlar, en eskisi önce. Konuma göre sıralamak uygulamanın işidir: her kart işletmesinin şubelerini (`places`) taşır, konum sunucuya gönderilmez; yıldızlılar yine en başta kalsın.\n**Listeden kaldırılan kartlar** (`hidden: true`) bu sıranın ardından, en sonda gelir ve sırayı etkilemez: Kartlarım'ı ve işletme görünümünü onları atlayarak çizin; bütün kartları kaldırılmış işletme Kartlarım'da görünmez. Eski kartlar biten kartlardır (`ended: true`), kaldırılmış olsun olmasın: en son biten önce (`endedAt`, kaydı olmayan en sonda).\n`merchant` (kartlardaki `merchantSlug`) yalnız o işletmenin kartlarını işletme görünümünün sırasıyla verir, listeden kaldırılanlar sonda.\n\n**Kimlik:** kart sahibi oturumu.",
         "x-credentials": [
           "holder"
         ],
@@ -92987,7 +93547,7 @@
           "Kart sahibi"
         ],
         "summary": "Tek dokunuşla katıl",
-        "description": "Hesap, kasadaki QR'ın programına katılır. Kart, hesabın seçilen doğrulanmış adresi ya da numarasıyla verilir ve hesaba bağlanır. Adresle katılımda kartın bağlantısı o adrese de gider: telefon kaybolsa da kart kaybolmaz; numaraya hiçbir şey gitmez. Katılım, aydınlatma metninin sunulduğu andır; bu kayıt (`kvkkConsent: true`) kaynağıyla tutulur (kaynak: Rewloy Cüzdan uygulaması, `cuzdan-app`).\n- `email` ya da `verifiedPhone` (yalnız biri): `GET /v1/holder/programs/{id}` yanıtındaki `emails` ya da `phones` içinden biri. Hesapta doğrulanmamış bir adres ya da numara `400 VALIDATION` döner, çünkü bir forma yazılan adres bir şey kanıtlamaz. Numarayla katılımda programın telefon sorusu sorulmaz: numara telefondur.\n- İşletmede hesabın başka bir adresi ya da numarasıyla açılmış bir kaydı varsa yeni kayıt açılmaz: seçilen adres ya da numara o kayda eklenir (ADR 165).\n- Programın sorduğu öteki alanlar (`fields`) gövdede gelir; zorunlu biri eksikse `FIELD_REQUIRED`.\n- Hesabın bu programda zaten kartı varsa yeni kart verilmez, o kart döner (`created: false`, `200`); katılım kapalıyken de. Aynı anda gelen iki istek de tek kart yapar. Yeni kart `201` ile döner.\n- Kartı olmayan hesap için katılım kimliksiz katılımdaki gibi kapanır (`JOIN_CLOSED`). IP başına 10 dakikada 30 katılım sınırı da kimliksiz katılımla ortaktır.\n\n**Kimlik:** kart sahibi oturumu.",
+        "description": "Hesap, kasadaki QR'ın programına katılır. Kart, hesabın seçilen doğrulanmış adresi ya da numarasıyla verilir ve hesaba bağlanır. Adresle katılımda kartın bağlantısı o adrese de gider: telefon kaybolsa da kart kaybolmaz; numaraya hiçbir şey gitmez. Katılım, aydınlatma metninin sunulduğu andır; bu kayıt (`kvkkConsent: true`) kaynağıyla tutulur (kaynak: Rewloy Cüzdan uygulaması, `cuzdan-app`).\n- `email` ya da `verifiedPhone` (yalnız biri): `GET /v1/holder/programs/{id}` yanıtındaki `emails` ya da `phones` içinden biri. Hesapta doğrulanmamış bir adres ya da numara `400 VALIDATION` döner, çünkü bir forma yazılan adres bir şey kanıtlamaz. Numarayla katılımda programın telefon sorusu sorulmaz: numara telefondur.\n- İşletmede hesabın başka bir adresi ya da numarasıyla açılmış bir kaydı varsa yeni kayıt açılmaz: seçilen adres ya da numara o kayda eklenir.\n- Programın sorduğu öteki alanlar (`fields`) gövdede gelir; zorunlu biri eksikse `FIELD_REQUIRED`.\n- Hesabın bu programda zaten kartı varsa yeni kart verilmez, o kart döner (`created: false`, `200`); katılım kapalıyken de. Aynı anda gelen iki istek de tek kart yapar. Yeni kart `201` ile döner.\n- Kartı olmayan hesap için katılım kimliksiz katılımdaki gibi kapanır (`JOIN_CLOSED`). IP başına 10 dakikada 30 katılım sınırı da kimliksiz katılımla ortaktır.\n\n**Kimlik:** kart sahibi oturumu.",
         "x-credentials": [
           "holder"
         ],
@@ -93445,7 +94005,7 @@
           "Kart sahibi"
         ],
         "summary": "Kodu tek dokunuşla kullan",
-        "description": "Hediye kartı, kupon ya da indirim kodu (`/c/{code}`) bu hesapla kullanılır: kart, hesabın seçilen doğrulanmış adresi ya da numarasıyla verilir ve hesaba bağlanır. Web'deki `/c/{code}` sayfasının oturum açıkken yaptığıdır (ADR 165). Kodun ne verdiği ve sorduğu alanlar `GET /v1/public/codes/{code}` ile öğrenilir.\n- `email` ya da `verifiedPhone` (yalnız biri): hesabın doğrulanmış adreslerinden ya da numaralarından biri; hesapta doğrulanmamışsa `400 VALIDATION`. Numarayla alımda programın telefon sorusu sorulmaz: numara telefondur.\n- Kişi başına sınır kişide sayılır, hangi adres ya da numarayla tanınırsa tanınsın. Sınır dolduysa yeni kart verilmez, kişinin bu koddan aldığı son kart döner (`created: false`, `200`).\n- İşletmede hesabın başka bir adresi ya da numarasıyla açılmış bir kaydı varsa yeni kayıt açılmaz: seçilen adres ya da numara o kayda eklenir.\n- Adresle alınan yeni kartın bağlantısı o adrese de gider; numaraya hiçbir şey gitmez. Aydınlatma kaydı kaynağıyla tutulur (`cuzdan-app`).\n- Kod kapandıysa `BATCH_CLOSED`, süresi dolduysa `BATCH_EXPIRED`, kartları bittiyse `BATCH_FULL`; işletme şu an üye almıyorsa `JOIN_CLOSED` (503). IP başına 10 dakikada 30 deneme sınırı kimliksiz alımla ortaktır.\n\n**Kimlik:** kart sahibi oturumu.",
+        "description": "Hediye kartı, kupon ya da indirim kodu (`/c/{code}`) bu hesapla kullanılır: kart, hesabın seçilen doğrulanmış adresi ya da numarasıyla verilir ve hesaba bağlanır. Web'deki `/c/{code}` sayfasının oturum açıkken yaptığıdır. Kodun ne verdiği ve sorduğu alanlar `GET /v1/public/codes/{code}` ile öğrenilir.\n- `email` ya da `verifiedPhone` (yalnız biri): hesabın doğrulanmış adreslerinden ya da numaralarından biri; hesapta doğrulanmamışsa `400 VALIDATION`. Numarayla alımda programın telefon sorusu sorulmaz: numara telefondur.\n- Kişi başına sınır kişide sayılır, hangi adres ya da numarayla tanınırsa tanınsın. Sınır dolduysa yeni kart verilmez, kişinin bu koddan aldığı son kart döner (`created: false`, `200`).\n- İşletmede hesabın başka bir adresi ya da numarasıyla açılmış bir kaydı varsa yeni kayıt açılmaz: seçilen adres ya da numara o kayda eklenir.\n- Adresle alınan yeni kartın bağlantısı o adrese de gider; numaraya hiçbir şey gitmez. Aydınlatma kaydı kaynağıyla tutulur (`cuzdan-app`).\n- Kod kapandıysa `BATCH_CLOSED`, süresi dolduysa `BATCH_EXPIRED`, kartları bittiyse `BATCH_FULL`; işletme şu an üye almıyorsa `JOIN_CLOSED` (503). IP başına 10 dakikada 30 deneme sınırı kimliksiz alımla ortaktır.\n\n**Kimlik:** kart sahibi oturumu.",
         "x-credentials": [
           "holder"
         ],
@@ -94177,7 +94737,7 @@
                             "dueAt",
                             "byThisDevice"
                           ],
-                          "description": "Bekleyen giriş yolu değişikliği (ADR 170): hesaba girmenin 72 saatten eski başka bir yolu yokken yapılan değişiklik süre dolana kadar bekler. `byThisDevice` ise kişiye \"Vazgeç\", değilse \"Bu değişikliği ben yapmadım\" gösterin; ikisi de `DELETE /v1/holder/changes/{id}`."
+                          "description": "Bekleyen giriş yolu değişikliği: hesaba girmenin 72 saatten eski başka bir yolu yokken yapılan değişiklik süre dolana kadar bekler. `byThisDevice` ise kişiye \"Vazgeç\", değilse \"Bu değişikliği ben yapmadım\" gösterin; ikisi de `DELETE /v1/holder/changes/{id}`."
                         },
                         "pendingRecovery": {
                           "type": [
@@ -94211,7 +94771,7 @@
                             "to",
                             "dueAt"
                           ],
-                          "description": "Bu hesap için onaylanmış ve bekleyen bir kurtarma talebi (ADR 170): süre dolunca hesap yeni adrese ya da numaraya taşınır ve bütün oturumlar kapanır. Kişiye \"Bu değişikliği ben yapmadım\" gösterin: `DELETE /v1/holder/changes/{id}`."
+                          "description": "Bu hesap için onaylanmış ve bekleyen bir kurtarma talebi: süre dolunca hesap yeni adrese ya da numaraya taşınır ve bütün oturumlar kapanır. Kişiye \"Bu değişikliği ben yapmadım\" gösterin: `DELETE /v1/holder/changes/{id}`."
                         }
                       },
                       "required": [
@@ -95566,9 +96126,10 @@
             "schema": {
               "type": "string",
               "minLength": 8,
-              "maxLength": 64
+              "maxLength": 64,
+              "pattern": "^[\\x20-\\x7E]+$"
             },
-            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür."
+            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür. 8–64 yazdırılabilir ASCII karakter (ş, ğ, ı gibi harfler `400 VALIDATION`); bu kimlik için tekil."
           }
         ],
         "requestBody": {
@@ -96207,9 +96768,10 @@
             "schema": {
               "type": "string",
               "minLength": 8,
-              "maxLength": 64
+              "maxLength": 64,
+              "pattern": "^[\\x20-\\x7E]+$"
             },
-            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür."
+            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür. 8–64 yazdırılabilir ASCII karakter (ş, ğ, ı gibi harfler `400 VALIDATION`); bu kimlik için tekil."
           }
         ],
         "requestBody": {
@@ -97063,7 +97625,7 @@
                             "status",
                             "change"
                           ],
-                          "description": "Soruyu bir giriş yolu değişikliği sorduysa (`POST /v1/holder/identities/{id}/replace/verify`, ADR 170): birleşince yapılan değişiklik; `keep` ise ya da soruyu başka bir adım sorduysa `null`"
+                          "description": "Soruyu bir giriş yolu değişikliği sorduysa (`POST /v1/holder/identities/{id}/replace/verify`): birleşince yapılan değişiklik; `keep` ise ya da soruyu başka bir adım sorduysa `null`"
                         }
                       },
                       "required": [
@@ -97534,7 +98096,7 @@
           "Kart sahibi"
         ],
         "summary": "E-postayı ya da numarayı değiştir: kod gönder",
-        "description": "Hesabın bir e-postasının ya da numarasının (`GET /v1/holder/account` listesindeki kimliği) yerine yenisi (ADR 170): adrese `email`, numaraya `phone` (aynı türden). Yeniye 6 haneli bir kod gider; kodu bu yanıttaki `request` ile `POST /v1/holder/identities/{id}/replace/verify` gönderin.\n- Uygulamanın oturumu cihazın kanıtıdır (web'deki cihaz anahtarının yerine).\n- Yeni adres ya da numara eskisiyle aynıysa ya da zaten bu hesabınsa `409 IDENT_SAME`. Numara için telefonla giriş açık değilse `501 NOT_ENABLED`; `channel` ve sınırlar `POST /v1/holder/identities/phone` gibidir. Hesap başına saatte 10 (ekleme ve değiştirme birlikte).\n- **Idempotency-Key** (isteğe bağlı, önerilir; 8–64 karakter, her yeni istek için yeni bir UUID): aynı anahtar ve aynı gövdeyle tekrar yeni kod GÖNDERMEZ, ilk yanıtı (aynı `request`) `Idempotent-Replayed: true` ile döndürür ve sınırlardan düşmez — bağlantısı kopan uygulama güvenle yineler. Aynı anahtar başka bir gövdeyle `422 IDEMPOTENCY_KEY_REUSED`; ilk istek sürerken `409 IDEMPOTENCY_IN_PROGRESS` (bir şey gönderilmez). Yanıt şifreli saklanır, 7 gün tekrar edilir; kodun kendisi 15 dakika geçerlidir, yeni kod için yeni anahtar gönderin. Oturumsuz çağrıda anahtar istemcinin IP adresine bağlıdır. Başlık yoksa her çağrı yeni bir kod ve yeni bir `request` demektir.\n\n**Kimlik:** kart sahibi oturumu.",
+        "description": "Hesabın bir e-postasının ya da numarasının (`GET /v1/holder/account` listesindeki kimliği) yerine yenisi: adrese `email`, numaraya `phone` (aynı türden). Yeniye 6 haneli bir kod gider; kodu bu yanıttaki `request` ile `POST /v1/holder/identities/{id}/replace/verify` gönderin.\n- Uygulamanın oturumu cihazın kanıtıdır (web'deki cihaz anahtarının yerine).\n- Yeni adres ya da numara eskisiyle aynıysa ya da zaten bu hesabınsa `409 IDENT_SAME`. Numara için telefonla giriş açık değilse `501 NOT_ENABLED`; `channel` ve sınırlar `POST /v1/holder/identities/phone` gibidir. Hesap başına saatte 10 (ekleme ve değiştirme birlikte).\n- **Idempotency-Key** (isteğe bağlı, önerilir; 8–64 karakter, her yeni istek için yeni bir UUID): aynı anahtar ve aynı gövdeyle tekrar yeni kod GÖNDERMEZ, ilk yanıtı (aynı `request`) `Idempotent-Replayed: true` ile döndürür ve sınırlardan düşmez — bağlantısı kopan uygulama güvenle yineler. Aynı anahtar başka bir gövdeyle `422 IDEMPOTENCY_KEY_REUSED`; ilk istek sürerken `409 IDEMPOTENCY_IN_PROGRESS` (bir şey gönderilmez). Yanıt şifreli saklanır, 7 gün tekrar edilir; kodun kendisi 15 dakika geçerlidir, yeni kod için yeni anahtar gönderin. Oturumsuz çağrıda anahtar istemcinin IP adresine bağlıdır. Başlık yoksa her çağrı yeni bir kod ve yeni bir `request` demektir.\n\n**Kimlik:** kart sahibi oturumu.",
         "x-credentials": [
           "holder"
         ],
@@ -97555,9 +98117,10 @@
             "schema": {
               "type": "string",
               "minLength": 8,
-              "maxLength": 64
+              "maxLength": 64,
+              "pattern": "^[\\x20-\\x7E]+$"
             },
-            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür."
+            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür. 8–64 yazdırılabilir ASCII karakter (ş, ğ, ı gibi harfler `400 VALIDATION`); bu kimlik için tekil."
           }
         ],
         "requestBody": {
@@ -97970,7 +98533,7 @@
           "Kart sahibi"
         ],
         "summary": "E-postayı ya da numarayı değiştir: kodu doğrula",
-        "description": "Değiştirme adımının `request` değeri ve yeniye gelen kod (ADR 170, PHONE.md §12.1).\n- Hesaba girmenin en az 72 saattir (`recovery.wait_hours`) hesapta olan başka bir yolu varsa (bir e-posta, bir numara, passkey, Google ya da Apple; yeni eklenen ya da bir birleştirmeyle gelen sayılmaz, ADR 172) yenisi eskisinin yerini hemen alır (`applied`): işletmelerdeki kayıtlar yeniye geçer, hesabın öteki adreslerine e-posta, öteki cihazlarına bildirim gider.\n- Yoksa değişiklik bekler (`pending`, `change.dueAt`; ayar `recovery.wait_hours`, 72 saat): o zamana kadar eskisiyle girilir, yenisiyle girilmez. Eski adrese iptal bağlantılı bir e-posta, öteki cihazlara bildirim gider; SMS ya da WhatsApp gitmez.\n- Yeni adres ya da numara başka bir Rewloy Cüzdan hesabındaysa `409 MERGE_REQUIRED` (`details.request`): kişiye sorun, yanıtı `POST /v1/holder/merge` ile gönderin; birleşince değişiklik yapılır. Eski giriş yolu, birleşmeden önce bu hesaba girmenin tek yoluysa değişiklik yine bekler (öteki hesabın giriş yolları sayılmaz).\n- Yanlış kodda `CODE_INVALID`. Eski giriş yolu artık hesapta değilse `404 NOT_FOUND`.\n\n**Kimlik:** kart sahibi oturumu.",
+        "description": "Değiştirme adımının `request` değeri ve yeniye gelen kod.\n- Hesaba girmenin en az 72 saattir (`recovery.wait_hours`) hesapta olan başka bir yolu varsa (bir e-posta, bir numara, passkey, Google ya da Apple; yeni eklenen ya da bir birleştirmeyle gelen sayılmaz) yenisi eskisinin yerini hemen alır (`applied`): işletmelerdeki kayıtlar yeniye geçer, hesabın öteki adreslerine e-posta, öteki cihazlarına bildirim gider.\n- Yoksa değişiklik bekler (`pending`, `change.dueAt`; ayar `recovery.wait_hours`, 72 saat): o zamana kadar eskisiyle girilir, yenisiyle girilmez. Eski adrese iptal bağlantılı bir e-posta, öteki cihazlara bildirim gider; SMS ya da WhatsApp gitmez.\n- Yeni adres ya da numara başka bir Rewloy Cüzdan hesabındaysa `409 MERGE_REQUIRED` (`details.request`): kişiye sorun, yanıtı `POST /v1/holder/merge` ile gönderin; birleşince değişiklik yapılır. Eski giriş yolu, birleşmeden önce bu hesaba girmenin tek yoluysa değişiklik yine bekler (öteki hesabın giriş yolları sayılmaz).\n- Yanlış kodda `CODE_INVALID`. Eski giriş yolu artık hesapta değilse `404 NOT_FOUND`.\n\n**Kimlik:** kart sahibi oturumu.",
         "x-credentials": [
           "holder"
         ],
@@ -98386,7 +98949,7 @@
           "Kart sahibi"
         ],
         "summary": "Bekleyen değişikliği iptal et (\"Bu değişikliği ben yapmadım\")",
-        "description": "Hesabın bekleyen giriş yolu değişikliğini (`GET /v1/holder/account` `pendingChange.id`) ya da onaylanmış ve bekleyen bir kurtarma talebini (`pendingRecovery.id`) iptal eder (ADR 170).\n- Değişikliği bu cihaz istediyse kişinin vazgeçmesidir. Başka bir cihaz iptal ederse \"Bu değişikliği ben yapmadım\" demektir: değişikliği isteyen cihazın oturumu kapanır ve hesap işaretlenir (kurtarma talepleri artık kendiliğinden onaylanmaz).\n- Kurtarma talebi iptal edilirse hesap olduğu gibi kalır ve işaretlenir.\n- Bekleyen bir şey yoksa (uygulandı, iptal edildi) `404 NOT_FOUND`.\n\n**Kimlik:** kart sahibi oturumu.",
+        "description": "Hesabın bekleyen giriş yolu değişikliğini (`GET /v1/holder/account` `pendingChange.id`) ya da onaylanmış ve bekleyen bir kurtarma talebini (`pendingRecovery.id`) iptal eder.\n- Değişikliği bu cihaz istediyse kişinin vazgeçmesidir. Başka bir cihaz iptal ederse \"Bu değişikliği ben yapmadım\" demektir: değişikliği isteyen cihazın oturumu kapanır ve hesap işaretlenir (kurtarma talepleri artık kendiliğinden onaylanmaz).\n- Kurtarma talebi iptal edilirse hesap olduğu gibi kalır ve işaretlenir.\n- Bekleyen bir şey yoksa (uygulandı, iptal edildi) `404 NOT_FOUND`.\n\n**Kimlik:** kart sahibi oturumu.",
         "x-credentials": [
           "holder"
         ],
@@ -101774,7 +102337,7 @@
                         },
                         "account": {
                           "type": "object",
-                          "description": "Rewloy Cüzdan hesabı: createdAt, lastSeenAt, flaggedAt (hesap işaretlendiyse ne zaman: bir değişiklik ya da kurtarma talebi \"Bu değişikliği ben yapmadım\" ile iptal edildi ya da ekip işaretledi, ADR 170), emails, phones (doğrulanmış numaralar: phone, provenAt, lastProvenAt), passkeys, signIns, devices (her biri keySetAt ve lastRenewedAt ile: cihaz anahtarı, web), cardsAddedByLink, favorites (serial, business, program, position, starredAt), hiddenCards (listeden kaldırılan kartlar: serial, business, program, hiddenAt), identityChanges (giriş yolu değişiklikleri: kind, from ve to — maskeli —, state, requestedAt, dueAt, settledAt), recoveryRequests (hesap için açılan kurtarma talepleri: number, oldIdentifier ve newIdentifier — maskeli —, state, requestedAt, dueAt, appliedAt, cancelledAt), trail; bildirimler açıkken ya da kayıtları dururken notifications (transactionNotifications, devices: cihaz, platform — web, apns ya da fcm —, servis, ne zamandan beri, son kabul; sent: tür, işletme, kart, başlık, metin, zaman, her cihazın platformu ve sonucu; bildirim adresleri, anahtarlar ve belirteçler yazılmaz)"
+                          "description": "Rewloy Cüzdan hesabı: createdAt, lastSeenAt, flaggedAt (hesap işaretlendiyse ne zaman: bir değişiklik ya da kurtarma talebi \"Bu değişikliği ben yapmadım\" ile iptal edildi ya da ekip işaretledi), emails, phones (doğrulanmış numaralar: phone, provenAt, lastProvenAt), passkeys, signIns, devices (her biri keySetAt ve lastRenewedAt ile: cihaz anahtarı, web), cardsAddedByLink, favorites (serial, business, program, position, starredAt), hiddenCards (listeden kaldırılan kartlar: serial, business, program, hiddenAt), identityChanges (giriş yolu değişiklikleri: kind, from ve to — maskeli —, state, requestedAt, dueAt, settledAt), recoveryRequests (hesap için açılan kurtarma talepleri: number, oldIdentifier ve newIdentifier — maskeli —, state, requestedAt, dueAt, appliedAt, cancelledAt), trail; bildirimler açıkken ya da kayıtları dururken notifications (transactionNotifications, devices: cihaz, platform — web, apns ya da fcm —, servis, ne zamandan beri, son kabul; sent: tür, işletme, kart, başlık, metin, zaman, her cihazın platformu ve sonucu; bildirim adresleri, anahtarlar ve belirteçler yazılmaz)"
                         },
                         "addresses": {
                           "type": "array",
@@ -104793,9 +105356,10 @@
             "schema": {
               "type": "string",
               "minLength": 8,
-              "maxLength": 64
+              "maxLength": 64,
+              "pattern": "^[\\x20-\\x7E]+$"
             },
-            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür."
+            "description": "Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür. 8–64 yazdırılabilir ASCII karakter (ş, ğ, ı gibi harfler `400 VALIDATION`); bu kimlik için tekil."
           }
         ],
         "requestBody": {
@@ -105859,6 +106423,9 @@
                   "SALE_NOT_FOUND",
                   "SALE_AMBIGUOUS",
                   "SALE_ALREADY_SPENT",
+                  "ACTION_NOT_FOUND",
+                  "ACTION_AMBIGUOUS",
+                  "ACTION_NOT_REVERSIBLE",
                   "WRONG_LOCATION",
                   "INVALID_PROMOTION",
                   "PROMOTION_NOT_FOUND",

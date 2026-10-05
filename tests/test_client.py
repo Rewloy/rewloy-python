@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import json
 import platform
 import re
 from typing import Any, Callable, Dict
 
 import pytest
 
-from rewloy import OPERATIONS, METHOD_NAMES, OPERATION_IDS, EventStream, Headers, Page, Rewloy, VERSION
+from rewloy import OPERATIONS, METHOD_NAMES, OPERATION_IDS, EventStream, Headers, Page, RateLimit, Rewloy, VERSION, parse_rate_limit
 
 from .helpers import HOLDER, KEY, LOCATION, MERCHANT, SERIAL, STAFF, Ctx, Stub, loose, make_client
 
@@ -62,7 +63,7 @@ def test_has_a_method_for_every_operation_and_a_mapping_from_the_operation_id() 
 def test_says_the_version_it_is() -> None:
     import rewloy
 
-    assert rewloy.__version__ == VERSION == "0.2.1"
+    assert rewloy.__version__ == VERSION == "0.2.2"
 
 
 @pytest.fixture
@@ -78,7 +79,11 @@ def api(stub: Callable[[Callable[[Ctx], None]], Stub]) -> Stub:
         elif url == "/v1/openapi.json":
             c.json(200, {"openapi": "3.1.0", "paths": {}})
         elif url == "/v1/campaigns" and c.req.method == "POST":
-            c.json(201, {"data": {"id": "c1"}}, {"Idempotent-Replayed": "true", "Rewloy-Mode": "test", "X-Request-Id": "r-campaign"})
+            c.json(201, {"data": {"id": "c1"}}, {"Idempotent-Replayed": "true", "Rewloy-Mode": "test", "X-Request-Id": "r-campaign", "RateLimit-Limit": "120", "RateLimit-Remaining": "117", "RateLimit-Reset": "41"})
+        elif url.endswith("/actions/reverse"):
+            c.json(200, {"data": {"type": "giftcard", "undone": "spend", "restored": 5000, "balance": 5000, "uses": None, "usesLeft": None, "status": "active", "reopened": False, "duplicate": False, "rewardReady": False, "rewardsReady": 0}})
+        elif url.endswith("/actions") and c.req.method == "POST":
+            c.json(200, {"data": {"status": "active", "duplicate": False, "uses": 3, "usesLeft": 2}})
         else:
             c.json(200, {"data": {"ok": True}})
 
@@ -249,6 +254,7 @@ def test_gives_the_whole_answer_through_request(api: Stub) -> None:
     assert res.request_id == "r-campaign"
     assert res.mode == "test"
     assert res.replayed is True
+    assert res.rate_limit == RateLimit(limit=120, remaining=117, reset=41)
     assert isinstance(res.headers, Headers)
     assert res.headers["Rewloy-Mode"] == "test"  # case-insensitive
     assert "rewloy-mode" in res.headers
@@ -259,7 +265,35 @@ def test_gives_the_whole_answer_through_request(api: Stub) -> None:
     assert listing.meta == {"page": 1, "pageSize": 50, "total": 1}
     assert listing.mode is None
     assert listing.replayed is False
+    assert listing.rate_limit is None, "no RateLimit headers, no rate_limit"
     assert listing.data == [{"personId": "p1"}]
+
+
+def test_reverses_a_till_action_without_an_idempotency_key_and_narrows_pass_actions_two_answers(api: Stub) -> None:
+    c = make_client(api)
+    back = c.reverse_action(SERIAL, body={"actionKey": "kasa3-z0187-fis0042", "locationId": LOCATION})
+    assert back["undone"] == "spend"
+    assert back["restored"] == 5000
+    assert api.last.method == "POST"
+    assert api.last.url == f"/v1/passes/{SERIAL}/actions/reverse"
+    assert "idempotency-key" not in {k.lower() for k in api.last.headers}, "the API does not ask for one"
+    assert json.loads(api.last.body) == {"actionKey": "kasa3-z0187-fis0042", "locationId": LOCATION}
+    assert METHOD_NAMES["reverseAction"] == "reverse_action"
+
+    use = c.pass_action(SERIAL, body={"action": "use", "locationId": LOCATION}, idempotency_key="kasa3-z0187-fis0043")
+    # A union of two TypedDicts, not Any: `uses` exists only on the coupon / discount-card answer.
+    if "uses" in use:
+        assert use["usesLeft"] == 2  # mypy: narrowed to the coupon answer
+    else:
+        assert use["balance"] is not None
+    assert "balance" not in use
+
+
+def test_reads_the_rate_limit_headers() -> None:
+    assert parse_rate_limit(Headers([("RateLimit-Limit", "60"), ("RateLimit-Remaining", "0"), ("RateLimit-Reset", "9")])) == RateLimit(60, 0, 9)
+    assert parse_rate_limit(Headers([("RateLimit-Limit", "60")])) is None
+    assert parse_rate_limit(Headers([("RateLimit-Limit", "x"), ("RateLimit-Remaining", "0"), ("RateLimit-Reset", "9")])) is None
+    assert parse_rate_limit(None) is None
 
 
 def test_opens_streams_through_their_methods_not_request(api: Stub) -> None:
