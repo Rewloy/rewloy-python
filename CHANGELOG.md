@@ -5,6 +5,87 @@ https://rewloy.com/gelistiriciler/degisiklikler
 
 This library's releases. The API's own changes are listed at the link above.
 
+## 0.2.4 (2026-10-06)
+
+Rewloy API 1.2.0'ı izler (API sürümü, `info.version`): 260 işlem (0.2.2'de 256),
+hiçbiri kaldırılmadı. Kasa yazımlarının yanıtında `card`, kartın işlem listesi,
+webhook sırrını yenileme ve silme, POS anahtarları, test ortamını silmeden
+sıfırlama, bütün kodların listesi. Ayrıca README'deki `rewardReady` örneği
+`actions[].ready` okuyacak şekilde düzeltildi. 0.2.3 yalnız .NET ve Kotlin'in
+paket sürümüydü; beş kütüphane 0.2.4'te aynı sürüme gelir.
+
+Follows Rewloy API 1.2.0 (the product version in `info.version`): 260
+operations (256 in 0.2.2), none removed. All five client libraries are 0.2.4.
+Additive, except that `closed` in the test-reset answer is now always `null`.
+
+- **New operation `listPassOperations`** (`GET /v1/passes/{serial}/operations`,
+  paged): a card's ledger operations and coupon / discount-card uses, newest
+  first, for a till's "last operations" list. Each carries `kind`, signed
+  `delta` and `unit`, `at` (and `occurredAt` for a sale written later),
+  `reference`, `source`, `byCaller`, and what undoes it: `undoWith`
+  (`sale/reverse` or `actions/reverse`), `reversible` and, when not,
+  `reason`; for this credential's own operations `saleKey` / `actionKey` to pass
+  straight to the reverse call; `reversedBy`, `reversedAt`, `reverses`.
+  Needs `passes.read`.
+- **`card` on write answers** (`recordSale`, `passAction`, `reverseSale`,
+  `reverseAction`): the card after the write, the fields of `getPass` except
+  `customer` (`programName`, `currency`, `stamps` / `points` / `money`,
+  `rewardReady`, `actions`, `sale`…), read in the same transaction. On a replay
+  (`duplicate: true`) it is the card's current state. It is `null` when the
+  credential lacks `passes.read` in the card's programme (a till-only plugin
+  key), so the type is nullable. No second `getPass` is needed to draw a receipt.
+- **`reversed` on `recordSale` and `passAction` answers**: `true` only on a
+  replay of a sale that was taken back since (`credited` is what the first
+  request wrote, the card no longer carries it); send a new key to write the
+  receipt again.
+- **`occurredAt` errors**: a rejected `occurredAt` is a `400 VALIDATION` whose
+  `details[0].reason` says which limit: `in_future`, `too_old` (over 72 hours),
+  `before_issue` (the card did not exist then: resend without `occurredAt`),
+  `invalid`. Treat an unknown reason as `invalid`. (Documented on the error
+  details; the field stays optional.)
+- **New operations `rotateWebhookSecret`** (`POST /v1/developers/webhooks/{id}/rotate-secret`)
+  and **`deleteWebhook`** (`DELETE /v1/developers/webhooks/{id}`, `204`). A
+  rotation returns the new `secret` once; the old one keeps signing for 24
+  hours, so `Rewloy-Signature` carries two `v1` values and the delivery has
+  `Rewloy-Signature-Rotating: 1`. `verifyWebhook` already tried every `v1` and
+  several secrets: pass `[new, old]` while you switch. Deleting removes the
+  delivery history too.
+- **POS keys**: `createApiKey` takes a second body shape, `kind: "pos"` with
+  `locationId` and optional `register` (the built-in till role, one branch, named
+  "POS · branch · register"), and answers with `baseUrl`; `listApiKeys` and
+  `getApiKey` rows carry `pos` (`{ locationId, register } | null`) and
+  `requestsToday`, and `listApiKeys` filters with `kind` (`pos` | `standard`).
+- **Test environment reset** (`resetTestEnvironment`) keeps the test business: the
+  body takes `revokeKeys` (default `false`; `true` also revokes the keys, closes
+  the webhooks and cancels open store-link codes), and the answer counts
+  `deleted` (`customers`, `cards`, `codes`, `outbox`, `webhookDeliveries`), `kept`
+  (`programs`, `keys`, `webhooks`), `created`, `keysRevoked` and
+  `walletCardsVoided`; `closed` is now always `null`. New error code
+  `TEST_RESET_BUSY` (`409`).
+- **New operation `listAllBatches`** (`GET /v1/batches`, paged): every gift-card,
+  coupon and discount code of the business, newest first; filters `programId`,
+  `type`, `status` and `q`. Each row's `state` (and the `status` filter) takes
+  **`archived`**: the code itself is open but its card (programme) is archived,
+  so its link issues nothing; `status` on the row stays `open` | `closed`. New error
+  code `PROGRAM_ARCHIVED` (`409`) on `createBatch` for an archived programme.
+- **Programme rows** (`listPrograms`, `getProgram`, `createProgram`,
+  `updateProgram`) carry `programName`, always equal to `name` (the field name
+  that `createProgram` takes and `getPass` returns).
+- Descriptions only: `earnRate` / `cashbackRate` round down on a sale
+  (`floor(amountMinor / 100 × earnRate)`, `floor(amountMinor × cashbackRate / 100)`);
+  `currencyLocked` also for an open amount-valued coupon; `actions30` on a key
+  now counts reads; `rewardReady` means "reward ready" only on stamp and points
+  cards (always `true` on VIP, any balance on cashback and gift cards): read
+  `actions[].ready` to know what can be done now; `kvkkConsent` on `issuePass`;
+  `me` → `key.abilities` is not the key's permissions (those are `permissions`).
+- **Fixed in the README**: the first example read `rewardReady` as "ready to
+  redeem". It now reads `actions[].ready` (see `getPass`).
+- Python: new tests in `tests/test_v120.py` (the four new operations, paging,
+  `kind: "pos"`, `revokeKeys`, a replayed sale with `card: None`,
+  `PROGRAM_ARCHIVED`); `RewloyError.details` documents `reason`. The
+  `# type: ignore` in a retry test now also silences mypy's
+  `comparison-overlap` (the typed answer has more required fields).
+
 ## 0.2.2 (2026-10-05)
 
 Rewloy 1.1.0'a (API sürümü) göre yeniden üretildi: 256 işlem (0.2.1'de 255). Kasa

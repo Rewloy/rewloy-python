@@ -63,7 +63,7 @@ def test_has_a_method_for_every_operation_and_a_mapping_from_the_operation_id() 
 def test_says_the_version_it_is() -> None:
     import rewloy
 
-    assert rewloy.__version__ == VERSION == "0.2.2"
+    assert rewloy.__version__ == VERSION == "0.2.4"
 
 
 @pytest.fixture

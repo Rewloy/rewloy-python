@@ -528,8 +528,14 @@ def header(version: str) -> str:
 
 
 def is_required_free(schema: Json) -> bool:
-    """No required property at the top level: ``{}`` is a valid body."""
-    return not is_obj(schema) or not isinstance(schema.get("required"), list) or len(schema["required"]) == 0
+    """No required property at the top level: ``{}`` is a valid body. A union (``oneOf`` / ``anyOf``) takes ``{}`` when
+    any of its shapes does; one whose shapes all require something (create_api_key's two key shapes) does not."""
+    if not is_obj(schema):
+        return True
+    shapes = schema.get("oneOf") if isinstance(schema.get("oneOf"), list) else schema.get("anyOf")
+    if isinstance(shapes, list) and shapes:
+        return any(is_required_free(s) for s in shapes)
+    return not isinstance(schema.get("required"), list) or len(schema["required"]) == 0
 
 
 def body_required(op: Op) -> bool:

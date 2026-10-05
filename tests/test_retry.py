@@ -142,7 +142,7 @@ def test_retries_put_and_delete(stub: StubFactory) -> None:
 def test_retries_a_till_action_with_the_same_idempotency_key(stub: StubFactory) -> None:
     s = stub(lambda c: c.json(503, api_error("INTERNAL", 503, "busy")) if c.n == 1 else c.json(200, {"data": {"balance": 3, "duplicate": False}}))
     c = make_client(s)
-    assert c.pass_action(SERIAL, body=ACTION, idempotency_key="fis-42-0001") == {"balance": 3, "duplicate": False}  # type: ignore[arg-type]
+    assert c.pass_action(SERIAL, body=ACTION, idempotency_key="fis-42-0001") == {"balance": 3, "duplicate": False}  # type: ignore[arg-type,comparison-overlap]
     assert len(s.requests) == 2
     assert [r.headers["idempotency-key"] for r in s.requests] == ["fis-42-0001", "fis-42-0001"]
 

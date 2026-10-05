@@ -49,7 +49,9 @@ from rewloy import Rewloy
 rewloy = Rewloy(api_key=os.environ["REWLOY_API_KEY"])
 
 kart = rewloy.get_pass("ABCD-EFGH-JKLM")
-print(kart["type"], kart["balance"], kart["rewardReady"])
+# "Şimdi ne yapılabilir?" için `actions[].ready` okunur; `rewardReady` yalnız damga ve puanda "ödül hazır"dır.
+odul = [a for a in kart["actions"] if a["action"] in ("redeem-stamps", "redeem-reward") and a["ready"]]
+print(kart["type"], kart["balance"], bool(odul))
 ```
 
 Her işlem, adı `operationId`'nin snake_case hâli olan bir metottur
@@ -184,9 +186,18 @@ if satis["applied"] == "none":
     print("Yazılan bir şey yok:", satis.get("reason"))
 else:
     print(satis["credited"], satis["applied"], "yazıldı, bakiye", satis["balance"])
-if satis["rewardReady"]:
+# Fişi çizmek için ayrıca okumanız gerekmez: yazımdan sonraki kart satis["card"]'dadır (yetki yoksa None).
+yazimdan_sonra = satis["card"]
+if yazimdan_sonra and any(a["action"] in ("redeem-stamps", "redeem-reward") and a["ready"] for a in yazimdan_sonra["actions"]):
     print("Ödül hazır")
 ```
+
+`actions[].ready`, kartın kendi durumuna göre işlemin şimdi yapılıp
+yapılamayacağıdır (damga ödülü hazır mı, puan bir ödüle yetiyor mu, bakiye var
+mı, kupon kullanılmamış mı, VIP ziyareti bu pencerede sayılmış mı). `rewardReady`
+aynen kalır ama türe göre anlam değiştirir: damga ve puanda "ödül hazır";
+cashback ve hediye kartında bakiye sıfırdan büyükse; **VIP'te her zaman
+`True`**. Kasa ekranında "Ödül hazır" yazısını yalnız damga ve puanda gösterin.
 
 `GET /v1/passes/{serial}` ayrıca `actions` (kartın aldığı kasa işlemleri ve
 şimdi yapılıp yapılamayacakları) ve `sale` (bir satışın bu kartta ne
@@ -241,6 +252,41 @@ bakiyeli kartlarda `balance` (damga, puan, VIP, cashback, hediye kartı), kupon 
 indirim kartında `status`, `uses` ve `usesLeft`. mypy ve pyright `"uses" in islem`
 ile ayırır. Kazanımlar (`earn-stamps`, `earn-points`, `visit`) `reverse_action`la
 değil `reverse_sale`la geri alınır.
+
+**Yazımın yanıtında kartın durumu: `card`.** `record_sale`, `pass_action`,
+`reverse_sale` ve `reverse_action` yanıtları `card` taşır: yazımdan sonraki kart,
+`get_pass`'in `customer` hariç aynı alanlarıyla (`programName`, `currency`,
+`stamps`/`points`/`money`, `actions`…). Yazımla aynı işlemde okunur, yanıtın
+`balance`'ıyla aynı anı söyler. **Tekrarda** (`duplicate: True`) kartın
+**şimdiki** durumudur. Kimliğin kartın programında `passes.read` yetkisi yoksa
+(yalnız kasa yetkisi olan bir eklenti anahtarı) `card` `None`dır. `record_sale`
+yanıtındaki `reversed: True`, bu anahtarla yazılan satışın sonradan geri
+alındığını söyler (yalnız bir tekrarda olabilir; `credited` ilk isteğin
+yazdığıdır, kart onu artık taşımaz): fişi yeniden yazmak için yeni bir anahtar
+gönderin.
+
+**Kartın işlemleri: `list_pass_operations`.** Kartın defterindeki işlemler,
+yeniden eskiye, sayfalı (`rewloy.paginate("listPassOperations", path={"serial": seri})`):
+bir kasa ekranındaki "son işlemler" listesi ve her birinin İade düğmesi için;
+kasanın kendi anahtar günlüğünü tutması gerekmez. Her işlemde `undoWith` hangi
+uç noktanın geri aldığını (`"sale/reverse"` ya da `"actions/reverse"`),
+`reversible` bu kimliğin şimdi geri alıp alamayacağını söyler; bu kimliğin kendi
+işlemlerinde `saleKey` ya da `actionKey` de gelir.
+
+```python
+for islem in rewloy.paginate("listPassOperations", path={"serial": seri}):
+    if not islem["reversible"]:
+        continue
+    if islem["undoWith"] == "sale/reverse":
+        rewloy.reverse_sale(seri, body={"saleKey": islem["saleKey"]})
+    else:
+        rewloy.reverse_action(seri, body={"actionKey": islem["actionKey"]})
+```
+
+**`occurredAt` reddedilirse** `400 VALIDATION` gelir ve
+`err.details[0]["reason"]` nedeni söyler: `in_future`, `too_old` (72 saatten
+eski), `before_issue` (kart o anda yoktu: `occurredAt` olmadan yeniden
+gönderin), `invalid`. Tanımadığınız bir `reason`'ı `invalid` gibi ele alın.
 
 ### `Idempotency-Key`
 
@@ -338,6 +384,21 @@ rewloy.test_webhook(yeni["webhook"]["id"])   # webhook.test olayı gönderir
 
 Adres herkese açık bir `https` adresi olmalıdır (test ortamında da);
 yerelde bir tünel kullanın.
+
+**Sırrı yenilemek.** Kaybolan ya da sızan bir sır için `rotate_webhook_secret`
+webhook'a yeni bir sır verir (yeni `secret` yalnız o yanıtta döner); webhook'u
+silip yeniden eklemek gerekmez. Eski sır 24 saat daha yeninin yanında imzalar:
+o sürede `Rewloy-Signature` iki `v1` taşır ve teslimler
+`Rewloy-Signature-Rotating: 1` başlığıyla gelir. `verify_webhook` her `v1`'i ve
+`secret` olarak verilen birden çok sırrı dener; yenilemeden önce alıcınızı
+`[yeni, eski]` ile güncelleyin. `delete_webhook` webhook'u teslim geçmişiyle
+birlikte kalıcı siler (`204`).
+
+```python
+yeni = rewloy.rotate_webhook_secret(webhook_id)["secret"]
+# yeni sırrı alıcınıza ekleyin, 24 saat sonra eskisini bırakın
+olay = verify_webhook(ham_govde, imza_basligi, [yeni, eski_sir])
+```
 
 Tutmazsa `WebhookSignatureError` atar: 400 ile yanıtlayın ve hiçbir işlem
 yapmayın. Gövde mutlaka ham olmalıdır (`str` ya da `bytes`). JSON olarak
@@ -517,6 +578,20 @@ yanit.mode   # "test"
 - Webhook'lar teslim edilir ve `Rewloy-Test: 1` başlığıyla `"test": true`
   taşır.
 - Gerçek müşteri verisini test ortamına girmeyin.
+- `reset_test_environment` (1.2.0'dan beri) müşterileri, kartları, kodları ve
+  kayıtları siler; ortamın kimliği, programları, şubeleri, anahtarları ve
+  webhook'ları kalır, entegrasyonunuz aynı anahtarla sürer. Bir anahtar
+  sızdıysa `body={"revokeKeys": True}` anahtarları da geçersiz kılar ve
+  webhook'ları kapatır. Yanıt `deleted` ve `kept` sayılarını verir; `closed`
+  artık hep `None`dır.
+- POS için anahtar: `create_api_key(body={"kind": "pos", "locationId": sube_id, "register": "Kasa 1", "password": sifre})`
+  hazır Kasa rolüyle yalnız o şubede çalışan bir anahtar oluşturur; yanıttaki
+  `baseUrl` POS'a yazılacak adrestir.
+- `list_all_batches` işletmenin bütün hediye kartı, kupon ve indirim kodlarını
+  sayfalar (`status` süzgeci: `open`, `full`, `expired`, `closed` ya da
+  `archived`; satırın `state`'i de bunlardan biri: `archived` kodun programı
+  arşivde demektir, bağlantısı kart vermez). Arşivdeki bir programa kod
+  oluşturmak `409 PROGRAM_ARCHIVED` verir.
 
 Ayrıntı: https://rewloy.com/gelistiriciler#test-ortamı
 
@@ -680,6 +755,24 @@ print(voided["undone"], voided["restored"], voided["balance"])   # 'spend', 2500
   of two `TypedDict`s: the balance-card answer (`balance`) or the coupon /
   discount-card answer (`status`, `uses`, `usesLeft`); `"uses" in answer`
   narrows it for mypy and pyright.
+- **`card` on write answers.** `record_sale`, `pass_action`, `reverse_sale` and
+  `reverse_action` answer with `card`: the card after the write, the fields of
+  `get_pass` except `customer`, read in the same transaction (on a replay,
+  `duplicate: True`, it is the card's **current** state). A key without
+  `passes.read` in the card's programme gets `card: None`. `record_sale`'s
+  `reversed: True` (replays only) says the sale written under that key was
+  taken back since: send a new key to write the receipt again. For "can I act
+  now" read `card["actions"][i]["ready"]`; `rewardReady` means "reward ready"
+  only for stamp and points cards (always `True` on VIP, any balance on cashback
+  and gift cards).
+- **Recent operations.** `list_pass_operations` lists a card's ledger
+  operations, newest first and paged, for a till's "last operations" screen:
+  `undoWith` (`"sale/reverse"` or `"actions/reverse"`), `reversible` and, for
+  this credential's own operations, `saleKey` / `actionKey` to pass straight to
+  `reverse_sale` / `reverse_action`.
+- **Rejected `occurredAt`** is a `400 VALIDATION` whose
+  `err.details[0]["reason"]` is `in_future`, `too_old`, `before_issue` or
+  `invalid` (treat an unknown reason as `invalid`).
 - **Idempotency keys.** `record_sale`, `pass_action`, `send_campaign` and
   `refund_shop_redemption` need an `Idempotency-Key`: the API's OpenAPI document
   marks the header required for them, so `idempotency_key` is a required
@@ -737,6 +830,20 @@ event = verify_webhook(raw_body, headers.get("Rewloy-Signature"), secret)
 - **Headers.** `Rewloy-Event` is the event type. `Rewloy-Delivery` is the
   same on every retry of a delivery: deduplicate on it. Delivery is at least
   once.
+
+`rotate_webhook_secret` gives a webhook a new secret (returned only in that
+answer); the old one keeps signing for 24 hours, so `Rewloy-Signature` carries
+two `v1` values and the delivery has `Rewloy-Signature-Rotating: 1`.
+`verify_webhook` tries every `v1` and every secret you pass:
+`[new_secret, old_secret]`. `delete_webhook` removes a webhook and its delivery
+history for good.
+
+Also in Rewloy 1.2.0 (library 0.2.4): `create_api_key(body={"kind": "pos", "locationId": …, "register": …, "password": …})`
+(a till key bound to one branch); `reset_test_environment(body={"revokeKeys": True})`
+(keeps the test business, programmes and keys; revokes keys only when asked);
+`list_all_batches` (every gift-card, coupon and discount code of the business,
+with the `archived` state); `409 PROGRAM_ARCHIVED` when creating a code for an
+archived programme.
 
 ### Errors, retries, deprecations
 
