@@ -342,6 +342,8 @@ class RewloyMethods:
         ``POST /v1/passes``
 
         API referansı: https://rewloy.com/gelistiriciler/api#op-issuePass
+
+        ``idempotency_key`` is the ``Idempotency-Key`` header, optional: 8–64 printable ASCII characters. Left out, the client generates a UUID and sends the same one on every retry of the call.
         """
         return cast(
             "T.IssuePassData",
@@ -425,7 +427,7 @@ class RewloyMethods:
         *,
         body: T.PassActionBody,
         merchant: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str,
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
     ) -> T.PassActionData:
@@ -454,6 +456,8 @@ class RewloyMethods:
         ``POST /v1/passes/{serial}/actions``
 
         API referansı: https://rewloy.com/gelistiriciler/api#op-passAction
+
+        ``idempotency_key`` is the ``Idempotency-Key`` header, required: 8–64 printable ASCII characters. The client never makes one up (a generated key would not survive a restart of your app); it sends this one on every retry of the call.
         """
         return cast(
             "T.PassActionData",
@@ -474,7 +478,7 @@ class RewloyMethods:
         *,
         body: T.RecordSaleBody,
         merchant: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str,
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
     ) -> T.RecordSaleData:
@@ -505,6 +509,8 @@ class RewloyMethods:
         ``POST /v1/passes/{serial}/sale``
 
         API referansı: https://rewloy.com/gelistiriciler/api#op-recordSale
+
+        ``idempotency_key`` is the ``Idempotency-Key`` header, required: 8–64 printable ASCII characters. The client never makes one up (a generated key would not survive a restart of your app); it sends this one on every retry of the call.
         """
         return cast(
             "T.RecordSaleData",
@@ -906,6 +912,8 @@ class RewloyMethods:
         ``POST /v1/holder/login``
 
         API referansı: https://rewloy.com/gelistiriciler/api#op-holderLogin
+
+        ``idempotency_key`` is the ``Idempotency-Key`` header, optional: 8–64 printable ASCII characters. Left out, the client generates a UUID and sends the same one on every retry of the call.
         """
         return cast(
             "T.HolderLoginData",
@@ -3175,7 +3183,7 @@ class RewloyMethods:
         *,
         body: T.SendCampaignBody,
         merchant: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str,
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
     ) -> T.SendCampaignData:
@@ -3195,6 +3203,8 @@ class RewloyMethods:
         ``POST /v1/campaigns``
 
         API referansı: https://rewloy.com/gelistiriciler/api#op-sendCampaign
+
+        ``idempotency_key`` is the ``Idempotency-Key`` header, required: 8–64 printable ASCII characters. The client never makes one up (a generated key would not survive a restart of your app); it sends this one on every retry of the call.
         """
         return cast(
             "T.SendCampaignData",
@@ -5271,7 +5281,7 @@ class RewloyMethods:
         *,
         body: T.RefundShopRedemptionBody,
         merchant: Optional[str] = None,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str,
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
     ) -> T.RefundShopRedemptionData:
@@ -5286,6 +5296,8 @@ class RewloyMethods:
         ``POST /v1/shops/{id}/redemptions/{redemptionId}/refund``
 
         API referansı: https://rewloy.com/gelistiriciler/api#op-refundShopRedemption
+
+        ``idempotency_key`` is the ``Idempotency-Key`` header, required: 8–64 printable ASCII characters. The client never makes one up (a generated key would not survive a restart of your app); it sends this one on every retry of the call.
         """
         return cast(
             "T.RefundShopRedemptionData",
@@ -7279,6 +7291,8 @@ class RewloyMethods:
         ``POST /v1/holder/identities/email``
 
         API referansı: https://rewloy.com/gelistiriciler/api#op-addHolderEmail
+
+        ``idempotency_key`` is the ``Idempotency-Key`` header, optional: 8–64 printable ASCII characters. Left out, the client generates a UUID and sends the same one on every retry of the call.
         """
         return cast(
             "T.AddHolderEmailData",
@@ -7341,6 +7355,8 @@ class RewloyMethods:
         ``POST /v1/holder/identities/phone``
 
         API referansı: https://rewloy.com/gelistiriciler/api#op-addHolderPhone
+
+        ``idempotency_key`` is the ``Idempotency-Key`` header, optional: 8–64 printable ASCII characters. Left out, the client generates a UUID and sends the same one on every retry of the call.
         """
         return cast(
             "T.AddHolderPhoneData",
@@ -7458,6 +7474,8 @@ class RewloyMethods:
         ``POST /v1/holder/identities/{id}/replace``
 
         API referansı: https://rewloy.com/gelistiriciler/api#op-replaceHolderIdentity
+
+        ``idempotency_key`` is the ``Idempotency-Key`` header, optional: 8–64 printable ASCII characters. Left out, the client generates a UUID and sends the same one on every retry of the call.
         """
         return cast(
             "T.ReplaceHolderIdentityData",
@@ -8079,6 +8097,8 @@ class RewloyMethods:
         ``POST /v1/holder/recovery``
 
         API referansı: https://rewloy.com/gelistiriciler/api#op-startHolderRecovery
+
+        ``idempotency_key`` is the ``Idempotency-Key`` header, optional: 8–64 printable ASCII characters. Left out, the client generates a UUID and sends the same one on every retry of the call.
         """
         return cast(
             "T.StartHolderRecoveryData",

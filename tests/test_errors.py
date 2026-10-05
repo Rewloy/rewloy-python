@@ -17,7 +17,7 @@ def test_maps_an_api_error_body(stub: StubFactory) -> None:
     body = api_error("INSUFFICIENT_BALANCE", 409, "bakiye yetersiz: 40,00 ₺ var")
     s = stub(lambda c: c.json(409, body, {"X-Request-Id": "0192f7c1-8b2e-7a31-9c1d-000000000009"}))
     with pytest.raises(RewloyError) as info:
-        make_client(s, max_retries=0).pass_action(SERIAL, body={"action": "spend", "locationId": LOCATION, "amountMinor": 5000})
+        make_client(s, max_retries=0).pass_action(SERIAL, body={"action": "spend", "locationId": LOCATION, "amountMinor": 5000}, idempotency_key="fis-000123")
     err = info.value
     assert type(err) is RewloyError
     assert not isinstance(err, RateLimitError)
@@ -39,7 +39,7 @@ def test_keeps_the_validation_details(stub: StubFactory) -> None:
     details = [{"field": "body", "rule": "maxLength", "message": "en fazla 180 karakter olmalı"}]
     s = stub(lambda c: c.json(400, api_error("VALIDATION", 400, "Gönderilen bilgiler geçersiz (gövde): body en fazla 180 karakter olmalı", details)))
     with pytest.raises(RewloyError) as info:
-        make_client(s).send_campaign(body={"body": "x" * 200})
+        make_client(s).send_campaign(body={"body": "x" * 200}, idempotency_key="kampanya-0001")
     assert info.value.code == "VALIDATION"
     assert info.value.details == details
     assert info.value.title == "Gönderilen bilgiler geçersiz"

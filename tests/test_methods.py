@@ -76,6 +76,11 @@ def test_a_method_calls_its_operation(operation_id: str, stub_for_all: Any) -> N
         kwargs["query"] = required_query(operation_id)
     if "body" in signature.parameters and signature.parameters["body"].default is inspect.Parameter.empty:
         kwargs["body"] = {}
+    if "idempotency_key" in signature.parameters and signature.parameters["idempotency_key"].default is inspect.Parameter.empty:
+        assert meta.idempotency == "required", operation_id
+        kwargs["idempotency_key"] = "till-key-0001"
+    else:
+        assert meta.idempotency != "required", operation_id
     if meta.stream:
         kwargs["reconnect"] = False
 

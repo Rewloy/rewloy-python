@@ -62,7 +62,7 @@ def test_has_a_method_for_every_operation_and_a_mapping_from_the_operation_id() 
 def test_says_the_version_it_is() -> None:
     import rewloy
 
-    assert rewloy.__version__ == VERSION == "0.2.0"
+    assert rewloy.__version__ == VERSION == "0.2.1"
 
 
 @pytest.fixture
@@ -159,12 +159,56 @@ def test_a_body_that_is_not_json_is_the_callers_mistake() -> None:
         c.create_segment(body={"name": "x", "rule": {"minVisits": float("nan")}})  # type: ignore[typeddict-item]
 
 
-def test_generates_an_idempotency_key_when_none_is_given_and_sends_the_given_one(api: Stub) -> None:
+def test_generates_an_idempotency_key_where_it_is_optional_and_sends_the_given_one(api: Stub) -> None:
     c = make_client(api)
-    c.pass_action(SERIAL, body={"action": "earn-stamps", "locationId": LOCATION, "count": 2})
+    c.issue_pass(body={"programId": "p1", "name": "Ayşe"})
     assert UUID.match(api.last.headers["idempotency-key"])
-    c.pass_action(SERIAL, body={"action": "earn-stamps", "locationId": LOCATION}, idempotency_key="fis-000123")
+    c.issue_pass(body={"programId": "p1"}, idempotency_key="kayit-000123")
+    assert api.last.headers["idempotency-key"] == "kayit-000123"
+
+
+def test_requires_the_idempotency_key_where_the_api_does_and_never_makes_one_up(api: Stub) -> None:
+    c = make_client(api)
+    body = {"action": "earn-stamps", "locationId": LOCATION, "count": 2}
+    with pytest.raises(TypeError, match="idempotency_key"):
+        c.pass_action(SERIAL, body=body)  # type: ignore[call-arg,arg-type]
+    with pytest.raises(ValueError, match="pass_action needs idempotency_key|passAction needs idempotency_key"):
+        c.request("passAction", path={"serial": SERIAL}, body=body)
+    with pytest.raises(ValueError, match="sendCampaign needs idempotency_key"):
+        c.request("sendCampaign", body={"body": "Merhaba"})
+    with pytest.raises(ValueError, match="needs idempotency_key"):
+        c.pass_action(SERIAL, body=body, idempotency_key=None)  # type: ignore[arg-type]
+    assert api.requests == []  # nothing was sent
+    c.pass_action(SERIAL, body=body, idempotency_key="fis-000123")  # type: ignore[arg-type]
     assert api.last.headers["idempotency-key"] == "fis-000123"
+
+
+def test_refuses_an_idempotency_key_that_cannot_be_a_header_value_before_sending(api: Stub) -> None:
+    c = make_client(api)
+    body = {"action": "earn-stamps", "locationId": LOCATION}
+    for bad in ["fiş-000123-ğ", "with space 123", "kısa", "a" * 65, "", "tab\there-123", "satir\nsonu-123", "valid-key-1\n"]:
+        with pytest.raises(ValueError, match="Idempotency-Key yalnız ASCII karakterler içerebilir"):
+            c.pass_action(SERIAL, body=body, idempotency_key=bad)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="printable ASCII"):
+        c.issue_pass(body={"programId": "p1"}, idempotency_key="çiçek-çiçek-1")
+    with pytest.raises(ValueError, match="Idempotency-Key yalnız ASCII"):
+        c.request("passAction", path={"serial": SERIAL}, body=body, idempotency_key="fiş-000123")
+    assert api.requests == []  # nothing was sent
+    for good in ["12345678", "a" * 64, "kasa3-z0187-fis0042", "!~#$%&()*+,-./:;<=>?@[]^_{|}"]:
+        c.pass_action(SERIAL, body=body, idempotency_key=good)  # type: ignore[arg-type]
+        assert api.last.headers["idempotency-key"] == good
+
+
+def test_accepts_the_base_url_with_or_without_v1(api: Stub) -> None:
+    for suffix in ["", "/", "/v1", "/v1/", "//v1//"]:
+        c = make_client(api, base_url=api.url + suffix)
+        assert c.base_url == api.url, suffix
+        c.get_pass(SERIAL)
+        assert api.last.url == f"/v1/passes/{SERIAL}", suffix
+    assert Rewloy(base_url="https://app.rewloy.com/v1").base_url == "https://app.rewloy.com"
+    assert Rewloy(base_url="https://app.rewloy.com/v1/").base_url == "https://app.rewloy.com"
+    assert Rewloy(base_url="https://proxy.example.com/rewloy/v1").base_url == "https://proxy.example.com/rewloy"
+    assert Rewloy(base_url="https://proxy.example.com/rewloy").base_url == "https://proxy.example.com/rewloy"
 
 
 def test_encodes_path_parameters_and_the_query(api: Stub) -> None:
@@ -198,7 +242,7 @@ def test_reads_each_kind_of_answer(api: Stub) -> None:
 
 def test_gives_the_whole_answer_through_request(api: Stub) -> None:
     c = make_client(api)
-    res = c.request("sendCampaign", body={"body": "Bu hafta kahveler 2 damga!"})
+    res = c.request("sendCampaign", body={"body": "Bu hafta kahveler 2 damga!"}, idempotency_key="kampanya-2026-10-03")
     assert res.status == 201
     assert res.data == {"id": "c1"}
     assert res.meta is None
@@ -209,7 +253,7 @@ def test_gives_the_whole_answer_through_request(api: Stub) -> None:
     assert res.headers["Rewloy-Mode"] == "test"  # case-insensitive
     assert "rewloy-mode" in res.headers
     # By method name too.
-    again = c.request("send_campaign", body={"body": "x"})
+    again = c.request("send_campaign", body={"body": "x"}, idempotency_key="kampanya-0002")
     assert again.status == 201
     listing = c.request("listCustomers")
     assert listing.meta == {"page": 1, "pageSize": 50, "total": 1}

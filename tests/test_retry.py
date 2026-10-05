@@ -142,13 +142,9 @@ def test_retries_put_and_delete(stub: StubFactory) -> None:
 def test_retries_a_till_action_with_the_same_idempotency_key(stub: StubFactory) -> None:
     s = stub(lambda c: c.json(503, api_error("INTERNAL", 503, "busy")) if c.n == 1 else c.json(200, {"data": {"balance": 3, "duplicate": False}}))
     c = make_client(s)
-    assert c.pass_action(SERIAL, body=ACTION) == {"balance": 3, "duplicate": False}  # type: ignore[arg-type]
+    assert c.pass_action(SERIAL, body=ACTION, idempotency_key="fis-42-0001") == {"balance": 3, "duplicate": False}  # type: ignore[arg-type]
     assert len(s.requests) == 2
-    keys = [r.headers["idempotency-key"] for r in s.requests]
-    assert len(keys[0]) == 36
-    assert keys[1] == keys[0]
-    c.pass_action(SERIAL, body=ACTION, idempotency_key="fis-42-0001")  # type: ignore[arg-type]
-    assert s.requests[2].headers["idempotency-key"] == "fis-42-0001"
+    assert [r.headers["idempotency-key"] for r in s.requests] == ["fis-42-0001", "fis-42-0001"]
 
 
 def test_waits_out_idempotency_in_progress_on_a_campaign_send_then_reads_the_replayed_answer(stub: StubFactory) -> None:
@@ -164,7 +160,7 @@ def test_waits_out_idempotency_in_progress_on_a_campaign_send_then_reads_the_rep
 def test_another_409_is_not_retried(stub: StubFactory) -> None:
     s = stub(lambda c: c.json(409, api_error("IDEMPOTENCY_KEY_REUSED", 409, "x")))
     with pytest.raises(RewloyError) as info:
-        make_client(s).request("sendCampaign", body={"body": "Merhaba"})
+        make_client(s).request("sendCampaign", body={"body": "Merhaba"}, idempotency_key="kampanya-0001")
     assert info.value.code == "IDEMPOTENCY_KEY_REUSED"
     assert len(s.requests) == 1
 

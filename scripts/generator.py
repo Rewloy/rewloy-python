@@ -631,6 +631,15 @@ def docstring(op: Op, indent: str) -> str:
     parts = [escape_doc(t) for t in (op.summary.strip(), op.description.strip()) if t]
     parts.append(f"``{op.method} {op.path}``")
     parts.append(f"API referansı: {reference(op)}")
+    if op.idempotency is not None:
+        parts.append(
+            "``idempotency_key`` is the ``Idempotency-Key`` header, required: 8–64 printable ASCII characters. The "
+            "client never makes one up (a generated key would not survive a restart of your app); it sends this one "
+            "on every retry of the call."
+            if op.idempotency.required else
+            "``idempotency_key`` is the ``Idempotency-Key`` header, optional: 8–64 printable ASCII characters. Left "
+            "out, the client generates a UUID and sends the same one on every retry of the call."
+        )
     if op.deprecated:
         parts.append(f".. deprecated:: {deprecation_note(op)}")
     if op.deprecated_fields:
@@ -688,7 +697,7 @@ def method_source(op: Op, e: TypeEmitter) -> str:
         sig.append("merchant: Optional[str] = None")
         call.append("merchant=merchant")
     if op.idempotency is not None:
-        sig.append("idempotency_key: Optional[str] = None")
+        sig.append("idempotency_key: str" if op.idempotency.required else "idempotency_key: Optional[str] = None")
         call.append("idempotency_key=idempotency_key")
     sig.append("timeout: Optional[float] = None")
     call.append("timeout=timeout")

@@ -157,6 +157,30 @@ def encode_query(query: Mapping[str, object]) -> str:
     return "&".join(pairs)
 
 
+def normalize_base_url(url: str) -> str:
+    """The base URL without trailing slashes and without a trailing ``/v1``: the operations' paths carry ``/v1``
+    themselves, and the documentation shows the address both ways (``https://app.rewloy.com`` and
+    ``https://app.rewloy.com/v1``)."""
+    url = url.rstrip("/")
+    if url.endswith("/v1"):
+        url = url[: -len("/v1")].rstrip("/")
+    return url
+
+
+_IDEMPOTENCY_KEY = re.compile(r"[\x21-\x7e]{8,64}")
+
+
+def check_idempotency_key(key: object) -> str:
+    """An ``Idempotency-Key`` is 8–64 printable ASCII characters (0x21–0x7E): an HTTP header value cannot carry
+    anything else."""
+    if not isinstance(key, str) or _IDEMPOTENCY_KEY.fullmatch(key) is None:
+        raise ValueError(
+            "Rewloy: Idempotency-Key yalnız ASCII karakterler içerebilir (görünür karakterler, 8–64) / the "
+            "Idempotency-Key must be printable ASCII (0x21–0x7E), 8–64 characters"
+        )
+    return key
+
+
 @dataclass(frozen=True)
 class _Call:
     """What the caller gave: everything about one call that is not the operation itself."""
@@ -255,7 +279,7 @@ class Rewloy(RewloyMethods):
         self.merchant = merchant
         if not re.match(r"https?://", base_url, re.IGNORECASE):
             raise ValueError("Rewloy: base_url must start with http:// or https://")
-        self.base_url = base_url.rstrip("/")
+        self.base_url = normalize_base_url(base_url)
         if timeout < 0:
             raise ValueError("Rewloy: timeout cannot be negative")
         self.timeout = timeout
@@ -456,7 +480,16 @@ class Rewloy(RewloyMethods):
         if op.merchant and merchant:
             h["Rewloy-Merchant"] = merchant
         if op.idempotency:
-            h["Idempotency-Key"] = call.idempotency_key or str(uuid.uuid4())
+            if call.idempotency_key is None:
+                if op.idempotency == "required":
+                    raise ValueError(
+                        f"Rewloy: {op.id} needs idempotency_key: Idempotency-Key gerekli, kütüphane uydurmaz (8–64 ASCII "
+                        "karakter) / the Idempotency-Key is required and is never generated for you (8–64 printable "
+                        "ASCII characters)"
+                    )
+                h["Idempotency-Key"] = str(uuid.uuid4())
+            else:
+                h["Idempotency-Key"] = check_idempotency_key(call.idempotency_key)
         if op.body:
             h["Content-Type"] = "application/json"
         if op.stream:
@@ -467,7 +500,8 @@ class Rewloy(RewloyMethods):
             h["Last-Event-ID"] = last_event_id
         for name, value in (call.headers or {}).items():
             if value is not None:
-                h[name] = _scalar(value, f"headers.{name}")
+                text = _scalar(value, f"headers.{name}")
+                h[name] = check_idempotency_key(text) if name.lower() == "idempotency-key" else text
         return h
 
     def _body(self, op: OperationMeta, call: _Call) -> Optional[bytes]:

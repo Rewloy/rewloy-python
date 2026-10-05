@@ -5,6 +5,34 @@ https://rewloy.com/gelistiriciler/degisiklikler
 
 This library's releases. The API's own changes are listed at the link above.
 
+## 0.2.1 (2026-10-05)
+
+Dışarıdan geliştiricilerin bulduğu üç sorun düzeltildi.
+
+Three problems found by outside developers, fixed.
+
+- **`Idempotency-Key` is checked before sending.** A key with non-ASCII
+  characters (`fiş-0042`) crashed the HTTP layer with a raw encoding error.
+  Now the client refuses any key that is not printable ASCII (0x21–0x7E), 8–64
+  characters, with a clear `ValueError` ("Idempotency-Key yalnız ASCII
+  karakterler içerebilir …") and sends nothing. The API will also answer
+  `400 VALIDATION` for such a key in its next release.
+- **`base_url` takes the address with or without `/v1`.** The documentation and
+  the OpenAPI document show `https://app.rewloy.com/v1`; the client wanted the
+  origin only. Now both work; a trailing `/v1` or `/v1/` and trailing slashes
+  are stripped (`rewloy.base_url` is the origin).
+- **`idempotency_key` is required where the API requires it.** For
+  `record_sale`, `pass_action`, `send_campaign` and `refund_shop_redemption`
+  the OpenAPI document marks the header required, but the methods took it as
+  optional and made up a random UUID when it was missing, which does not
+  survive a restart of your app. It is now a required keyword argument of those
+  methods (`TypeError` if left out; `ValueError` through `request()`), checked
+  by mypy and before anything is sent. Where the header is optional
+  (`issue_pass`, …) a UUID is still generated and reused on every retry.
+  **Breaking for callers that relied on the generated key** (a small break,
+  taken in a patch release because the old behaviour could write a sale twice).
+  An empty string is no longer treated as "no key": it is refused as invalid.
+
 ## 0.2.0 (2026-10-05)
 
 Rewloy API 1.0.5'e göre yeniden üretildi: 255 işlem (0.1.0'da 237). Kasa için

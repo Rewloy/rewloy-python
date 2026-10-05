@@ -11,8 +11,9 @@ understand (5), English library text with the API's Turkish descriptions and
 a bilingual README (8), a credential is left out where an operation does not
 take its kind but works without one (13), construction is checked (14), the
 retry rules and their numbers (15), timeouts per attempt, for a stream only
-until its headers (16), UUID v4 idempotency keys sent for every operation that
-declares the header (17), one error hierarchy with the same codes for what
+until its headers (16), idempotency keys (17: required where the API's
+document says so and never made up for those, printable ASCII of 8–64
+characters checked before sending, a UUID v4 only where optional), one error hierarchy with the same codes for what
 never got an answer (18), test mode read from `Rewloy-Mode` on the answer, not
 kept on the client (20), streams reconnect by default (21), webhooks accept
 any `v1` and any of several secrets with a ±300 s tolerance (22), and the

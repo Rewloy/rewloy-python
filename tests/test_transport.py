@@ -51,7 +51,7 @@ def test_a_body_a_204_and_a_blob(stub: StubFactory, transport: Any) -> None:
 
     s = stub(handle)
     c = Rewloy(api_key=KEY, base_url=s.url, transport=transport)
-    res = c.request("sendCampaign", body={"body": "Merhaba ğüşıöç"})
+    res = c.request("sendCampaign", body={"body": "Merhaba ğüşıöç"}, idempotency_key="kampanya-0001")
     assert res.status == 201
     assert res.data["echo"] == {"body": "Merhaba ğüşıöç"}
     c.revoke_api_key("k1")
