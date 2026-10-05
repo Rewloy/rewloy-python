@@ -55,7 +55,7 @@ jobs:
           cd "$RUNNER_TEMP"
           "$RUNNER_TEMP/clean/bin/python" -c "
           import rewloy, importlib.resources as r
-          assert rewloy.__version__ == '0.2.0', rewloy.__version__
+          assert rewloy.__version__ == '0.2.1', rewloy.__version__
           assert len(rewloy.OPERATIONS) > 200
           assert r.files('rewloy').joinpath('py.typed').is_file()
           assert rewloy.Rewloy(api_key='rwk_x').pass_action
