@@ -1,5 +1,5 @@
 """Every generated method, against a stub that answers each operation the way the API does: the path, the verb, the
-headers and the way the answer is read are checked for all 237 of them."""
+headers and the way the answer is read are checked for every one of them."""
 
 from __future__ import annotations
 

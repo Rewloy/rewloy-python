@@ -13,7 +13,8 @@ kartı, kupon ve indirimdir:
 
 Kasada QR okutulur; bakiye, ödül ve kampanyalar kartın kendisinde güncellenir.
 Panelde yapılabilen her şey [Rewloy API v1](https://rewloy.com/gelistiriciler)
-ile de yapılabilir; bu kütüphane onu Python'dan kullanır:
+ile de yapılabilir; bu kütüphane onu Python'dan kullanır. Geliştirici
+belgeleri: **https://rewloy.com/gelistiriciler**.
 
 - **Tam tipli.** API'nin her işlemi, `operationId` adının snake_case hâliyle
   bir metottur (`passAction` → `pass_action`). İstek gövdeleri, sorgular ve
@@ -24,8 +25,8 @@ ile de yapılabilir; bu kütüphane onu Python'dan kullanır:
 - **Bağımlılıksız.** Python 3.9 ve üstü; yalnız standart kütüphane (`urllib`,
   `json`, `hmac`). Bağlantı havuzu ve HTTP/2 isteyen için `httpx` taşıması
   isteğe bağlıdır.
-- **Güvenli tekrar.** Geçici hatalarda ölçülü yeniden deneme; kasa işleminde
-  ve kampanyada `Idempotency-Key`.
+- **Güvenli tekrar.** Geçici hatalarda ölçülü yeniden deneme; satışta, kasa
+  işleminde ve kampanyada `Idempotency-Key`.
 - **Ötesi:** sayfalama, canlı akış (SSE), webhook imzası doğrulama,
   kullanımdan kalkma uyarıları.
 
@@ -58,7 +59,7 @@ Her işlem, adı `operationId`'nin snake_case hâli olan bir metottur
 - `query`: sorgu parametreleri (sözlük);
 - `body`: JSON gövde (sözlük);
 - `merchant`: `Rewloy-Merchant` başlığı;
-- `idempotency_key`: `Idempotency-Key` başlığı (kasa işlemi ve kampanya);
+- `idempotency_key`: `Idempotency-Key` başlığı (satış, kasa işlemi ve kampanya);
 - `timeout` (saniye) ve `max_retries`.
 
 Sorgu ve gövde sözlükleri API'deki adlarıyla yazılır (`programId`,
@@ -106,7 +107,7 @@ Bir işlem istemcinin kimlik türünü kabul etmiyor ama kimliksiz de çalışı
 bir kimliği reddeder (`CREDENTIAL_NOT_ALLOWED`). Kimlik `repr`de görünmez.
 
 Diğer seçenekler:
-- `base_url` (varsayılan `https://app.rewloy.com`);
+- `base_url` (varsayılan `https://app.rewloy.com`; `/v1` olmadan, kütüphane ekler);
 - `timeout` (saniye; varsayılan 60, `0` sınırsız);
 - `max_retries` (2);
 - `transport`: HTTP katmanı (bkz. [Taşıma](#taşıma-ve-test-etmek));
@@ -115,6 +116,21 @@ Diğer seçenekler:
 
 İstemci iş parçacıkları arasında paylaşılabilir. `with Rewloy(...) as rewloy:`
 ya da `rewloy.close()` taşımanın tuttuklarını bırakır.
+
+### Başka bir adres (staging)
+
+API'nin başka bir kopyasına (kendi staging ortamınız ya da bir vekil sunucu)
+`base_url` ile bağlanılır:
+
+```python
+rewloy = Rewloy(
+    api_key=os.environ["REWLOY_API_KEY"],
+    base_url="https://rewloy-staging.ornek.com",   # /v1 olmadan
+)
+```
+
+Gerçek müşterilere dokunmadan denemek için adres değiştirmeniz gerekmez:
+[test modu](#test-modu) aynı adreste, ayrı bir test ortamıyla çalışır.
 
 ## Kart vermek ve kasada işlem
 
@@ -127,17 +143,84 @@ seri, kart_adresi = sonuc["serial"], sonuc["cardUrl"]
 islem = rewloy.pass_action(
     seri,
     body={"action": "earn-stamps", "locationId": sube_id, "count": 1},
-    idempotency_key=f"fis-{fis_no}",
+    idempotency_key=f"kasa3-z0187-fis{fis_no}",   # aşağıya bakın
 )
 if islem.get("duplicate"):
-    print("Bu fiş zaten işlenmiş")
+    print("Bu işlem zaten yazılmış")
 ```
 
-`pass_action`, `send_campaign` ve `issue_pass` bir `Idempotency-Key` alır.
-Verilmezse kütüphane bir UUID üretir ve aynı çağrının her denemesinde
-aynısını gönderir. Kasada fiş numarası gibi kendi anahtarınızı vermek
-daha iyidir: uygulama çöküp yeniden başlasa bile aynı fiş ikinci kez işlenmez,
-aynı anahtarla tekrar ilk sonucu `duplicate: true` ile döndürür.
+### Satış: `record_sale`
+
+Kasa ya da kendi yazılımınız için en kolay yol `record_sale`dir: "bu satış
+oldu, sen yaz". Ödenen toplamı (kartın para biriminde, kuruş) gönderirsiniz;
+ne yazılacağına kartın türü ve programın kendi kuralı karar verir. Kartın
+türünü bilmeniz gerekmez.
+
+```python
+kart = rewloy.get_pass(seri)
+# Kartın türüne özgü alanlar; `balance` yerine bunları okuyun.
+if "stamps" in kart:
+    print(f"{kart['stamps']['count']} / {kart['stamps']['max']} damga")
+if "points" in kart:
+    print(f"{kart['points']} puan")
+if "money" in kart:
+    print(kart["money"]["amountMinor"] / 100, kart["money"]["currency"])
+musteri = kart.get("customer")   # yalnız customers.read yetkisiyle; yoksa None
+print(kart["programName"], musteri["name"] if musteri else None)
+
+# Fiş numarası anahtar olamaz: kasa + Z no + fiş no, ya da satışla saklanan bir UUID.
+anahtar = f"kasa3-z0187-fis{fis_no}"
+satis = rewloy.record_sale(
+    seri,
+    body={
+        "locationId": sube_id,
+        "amountMinor": 4550,          # 45,50: kartın para biriminde (kart["currency"]), kuruş
+        "currency": kart["currency"], # isteğe bağlı güvence: uyuşmazsa 422 CURRENCY_MISMATCH
+        "reference": f"fis-{fis_no}", # fiş numarası buraya yazılır
+    },
+    idempotency_key=anahtar,
+)
+if satis["applied"] == "none":
+    print("Yazılan bir şey yok:", satis.get("reason"))
+else:
+    print(satis["credited"], satis["applied"], "yazıldı, bakiye", satis["balance"])
+if satis["rewardReady"]:
+    print("Ödül hazır")
+```
+
+`GET /v1/passes/{serial}` ayrıca `actions` (kartın aldığı kasa işlemleri ve
+şimdi yapılıp yapılamayacakları) ve `sale` (bir satışın bu kartta ne
+yazacağı) alanlarını verir.
+
+**İade.** `reverse_sale` bir satışın karta yazdığını geri alır; satışı
+yazarken gönderdiğiniz anahtarla (`saleKey`) ya da `reference`la bulur:
+
+```python
+geri = rewloy.reverse_sale(seri, body={"saleKey": anahtar, "locationId": sube_id})
+print(geri["reversed"], geri["applied"], "geri alındı, bakiye", geri["balance"])
+```
+
+Bir satış bir kez geri alınır (tekrar `duplicate: true` döner). Kazanılan
+kullanılmışsa (ödüle ya da harcamaya gitmişse) `409 SALE_ALREADY_SPENT` gelir ve
+hiçbir şey yazılmaz.
+
+### `Idempotency-Key`
+
+`record_sale`, `pass_action`, `send_campaign` ve `issue_pass` bir
+`Idempotency-Key` alır. Verilmezse kütüphane bir UUID üretir ve aynı çağrının
+her denemesinde aynısını gönderir; ama uygulama çöküp yeniden başlarsa yeni bir
+anahtar üretilir ve satış ikinci kez yazılabilir. Kasada anahtarı kendiniz
+üretip satışla birlikte saklayın:
+- **Anahtar bir kimlik için kalıcı olarak tekildir** (8–64 karakter; defterden
+  hiç silinmez). Aynı anahtarla aynı isteğin tekrarı ikinci kez yazmaz ve
+  ilk sonucu `duplicate: true` ile döndürür. Aynı anahtar başka bir gövdeyle
+  `422 IDEMPOTENCY_KEY_REUSED` alır.
+- **Fiş numarası tek başına anahtar olamaz:** yazarkasa fiş numaraları Z
+  raporundan sonra yeniden başlar. Kasa + Z no + fiş no birleşimi
+  (`kasa3-z0187-fis0042`) ya da satışla birlikte saklanıp tekrarda yeniden
+  gönderilen bir UUID kullanın.
+- **Fiş numarası `reference` alanına** yazılır; müşterinin geçmişinde ve işlem
+  dökümünde görünür.
 
 ## Sayfalama
 
@@ -190,6 +273,23 @@ gösterilen sırla (`whsec_…`) doğrular:
 - karşılaştırmayı `hmac.compare_digest` ile sabit sürede yapar;
 - `t` şimdiden 300 saniyeden (`tolerance=`) uzaksa reddeder;
 - gövdeyi ayrıştırılmış olarak (`dict`) döndürür.
+
+Webhook'u panelden ya da API'den ekleyebilirsiniz. `webhooks.manage` yetkili
+bir API anahtarı `create_webhook`, `list_webhooks`, `get_webhook`,
+`set_webhook_status`, `test_webhook` ve `list_webhook_deliveries`i çağırabilir;
+`webhook_events` abone olunabilecek olayları söyler. Sır (`secret`) yalnız
+`create_webhook` yanıtında gelir, saklayın:
+
+```python
+yeni = rewloy.create_webhook(
+    body={"url": "https://ornek.com/rewloy/webhook", "events": ["pass.activity", "pass.voided"]},
+)
+sir = yeni["secret"]
+rewloy.test_webhook(yeni["webhook"]["id"])   # webhook.test olayı gönderir
+```
+
+Adres herkese açık bir `https` adresi olmalıdır (test ortamında da);
+yerelde bir tünel kullanın.
 
 Tutmazsa `WebhookSignatureError` atar: 400 ile yanıtlayın ve hiçbir işlem
 yapmayın. Gövde mutlaka ham olmalıdır (`str` ya da `bytes`). JSON olarak
@@ -262,7 +362,7 @@ try:
     rewloy.pass_action(
         seri,
         body={"action": "spend", "locationId": sube_id, "amountMinor": 5000},
-        idempotency_key=f"fis-{fis_no}",
+        idempotency_key=f"kasa3-z0187-fis{fis_no}",
     )
 except RateLimitError as err:
     print(f"{err.retry_after} saniye sonra yeniden deneyin")
@@ -343,10 +443,31 @@ yanıtın tamamını döndürür: `data`, sayfalı listede `meta`, `status`,
 `path={"serial": …}` ile verilir. `data` burada tipli değildir; `typing.cast`
 ya da metodun kendisi.
 
-`mode`, yanıtın `Rewloy-Mode` başlığıdır. Platformda test modu hazırlanıyor:
-gerçek mesaj göndermeyen, gerçek kart vermeyen test anahtarları. Geldiğinde
-test yanıtları bunu bu başlıkla söyleyecek. Başlık yoksa `None`. Canlı akışta
-aynı bilgi `akis.mode`dadır.
+`mode`, yanıtın `Rewloy-Mode` başlığıdır: `live` ya da `test`. Başlık yoksa
+`None`. Canlı akışta aynı bilgi `akis.mode`dadır.
+
+## Test modu
+
+Gerçek müşterilere dokunmadan denemek için işletmenizin bir **test ortamı**
+vardır: ona bağlı ayrı bir işletme (adı "· Test" ile biter); kendi
+programları, müşterileri, kartları, anahtarları ve webhook'ları. Panel →
+Geliştirici → "Test ortamını aç" ya da `POST /v1/test/environment`. Orada
+oluşturulan anahtar `rwk_test_` ile başlar ve aynı adreste, aynı yollarla
+çalışır:
+
+```python
+rewloy = Rewloy(api_key=os.environ["REWLOY_TEST_KEY"])   # rwk_test_…
+yanit = rewloy.request("getPass", path={"serial": seri})
+yanit.mode   # "test"
+```
+
+- Test ortamı hiçbir şey göndermez (e-posta, bildirim, SMS); kartlar
+  cüzdanlara eklenmez. Gönderilmeyenler `GET /v1/test/messages` ile okunur.
+- Webhook'lar teslim edilir ve `Rewloy-Test: 1` başlığıyla `"test": true`
+  taşır.
+- Gerçek müşteri verisini test ortamına girmeyin.
+
+Ayrıntı: https://rewloy.com/gelistiriciler#test-ortamı
 
 İşlem tablosu da dışa açıktır: `OPERATIONS["passAction"]` →
 `OperationMeta(id, method_name, http_method, path, auth, merchant, idempotency, body, response, paged, stream, deprecated)`.
@@ -440,6 +561,8 @@ Bir güvenlik açığı bulursanız [SECURITY.md](SECURITY.md) dosyasındaki yol
 
 ## English
 
+Developer docs (in Turkish): **https://rewloy.com/gelistiriciler**.
+
 **The official Python library for the Rewloy API.**
 
 > **Status: preview (0.x), published on PyPI. The API is stable; the
@@ -473,13 +596,30 @@ from rewloy import Rewloy
 rewloy = Rewloy(api_key=os.environ["REWLOY_API_KEY"])   # or staff_session=…, merchant=… or holder_session=…
 
 created = rewloy.issue_pass(body={"programId": program_id, "email": email, "kvkkConsent": True})
-result = rewloy.pass_action(
+sale = rewloy.record_sale(
     created["serial"],
-    body={"action": "earn-stamps", "locationId": location_id},
-    idempotency_key=f"receipt-{receipt_no}",   # generated when omitted, reused across retries
+    body={"locationId": location_id, "amountMinor": 4550, "reference": f"receipt-{receipt_no}"},   # amount in the card's currency, minor units
+    idempotency_key=f"till3-z0187-r{receipt_no}",
 )
 ```
 
+- **Till.** `record_sale` writes a completed sale to a card (the card type and
+  the programme's own rule decide what is written); `get_pass` returns the
+  card's structured fields (`programName`, `currency`, `stamps`, `points`,
+  `money`, `customer`); `reverse_sale` takes a refunded sale back:
+  `rewloy.reverse_sale(serial, body={"saleKey": key})`.
+- **Idempotency keys.** `record_sale`, `pass_action` and `send_campaign` need an
+  `Idempotency-Key`. A key is unique **for good per credential**: do not use the
+  receipt number alone (fiscal receipt numbers restart after the Z report) but
+  register + Z number + receipt number, or a UUID stored with the sale. The
+  receipt number goes in `reference`. A generated key only covers the retries
+  of one call, not a restart of your app.
+- **Base URL.** `Rewloy(api_key=key, base_url="https://staging.example.com")`
+  (the origin, without `/v1`). Default `https://app.rewloy.com`.
+- **Test mode.** Open the test environment (panel → Developer, or
+  `POST /v1/test/environment`) and use its `rwk_test_` key at the same address:
+  a separate test business that sends nothing and never reaches real
+  customers. Webhooks are delivered with `Rewloy-Test: 1`.
 - **Arguments.** Path parameters are positional. `query`, `body`, `merchant`,
   `idempotency_key`, `timeout` (seconds) and `max_retries` are keywords. The
   dicts use the API's own key names.
@@ -487,8 +627,7 @@ result = rewloy.pass_action(
   `Page` (`.data`, `.meta`) for paged lists, `None` for 204, `bytes` for files.
   Types are in `rewloy.types` (`from rewloy.types import IssuePassBody`).
 - **The whole answer.** `rewloy.request("sendCampaign", body=…)` returns
-  `status`, `headers`, `request_id`, `mode` (the `Rewloy-Mode` header, for the
-  coming test mode) and `replayed` (`Idempotent-Replayed`) with `data`.
+  `status`, `headers`, `request_id`, `mode` (the `Rewloy-Mode` header: `live` or `test`) and `replayed` (`Idempotent-Replayed`) with `data`.
 - **Pagination.** `rewloy.paginate("listCustomers", query=…)` iterates the
   items of every page, lazily.
 - **Streams.** `with rewloy.live_feed() as stream: for event in stream: …`

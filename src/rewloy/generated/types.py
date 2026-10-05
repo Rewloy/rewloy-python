@@ -89,6 +89,27 @@ ErrorCode = Literal[
     "SHOP_PROGRAM_MISMATCH",
     "CONNECT_TOKEN_INVALID",
     "CONNECT_TOKEN_NOT_FOUND",
+    "NO_PLUGIN_KEY",
+    "CODE_EXPIRED",
+    "CODE_USED",
+    "INVITE_SIGN_IN",
+    "INVITE_OTHER_ACCOUNT",
+    "CODE_RELEASED",
+    "CODE_NOT_ACCEPTED_HERE",
+    "CURRENCY_MISMATCH",
+    "SHOP_PAUSED",
+    "VOUCHER_NOT_ONLINE",
+    "NOT_ONLINE",
+    "TOO_MANY_CODES",
+    "CODE_ATTACHED",
+    "CODE_NOT_FOUND",
+    "CARD_IN_ORDER",
+    "ORDER_CODES_LIMIT",
+    "HOLD_UNBACKED",
+    "REDEMPTION_NOT_FOUND",
+    "REFUND_TOO_LARGE",
+    "NOT_REFUNDABLE",
+    "NOT_HELD",
     "TICKET_NOT_FOUND",
     "NOTIFICATION_NOT_FOUND",
     "EXPORT_NOT_FOUND",
@@ -100,6 +121,10 @@ ErrorCode = Literal[
     "WRONG_CARD_TYPE",
     "INSUFFICIENT_BALANCE",
     "REWARD_NOT_READY",
+    "OWNER_EMAIL_UNVERIFIED",
+    "SALE_NOT_FOUND",
+    "SALE_AMBIGUOUS",
+    "SALE_ALREADY_SPENT",
     "WRONG_LOCATION",
     "INVALID_PROMOTION",
     "PROMOTION_NOT_FOUND",
@@ -167,7 +192,7 @@ ErrorCode = Literal[
 
 class _ErrorInfoRequired(TypedDict):
     # Makine için sabit kod (katalog: /gelistiriciler/hatalar).
-    code: Literal["VALIDATION", "BAD_REQUEST", "INVALID_JSON", "UNSUPPORTED_MEDIA_TYPE", "PAYLOAD_TOO_LARGE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_KEY_REUSED", "IDEMPOTENCY_IN_PROGRESS", "CONFIRM_REQUIRED", "REASON_REQUIRED", "NOT_FOUND", "RATE_LIMITED", "INTERNAL", "CROSS_SITE", "UNAUTHENTICATED", "INVALID_API_KEY", "KEY_MODE_MISMATCH", "TOKEN_INVALID", "FLOW_EXPIRED", "PASSKEY_REFUSED", "CODE_INVALID", "CODE_LOCKED", "PHONE_BUSY", "LAST_WAY_IN", "CHANGE_PENDING", "WAY_IN_TOO_NEW", "NOT_ENABLED", "PUSH_ENDPOINT_REFUSED", "PUSH_DEVICE_REFUSED", "PUSH_KEY_MISMATCH", "PUSH_NOT_SUBSCRIBED", "PROVIDER_REFUSED", "PROVIDER_UNAVAILABLE", "DEVICE_RENEWAL", "DEVICE_RENEWAL_REFUSED", "DEVICE_PROOF", "DEVICE_KEY_REFUSED", "MERGE_REQUIRED", "IDENT_SAME", "LOGIN_FAILED", "MFA_REQUIRED", "MFA_INVALID", "MFA_NOT_SET", "MFA_ALREADY_ENABLED", "MFA_REQUIRED_BY_TEAM", "MFA_OWNER_FIRST", "STEP_UP_FAILED", "CREDENTIAL_NOT_ALLOWED", "MERCHANT_REQUIRED", "SEAT_INACTIVE", "UNAUTHORIZED", "FORBIDDEN", "OUT_OF_SCOPE", "PLAN_FEATURE_MISSING", "READ_ONLY", "VIEW_AS_READ_ONLY", "SEAT_LIMIT", "LIMIT", "PROGRAM_NOT_FOUND", "PASS_NOT_FOUND", "CUSTOMER_NOT_FOUND", "SEGMENT_NOT_FOUND", "CAMPAIGN_NOT_FOUND", "AUTOMATION_NOT_FOUND", "SEQUENCE_NOT_FOUND", "LOCATION_NOT_FOUND", "GROUP_NOT_FOUND", "MEMBER_NOT_FOUND", "SEAT_NOT_FOUND", "ERASURE_NOT_FOUND", "JOIN_CLOSED", "INVITE_NOT_FOUND", "GRANT_NOT_FOUND", "BATCH_NOT_FOUND", "KEY_NOT_FOUND", "WEBHOOK_NOT_FOUND", "SHOP_NOT_FOUND", "SHOP_PROGRAM_MISMATCH", "CONNECT_TOKEN_INVALID", "CONNECT_TOKEN_NOT_FOUND", "TICKET_NOT_FOUND", "NOTIFICATION_NOT_FOUND", "EXPORT_NOT_FOUND", "SESSION_NOT_FOUND", "PASS_REFUSED", "PASS_INACTIVE", "PASS_EXPIRED", "PASS_USED_UP", "WRONG_CARD_TYPE", "INSUFFICIENT_BALANCE", "REWARD_NOT_READY", "WRONG_LOCATION", "INVALID_PROMOTION", "PROMOTION_NOT_FOUND", "VISIT_ALREADY_COUNTED", "ALREADY_ENDED", "PASS_STILL_ACTIVE", "CLAIM_CODE", "BAD_ACTION", "CONSENT_REQUIRED", "LEADERBOARD_OFF", "LEADERBOARD_ANONYMOUS", "WALLET_UNAVAILABLE", "INVALID_CONFIG", "BAD_IMAGE", "PROGRAM_HAS_CARDS", "ALREADY_ARCHIVED", "NOT_ARCHIVED", "NOT_AN_INSTRUMENT", "INVALID_BATCH", "BATCH_CLOSED", "BATCH_EXPIRED", "BATCH_FULL", "ALREADY_CLAIMED", "CURRENCY_LOCKED", "INVALID_CUSTOMER", "FIELD_REQUIRED", "INVALID_BIRTHDAY", "INVALID_PHONE", "EMAIL_BLOCKED", "PHONE_BLOCKED", "CUSTOMER_BLOCKED", "NO_EMAIL", "INVALID_SEGMENT", "CAMPAIGN_REFUSED", "NOT_CANCELLABLE", "AUTOMATION_REFUSED", "SEQUENCE_REFUSED", "TEAM_REFUSED", "GROUP_IN_USE", "LAST_LOCATION", "PLACES_OFF", "PLACES_UNAVAILABLE", "PLACE_CHOICE", "ACCOUNT_EXISTS", "TICKET_CLOSED", "SELF_CHANGE", "TEST_MODE_MISMATCH", "TEST_ENV_ONLY", "TEST_ENV_NESTED", "TEST_ENV_NO_INVITE", "TEST_LIMIT_REACHED", "TEST_CARD_NO_WALLET", "INVALID_KEY", "BAD_WEBHOOK_URL", "ALREADY_CLOSED", "NOT_REOPENABLE", "INCIDENT_CLOSED", "INCIDENT_INCOMPLETE", "INTELLIGENCE_DISABLED", "PEOPLE_DISABLED", "DUPLICATE", "RECOVERY_DECIDED", "SECRET_NOT_ALLOWED"]
+    code: Literal["VALIDATION", "BAD_REQUEST", "INVALID_JSON", "UNSUPPORTED_MEDIA_TYPE", "PAYLOAD_TOO_LARGE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_KEY_REUSED", "IDEMPOTENCY_IN_PROGRESS", "CONFIRM_REQUIRED", "REASON_REQUIRED", "NOT_FOUND", "RATE_LIMITED", "INTERNAL", "CROSS_SITE", "UNAUTHENTICATED", "INVALID_API_KEY", "KEY_MODE_MISMATCH", "TOKEN_INVALID", "FLOW_EXPIRED", "PASSKEY_REFUSED", "CODE_INVALID", "CODE_LOCKED", "PHONE_BUSY", "LAST_WAY_IN", "CHANGE_PENDING", "WAY_IN_TOO_NEW", "NOT_ENABLED", "PUSH_ENDPOINT_REFUSED", "PUSH_DEVICE_REFUSED", "PUSH_KEY_MISMATCH", "PUSH_NOT_SUBSCRIBED", "PROVIDER_REFUSED", "PROVIDER_UNAVAILABLE", "DEVICE_RENEWAL", "DEVICE_RENEWAL_REFUSED", "DEVICE_PROOF", "DEVICE_KEY_REFUSED", "MERGE_REQUIRED", "IDENT_SAME", "LOGIN_FAILED", "MFA_REQUIRED", "MFA_INVALID", "MFA_NOT_SET", "MFA_ALREADY_ENABLED", "MFA_REQUIRED_BY_TEAM", "MFA_OWNER_FIRST", "STEP_UP_FAILED", "CREDENTIAL_NOT_ALLOWED", "MERCHANT_REQUIRED", "SEAT_INACTIVE", "UNAUTHORIZED", "FORBIDDEN", "OUT_OF_SCOPE", "PLAN_FEATURE_MISSING", "READ_ONLY", "VIEW_AS_READ_ONLY", "SEAT_LIMIT", "LIMIT", "PROGRAM_NOT_FOUND", "PASS_NOT_FOUND", "CUSTOMER_NOT_FOUND", "SEGMENT_NOT_FOUND", "CAMPAIGN_NOT_FOUND", "AUTOMATION_NOT_FOUND", "SEQUENCE_NOT_FOUND", "LOCATION_NOT_FOUND", "GROUP_NOT_FOUND", "MEMBER_NOT_FOUND", "SEAT_NOT_FOUND", "ERASURE_NOT_FOUND", "JOIN_CLOSED", "INVITE_NOT_FOUND", "GRANT_NOT_FOUND", "BATCH_NOT_FOUND", "KEY_NOT_FOUND", "WEBHOOK_NOT_FOUND", "SHOP_NOT_FOUND", "SHOP_PROGRAM_MISMATCH", "CONNECT_TOKEN_INVALID", "CONNECT_TOKEN_NOT_FOUND", "NO_PLUGIN_KEY", "CODE_EXPIRED", "CODE_USED", "INVITE_SIGN_IN", "INVITE_OTHER_ACCOUNT", "CODE_RELEASED", "CODE_NOT_ACCEPTED_HERE", "CURRENCY_MISMATCH", "SHOP_PAUSED", "VOUCHER_NOT_ONLINE", "NOT_ONLINE", "TOO_MANY_CODES", "CODE_ATTACHED", "CODE_NOT_FOUND", "CARD_IN_ORDER", "ORDER_CODES_LIMIT", "HOLD_UNBACKED", "REDEMPTION_NOT_FOUND", "REFUND_TOO_LARGE", "NOT_REFUNDABLE", "NOT_HELD", "TICKET_NOT_FOUND", "NOTIFICATION_NOT_FOUND", "EXPORT_NOT_FOUND", "SESSION_NOT_FOUND", "PASS_REFUSED", "PASS_INACTIVE", "PASS_EXPIRED", "PASS_USED_UP", "WRONG_CARD_TYPE", "INSUFFICIENT_BALANCE", "REWARD_NOT_READY", "OWNER_EMAIL_UNVERIFIED", "SALE_NOT_FOUND", "SALE_AMBIGUOUS", "SALE_ALREADY_SPENT", "WRONG_LOCATION", "INVALID_PROMOTION", "PROMOTION_NOT_FOUND", "VISIT_ALREADY_COUNTED", "ALREADY_ENDED", "PASS_STILL_ACTIVE", "CLAIM_CODE", "BAD_ACTION", "CONSENT_REQUIRED", "LEADERBOARD_OFF", "LEADERBOARD_ANONYMOUS", "WALLET_UNAVAILABLE", "INVALID_CONFIG", "BAD_IMAGE", "PROGRAM_HAS_CARDS", "ALREADY_ARCHIVED", "NOT_ARCHIVED", "NOT_AN_INSTRUMENT", "INVALID_BATCH", "BATCH_CLOSED", "BATCH_EXPIRED", "BATCH_FULL", "ALREADY_CLAIMED", "CURRENCY_LOCKED", "INVALID_CUSTOMER", "FIELD_REQUIRED", "INVALID_BIRTHDAY", "INVALID_PHONE", "EMAIL_BLOCKED", "PHONE_BLOCKED", "CUSTOMER_BLOCKED", "NO_EMAIL", "INVALID_SEGMENT", "CAMPAIGN_REFUSED", "NOT_CANCELLABLE", "AUTOMATION_REFUSED", "SEQUENCE_REFUSED", "TEAM_REFUSED", "GROUP_IN_USE", "LAST_LOCATION", "PLACES_OFF", "PLACES_UNAVAILABLE", "PLACE_CHOICE", "ACCOUNT_EXISTS", "TICKET_CLOSED", "SELF_CHANGE", "TEST_MODE_MISMATCH", "TEST_ENV_ONLY", "TEST_ENV_NESTED", "TEST_ENV_NO_INVITE", "TEST_LIMIT_REACHED", "TEST_CARD_NO_WALLET", "INVALID_KEY", "BAD_WEBHOOK_URL", "ALREADY_CLOSED", "NOT_REOPENABLE", "INCIDENT_CLOSED", "INCIDENT_INCOMPLETE", "INTELLIGENCE_DISABLED", "PEOPLE_DISABLED", "DUPLICATE", "RECOVERY_DECIDED", "SECRET_NOT_ALLOWED"]
     # İnsan için Türkçe açıklama; değişebilir, koda göre davranın.
     message: str
     # Destek için istek numarası.
@@ -214,9 +239,11 @@ class _IssuePassBodyOptional(TypedDict, total=False):
     email: str
     name: str
     homeLocationId: str
-    # Hediye kartı tutarı, kuruş
+    # Hediye kartı tutarı, programın para biriminde, kuruş
     faceMinor: int
     kvkkConsent: bool
+    # İsteğe bağlı: tutarın para birimi (ISO 4217, ör. `TRY`, `EUR`, büyük-küçük harf önemsiz). Tutar **kartın para birimindedir** (programın para birimi: `GET /v1/passes/{serial}` → `currency`, `GET /v1/programs/{id}`); verilirse onunla karşılaştırılır, farklıysa `422 CURRENCY_MISMATCH` (`details.currency` kartınki) ve hiçbir şey yazılmaz. Tutar çevrilmez.
+    currency: str
     firstName: str
     lastName: str
     phone: str
@@ -226,6 +253,10 @@ class _IssuePassBodyOptional(TypedDict, total=False):
     orderId: str
     # Siparişin geldiği mağaza bağlantısı (`GET /v1/shops`). `orderId` ile birlikte.
     shopId: str
+    # Kişinin bu programda açık kartı varsa: `create` (varsayılan) yine yeni kart açar, `return` o kartı döndürür (`created: false`). `email` ister.
+    ifExists: Literal["create", "return"]
+    # true: kartın bağlantısı kişinin e-postasına gider (katılım formunun e-postası). `email` ister.
+    sendEmail: bool
 
 
 class IssuePassBody(_IssuePassBodyRequired, _IssuePassBodyOptional):
@@ -245,10 +276,15 @@ class IssuePassDataOrder(TypedDict):
 
 class _IssuePassDataRequired(TypedDict):
     serial: str
+    # Yeni kartta müşterinin özel kart bağlantısı (`?k=…`): müşteriye iletin, kayıtlara yazmayın. Var olan kartta (`created: false`) görüntüleme anahtarı taşımayan adres.
     cardUrl: str
+    # true: yeni kart açıldı · false: `ifExists: "return"` ile kişinin var olan kartı döndü
+    created: bool
 
 
 class _IssuePassDataOptional(TypedDict, total=False):
+    # Yalnız `sendEmail: true` iken: e-postaya ne oldu (`queued`, `suppressed`, `rate_limited`, `not_sent`)
+    emailStatus: Literal["queued", "suppressed", "rate_limited", "not_sent"]
     # Yalnız `orderId` gönderildiyse: siparişin bu karta ne olduğu.
     order: IssuePassDataOrder
 
@@ -272,20 +308,69 @@ GetPassHeaders = TypedDict("GetPassHeaders", {
 }, total=False)
 
 
+class GetPassDataStamps(TypedDict):
+    """Yalnız damga kartında: kartta şu an kaç damga var (`count`) ve bir ödül kaç damga ister (`max`). Hazır ödül sayısı `floor(count / max)`, sıradaki ödüle doğru damga `count % max`; program ödülden sonra damga biriktiriyorsa `count` `max`'ı aşabilir."""
+    count: int
+    max: int
+
+
+class GetPassDataMoney(TypedDict):
+    """Yalnız cashback ve hediye kartında: harcanabilir bakiye, kuruş, ve para birimi. Online bir siparişe ayrılan tutar düşülmüştür."""
+    amountMinor: int
+    currency: str
+
+
+class GetPassDataCustomer(TypedDict):
+    """Yalnız kimlik `customers.read` taşıyorsa (kartın programında): kartın müşterisi. null: kartın müşterisi yok, ya da müşteri kimliğin şube kapsamının dışında. Yetki yoksa alan gelmez."""
+    # Müşterinin adı; adı verilmemişse null
+    name: Optional[str]
+
+
+class GetPassDataActionsItem(TypedDict):
+    action: Literal["earn-stamps", "redeem-stamps", "earn-points", "redeem-reward", "visit", "spend", "accrue", "use", "load", "spend-points"]
+    # İşleme özgü zorunlu alanlar; `action` ve `locationId` her işlemde gerekir
+    needs: List[Literal["amountMinor", "points", "rewardIndex"]]
+    # Kartın durumuna göre işlem şimdi yapılabilir mi (ör. damga ödülü hazır mı, bakiye var mı, kupon kullanılmamış mı). Şube kuralı burada değil: `GET /v1/passes/{serial}/till`; yetkiler de değil
+    ready: bool
+
+
+class GetPassDataSale(TypedDict):
+    # Bir satışın (`POST /v1/passes/{serial}/sale`) bu türde yazdığı: damga, puan, ziyaret, cashback ya da hiçbir şey
+    writes: Literal["stamps", "points", "visit", "cashback", "none"]
+
+
 class _GetPassDataRequired(TypedDict):
     serial: str
     programId: str
     type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
     status: str
-    # Damga, puan, ziyaret ya da kuruş (türüne göre).
+    # Programın adı (ADR 182)
+    programName: str
+    # Kartın para birimi (ISO 4217, ör. `TRY`, `EUR`): programın para birimi — cashback ve hediye kartında programın kendi para birimi, öteki türlerde işletmeninki. Bu karttaki satışın ve işlemlerin `amountMinor`'ı bu birimdedir ve `currency` alanları bununla karşılaştırılır (ADR 182)
+    currency: str
+    # Türe göre birimi değişir: damga kartında damga, puan kartında puan, VIP'te ziyaret, cashback ve hediye kartında kuruş (`money.currency` cinsinden); kupon ve indirim kartının bakiyesi yoktur (0). Yeni kodda türe özgü alanları okuyun: `stamps`, `points`, `money`.
     balance: Optional[float]
+    # Damga: en az bir dolu kart · puan: bakiye en az bir ödüle yetiyor · VIP: bir seviyede · cashback ve hediye kartı: bakiye sıfırdan büyük (harcanacak bir şey var; bir "ödül" değil) · kupon ve indirim: her zaman true (kartın kendisi teklif). Kasada bir işlemin yapılıp yapılamayacağı için `actions[].ready` okuyun.
     rewardReady: bool
+    # Damga: hazır ödül sayısı · puan: bakiyenin yettiği ödül basamağı sayısı · VIP: seviyedeyse 1 · cashback ve hediye kartı: bakiye varsa 1 · kupon ve indirim: 0
     rewardsReady: int
     updatedAt: str
+    # Bu kartın türünün aldığı kasa işlemleri (`POST /v1/passes/{serial}/actions`)
+    actions: List[GetPassDataActionsItem]
+    sale: GetPassDataSale
 
 
 class _GetPassDataOptional(TypedDict, total=False):
+    # Yalnız damga kartında: kartta şu an kaç damga var (`count`) ve bir ödül kaç damga ister (`max`). Hazır ödül sayısı `floor(count / max)`, sıradaki ödüle doğru damga `count % max`; program ödülden sonra damga biriktiriyorsa `count` `max`'ı aşabilir.
+    stamps: GetPassDataStamps
+    # Yalnız puan kartında: puan bakiyesi
+    points: int
+    # Yalnız cashback ve hediye kartında: harcanabilir bakiye, kuruş, ve para birimi. Online bir siparişe ayrılan tutar düşülmüştür.
+    money: GetPassDataMoney
+    # Yalnız kimlik `customers.read` taşıyorsa (kartın programında): kartın müşterisi. null: kartın müşterisi yok, ya da müşteri kimliğin şube kapsamının dışında. Yetki yoksa alan gelmez.
+    customer: Optional[GetPassDataCustomer]
     progressLabel: Optional[str]
+    # Cüzdandaki ilerleme yazısı, gösterim içindir, ayrıştırmayın: damga kartında ödül hazır olana dek `"3 / 8"`, hazır olunca ödülün adı (`"Bedava kahve"`, birden çoksa `"2 × Bedava kahve"`); puanda bakiye; VIP'te seviye adı; cashback ve hediye kartında biçimlenmiş tutar (`"€2,25"`); kuponda teklif metni; indirimde `"%10"`.
     progressValue: Optional[str]
     tier: Optional[str]
     # VIP: bir sonraki seviye ve kalan ziyaret.
@@ -383,6 +468,8 @@ class _PassActionBodyOptional(TypedDict, total=False):
     points: int
     amountMinor: int
     rewardIndex: int
+    # İsteğe bağlı: tutarın para birimi (ISO 4217, ör. `TRY`, `EUR`, büyük-küçük harf önemsiz). Tutar **kartın para birimindedir** (programın para birimi: `GET /v1/passes/{serial}` → `currency`, `GET /v1/programs/{id}`); verilirse onunla karşılaştırılır, farklıysa `422 CURRENCY_MISMATCH` (`details.currency` kartınki) ve hiçbir şey yazılmaz. Tutar çevrilmez.
+    currency: str
 
 
 class PassActionBody(_PassActionBodyRequired, _PassActionBodyOptional):
@@ -412,6 +499,122 @@ class _PassActionDataOptional(TypedDict, total=False):
 class PassActionData(_PassActionDataRequired, _PassActionDataOptional):
     """The `data` of `passAction`'s answer."""
 
+
+# ----------------------------------------------------------------------
+# recordSale · POST /v1/passes/{serial}/sale
+
+class RecordSaleParams(TypedDict):
+    """Path parameters of `recordSale`."""
+    # Kart seri numarası, XXXX-XXXX-XXXX
+    serial: str
+
+
+_RecordSaleHeadersRequired = TypedDict("_RecordSaleHeadersRequired", {
+    # Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür.
+    "Idempotency-Key": str,
+})
+
+
+_RecordSaleHeadersOptional = TypedDict("_RecordSaleHeadersOptional", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class RecordSaleHeaders(_RecordSaleHeadersRequired, _RecordSaleHeadersOptional):
+    """Header parameters of `recordSale`, as sent on the wire."""
+
+
+
+class _RecordSaleBodyRequired(TypedDict):
+    # Ödenen toplam, kartın (programın) para biriminde, kuruş
+    amountMinor: int
+
+
+class _RecordSaleBodyOptional(TypedDict, total=False):
+    # Satışın yapıldığı şube. Verilmezse (online) satış bir şubeye yazılmaz; kimliğin her şubede `scan.use` yetkisi olmalıdır.
+    locationId: str
+    # Fiş ya da sipariş numarası; defter kaydının notuna yazılır
+    reference: str
+    # İsteğe bağlı: tutarın para birimi (ISO 4217, ör. `TRY`, `EUR`, büyük-küçük harf önemsiz). Tutar **kartın para birimindedir** (programın para birimi: `GET /v1/passes/{serial}` → `currency`, `GET /v1/programs/{id}`); verilirse onunla karşılaştırılır, farklıysa `422 CURRENCY_MISMATCH` (`details.currency` kartınki) ve hiçbir şey yazılmaz. Tutar çevrilmez.
+    currency: str
+
+
+class RecordSaleBody(_RecordSaleBodyRequired, _RecordSaleBodyOptional):
+    """Request body of `recordSale`."""
+
+
+
+class RecordSaleDataPromotion(TypedDict):
+    """Bu kazanımı katlayan kasa kampanyası (ADR 139)"""
+    id: str
+    name: str
+    factor: int
+
+
+class _RecordSaleDataRequired(TypedDict):
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    applied: Literal["stamps", "points", "visit", "cashback", "none"]
+    # Yazılan: damga, puan, ziyaret ya da kuruş; hiçbir şey yazılmadıysa 0. Tekrarda ilk isteğin yazdığı
+    credited: int
+    # Satıştan sonra kartın bakiyesi (damga, puan, ziyaret ya da kuruş); kupon ve indirimde null
+    balance: Optional[float]
+    duplicate: bool
+    rewardReady: bool
+    rewardsReady: int
+
+
+class _RecordSaleDataOptional(TypedDict, total=False):
+    # Yalnız `applied: "none"` iken: neden hiçbir şey yazılmadı
+    reason: Literal["below_minimum", "visit_already_counted", "card_full", "type_does_not_earn"]
+    # Damga: ödül hazır oldu · VIP: seviye
+    detail: str
+    # Bu kazanımı katlayan kasa kampanyası (ADR 139)
+    promotion: RecordSaleDataPromotion
+
+
+class RecordSaleData(_RecordSaleDataRequired, _RecordSaleDataOptional):
+    """The `data` of `recordSale`'s answer."""
+
+
+# ----------------------------------------------------------------------
+# reverseSale · POST /v1/passes/{serial}/sale/reverse
+
+class ReverseSaleParams(TypedDict):
+    """Path parameters of `reverseSale`."""
+    # Kart seri numarası, XXXX-XXXX-XXXX
+    serial: str
+
+
+ReverseSaleHeaders = TypedDict("ReverseSaleHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class ReverseSaleBody(TypedDict, total=False):
+    """Request body of `reverseSale`."""
+    # Satışın `Idempotency-Key`'i (aynı kimlikle gönderilmiş)
+    saleKey: str
+    # Satışın `reference`'ı; bu kartta tek bir satışta olmalı
+    reference: str
+    # Geri almanın yapıldığı şube (isteğe bağlı)
+    locationId: str
+
+
+class ReverseSaleData(TypedDict):
+    """The `data` of `reverseSale`'s answer."""
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    # Geri alınan satışın yazdığı
+    applied: Literal["stamps", "points", "visit", "cashback"]
+    # Geri alınan: satışın yazdığı damga, puan, ziyaret ya da kuruş
+    reversed: int
+    # Geri almadan sonra kartın bakiyesi
+    balance: float
+    # true: satış daha önce geri alınmıştı; şimdi hiçbir şey yazılmadı
+    duplicate: bool
+    rewardReady: bool
+    rewardsReady: int
 
 # ----------------------------------------------------------------------
 # publicProgram · GET /v1/public/programs/{id}
@@ -593,6 +796,22 @@ class EmailCardLinkData(TypedDict):
     accepted: Literal[True]
 
 # ----------------------------------------------------------------------
+# getMeta · GET /v1/meta
+
+GetMetaHeaders = TypedDict("GetMetaHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class GetMetaData(TypedDict):
+    """The `data` of `getMeta`'s answer."""
+    # Rewloy'nun sürümü (package.json), ör. `1.0.0`
+    version: str
+    # Bu API'nin sürümü
+    apiVersion: Literal["v1"]
+
+# ----------------------------------------------------------------------
 # openapi · GET /v1/openapi.json
 
 
@@ -623,6 +842,8 @@ class LoginDataBusinessesItem(TypedDict):
     mode: Literal["live", "test"]
     # Test ortamında, ait olduğu gerçek işletme; gerçek işletmede `null`
     testOf: Optional[str]
+    # İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir (ADR 182)
+    currency: str
 
 
 class LoginData(TypedDict):
@@ -691,6 +912,8 @@ class MeDataOption1BusinessesItem(TypedDict):
     mode: Literal["live", "test"]
     # Test ortamında, ait olduğu gerçek işletme; gerçek işletmede `null`
     testOf: Optional[str]
+    # İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir (ADR 182)
+    currency: str
 
 
 class MeDataOption1(TypedDict):
@@ -711,11 +934,19 @@ class MeDataOption2Key(TypedDict):
     rateLimitPerMinute: int
     # Bağlantı koduyla kurulmuş bir mağaza eklentisinin anahtarıysa ait olduğu mağaza bağlantısı (yalnız onu görür ve yönetir); değilse null.
     shopId: Optional[str]
+    # Bir eklentinin ekranlarını açıp kapatmak için, yetkilerden okunur (ADR 178): `view` = `passes.read` ve `analytics.read` (kart durumu, programın sayıları ve son işlemleri; müşterinin kişisel bilgisi yok); `till` = `scan.use` tam olarak bir şubede (o şubenin kasası: `getPassTill`, `recordSale`, `passAction`). Birden çok şubede ya da her yerde `scan.use` taşıyan anahtarın tek bir kasası olmadığından `till` yazılmaz.
+    abilities: List[Literal["view", "till"]]
+    # `till` varken kasanın şubesi (işlemlerde `locationId` olarak gönderilir); yoksa null.
+    tillLocationId: Optional[str]
+    # Kasanın şubesinin adı; yoksa null.
+    tillLocationName: Optional[str]
 
 
 class MeDataOption2Business(TypedDict):
     id: str
     name: str
+    # İşletmenin para birimi (ISO 4217, ör. `TRY`, `EUR`): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir. Varsayılan `TRY`; para kartı verilene dek `PATCH /v1/business` ile değişir (ADR 182)
+    currency: str
 
 
 class MeDataOption2(TypedDict):
@@ -730,6 +961,12 @@ MeData = Union[MeDataOption1, MeDataOption2]
 
 # ----------------------------------------------------------------------
 # holderLogin · POST /v1/holder/login
+
+HolderLoginHeaders = TypedDict("HolderLoginHeaders", {
+    # Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür.
+    "Idempotency-Key": str,
+}, total=False)
+
 
 class HolderLoginBody(TypedDict, total=False):
     """Request body of `holderLogin`."""
@@ -969,6 +1206,8 @@ class SignupDataBusinessesItem(TypedDict):
     mode: Literal["live", "test"]
     # Test ortamında, ait olduğu gerçek işletme; gerçek işletmede `null`
     testOf: Optional[str]
+    # İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir (ADR 182)
+    currency: str
 
 
 class SignupData(TypedDict):
@@ -1043,7 +1282,6 @@ class InvitePreviewData(TypedDict):
     """The `data` of `invitePreview`'s answer."""
     merchantName: str
     email: str
-    userExists: bool
 
 # ----------------------------------------------------------------------
 # acceptInvite · POST /v1/auth/invites/{code}/accept
@@ -1053,8 +1291,15 @@ class AcceptInviteParams(TypedDict):
     code: str
 
 
-class AcceptInviteBody(TypedDict):
+AcceptInviteHeaders = TypedDict("AcceptInviteHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class AcceptInviteBody(TypedDict, total=False):
     """Request body of `acceptInvite`."""
+    # Yalnız yeni hesap için: hesabın şifresi (en az 10 karakter)
     password: str
 
 
@@ -1076,6 +1321,8 @@ class AcceptInviteDataBusinessesItem(TypedDict):
     mode: Literal["live", "test"]
     # Test ortamında, ait olduğu gerçek işletme; gerçek işletmede `null`
     testOf: Optional[str]
+    # İşletmenin para birimi (ISO 4217): satışların `amountMinor`'ı ve para kartlarının tutarları bu birimdedir (ADR 182)
+    currency: str
 
 
 class AcceptInviteData(TypedDict):
@@ -1436,6 +1683,18 @@ class ListProgramsItemStats(TypedDict):
     rewardsReady: int
 
 
+class ListProgramsItemSale(TypedDict):
+    """Bir satışın bu programda ne kazandırdığı, kaydedilmiş kurallardan (salt-okunur). Kasa kampanyaları buna dahil değil."""
+    # Bir satışın (`POST /v1/passes/{serial}/sale`) bu programın kartlarına yazdığı
+    writes: Literal["stamps", "points", "visit", "cashback", "none"]
+    # Damga ve VIP: satış başına damga ya da ziyaret
+    perSale: Optional[int]
+    # Puan: her 1 birim harcamaya puan (`config.earnRate`)
+    pointsPerUnit: Optional[int]
+    # Cashback: toplamın yüzdesi (`config.cashbackRate`)
+    percent: Optional[int]
+
+
 class ListProgramsItem(TypedDict):
     """One item of `listPrograms`'s list."""
     id: str
@@ -1449,6 +1708,8 @@ class ListProgramsItem(TypedDict):
     artwork: ListProgramsItemArtwork
     # Kart sahipleri (açık kartı olan kişi), açık kartlar, son 30 gündeki ziyaretler, ödülü hazır kartlar
     stats: ListProgramsItemStats
+    # Bir satışın bu programda ne kazandırdığı, kaydedilmiş kurallardan (salt-okunur). Kasa kampanyaları buna dahil değil.
+    sale: ListProgramsItemSale
 
 
 ListProgramsData = List[ListProgramsItem]
@@ -1526,6 +1787,13 @@ class CreateProgramBodyTiersItem(TypedDict):
     visitsRequired: int
 
 
+class CreateProgramBodyOnlineValue(TypedDict):
+    """Kupon: online mağazada kullanıldığında değeri (ADR 179). Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer."""
+    kind: Literal["amount", "percent"]
+    # amount: kuruş (100 – 10.000.000); percent: 1 – 100
+    value: int
+
+
 class _CreateProgramBodyRequired(TypedDict):
     type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
     # Kartta görünen işletme adı
@@ -1574,6 +1842,8 @@ class _CreateProgramBodyOptional(TypedDict, total=False):
     cashbackRate: int
     # Kupon: teklif metni
     offerText: str
+    # Kupon: online mağazada kullanıldığında değeri (ADR 179). Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer.
+    onlineValue: Optional[CreateProgramBodyOnlineValue]
 
 
 class CreateProgramBody(_CreateProgramBodyRequired, _CreateProgramBodyOptional):
@@ -1595,6 +1865,18 @@ class CreateProgramDataStats(TypedDict):
     rewardsReady: int
 
 
+class CreateProgramDataSale(TypedDict):
+    """Bir satışın bu programda ne kazandırdığı, kaydedilmiş kurallardan (salt-okunur). Kasa kampanyaları buna dahil değil."""
+    # Bir satışın (`POST /v1/passes/{serial}/sale`) bu programın kartlarına yazdığı
+    writes: Literal["stamps", "points", "visit", "cashback", "none"]
+    # Damga ve VIP: satış başına damga ya da ziyaret
+    perSale: Optional[int]
+    # Puan: her 1 birim harcamaya puan (`config.earnRate`)
+    pointsPerUnit: Optional[int]
+    # Cashback: toplamın yüzdesi (`config.cashbackRate`)
+    percent: Optional[int]
+
+
 class CreateProgramData(TypedDict):
     """The `data` of `createProgram`'s answer."""
     id: str
@@ -1608,6 +1890,8 @@ class CreateProgramData(TypedDict):
     artwork: CreateProgramDataArtwork
     # Kart sahipleri (açık kartı olan kişi), açık kartlar, son 30 gündeki ziyaretler, ödülü hazır kartlar
     stats: CreateProgramDataStats
+    # Bir satışın bu programda ne kazandırdığı, kaydedilmiş kurallardan (salt-okunur). Kasa kampanyaları buna dahil değil.
+    sale: CreateProgramDataSale
 
 # ----------------------------------------------------------------------
 # programDesignOptions · GET /v1/programs/design-options
@@ -1700,6 +1984,18 @@ class GetProgramDataStats(TypedDict):
     rewardsReady: int
 
 
+class GetProgramDataSale(TypedDict):
+    """Bir satışın bu programda ne kazandırdığı, kaydedilmiş kurallardan (salt-okunur). Kasa kampanyaları buna dahil değil."""
+    # Bir satışın (`POST /v1/passes/{serial}/sale`) bu programın kartlarına yazdığı
+    writes: Literal["stamps", "points", "visit", "cashback", "none"]
+    # Damga ve VIP: satış başına damga ya da ziyaret
+    perSale: Optional[int]
+    # Puan: her 1 birim harcamaya puan (`config.earnRate`)
+    pointsPerUnit: Optional[int]
+    # Cashback: toplamın yüzdesi (`config.cashbackRate`)
+    percent: Optional[int]
+
+
 class GetProgramData(TypedDict):
     """The `data` of `getProgram`'s answer."""
     id: str
@@ -1713,6 +2009,8 @@ class GetProgramData(TypedDict):
     artwork: GetProgramDataArtwork
     # Kart sahipleri (açık kartı olan kişi), açık kartlar, son 30 gündeki ziyaretler, ödülü hazır kartlar
     stats: GetProgramDataStats
+    # Bir satışın bu programda ne kazandırdığı, kaydedilmiş kurallardan (salt-okunur). Kasa kampanyaları buna dahil değil.
+    sale: GetProgramDataSale
 
 # ----------------------------------------------------------------------
 # updateProgram · PATCH /v1/programs/{id}
@@ -1792,6 +2090,13 @@ class UpdateProgramBodyTiersItem(TypedDict):
     visitsRequired: int
 
 
+class UpdateProgramBodyOnlineValue(TypedDict):
+    """Kupon: online mağazada kullanıldığında değeri (ADR 179). Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer."""
+    kind: Literal["amount", "percent"]
+    # amount: kuruş (100 – 10.000.000); percent: 1 – 100
+    value: int
+
+
 class UpdateProgramBody(TypedDict, total=False):
     """Request body of `updateProgram`."""
     # Kartta görünen işletme adı
@@ -1835,6 +2140,8 @@ class UpdateProgramBody(TypedDict, total=False):
     cashbackRate: int
     # Kupon: teklif metni
     offerText: str
+    # Kupon: online mağazada kullanıldığında değeri (ADR 179). Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer.
+    onlineValue: Optional[UpdateProgramBodyOnlineValue]
 
 
 class UpdateProgramDataArtwork(TypedDict):
@@ -1851,6 +2158,18 @@ class UpdateProgramDataStats(TypedDict):
     rewardsReady: int
 
 
+class UpdateProgramDataSale(TypedDict):
+    """Bir satışın bu programda ne kazandırdığı, kaydedilmiş kurallardan (salt-okunur). Kasa kampanyaları buna dahil değil."""
+    # Bir satışın (`POST /v1/passes/{serial}/sale`) bu programın kartlarına yazdığı
+    writes: Literal["stamps", "points", "visit", "cashback", "none"]
+    # Damga ve VIP: satış başına damga ya da ziyaret
+    perSale: Optional[int]
+    # Puan: her 1 birim harcamaya puan (`config.earnRate`)
+    pointsPerUnit: Optional[int]
+    # Cashback: toplamın yüzdesi (`config.cashbackRate`)
+    percent: Optional[int]
+
+
 class UpdateProgramData(TypedDict):
     """The `data` of `updateProgram`'s answer."""
     id: str
@@ -1864,6 +2183,8 @@ class UpdateProgramData(TypedDict):
     artwork: UpdateProgramDataArtwork
     # Kart sahipleri (açık kartı olan kişi), açık kartlar, son 30 gündeki ziyaretler, ödülü hazır kartlar
     stats: UpdateProgramDataStats
+    # Bir satışın bu programda ne kazandırdığı, kaydedilmiş kurallardan (salt-okunur). Kasa kampanyaları buna dahil değil.
+    sale: UpdateProgramDataSale
 
 # ----------------------------------------------------------------------
 # deleteProgram · DELETE /v1/programs/{id}
@@ -1956,6 +2277,13 @@ class PreviewProgramBodyConfigTiersItem(TypedDict):
     visitsRequired: int
 
 
+class PreviewProgramBodyConfigOnlineValue(TypedDict):
+    """Kupon: online mağazada kullanıldığında değeri (ADR 179). Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer."""
+    kind: Literal["amount", "percent"]
+    # amount: kuruş (100 – 10.000.000); percent: 1 – 100
+    value: int
+
+
 class _PreviewProgramBodyConfigRequired(TypedDict):
     type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
     # Kartta görünen işletme adı
@@ -2004,6 +2332,8 @@ class _PreviewProgramBodyConfigOptional(TypedDict, total=False):
     cashbackRate: int
     # Kupon: teklif metni
     offerText: str
+    # Kupon: online mağazada kullanıldığında değeri (ADR 179). Yoksa (ya da null) kupon yalnız mağazada geçer; kodun kendi online değeri ya da tutarı bunun önüne geçer.
+    onlineValue: Optional[PreviewProgramBodyConfigOnlineValue]
 
 
 class PreviewProgramBodyConfig(_PreviewProgramBodyConfigRequired, _PreviewProgramBodyConfigOptional):
@@ -2384,6 +2714,8 @@ class ListCustomerCardsItem(TypedDict):
     email: Optional[str]
     # Kişinin bu işletmedeki adresleri ve numaraları, durumlarıyla: önce adresler, sonra numaralar. Yalnız bu işletmenin kaydı; kişinin Rewloy Cüzdan hesabı ya da başka işletmeleri hiçbir zaman (ADR 168)
     identifiers: List[ListCustomerCardsItemIdentifiersItem]
+    # `q` bir kart numarası olarak okundu ve bu kartın numarası onunla başlıyor: aranan kart bu (kişinin öteki kartları false)
+    matched: bool
 
 # ----------------------------------------------------------------------
 # getCustomer · GET /v1/customers/{id}
@@ -2519,7 +2851,7 @@ CustomerTimelineHeaders = TypedDict("CustomerTimelineHeaders", {
 class CustomerTimelineItem(TypedDict):
     """One item of `customerTimeline`'s list."""
     at: str
-    # earn, redeem, spend, load, …; visit; campaign, automation:<tür>, sequence; issued; verified:phone; changed:email, changed:phone
+    # earn, redeem, spend, load, …; hold, release, refund (online ödeme kodu, ADR 179); visit; campaign, automation:<tür>, sequence; issued; verified:phone; changed:email, changed:phone
     kind: str
     group: Literal["points", "rewards", "spend", "visits", "messages", "cards", "contact"]
     # Defter değişimi (damga, puan ya da kuruş)
@@ -2837,11 +3169,19 @@ CreateBatchHeaders = TypedDict("CreateBatchHeaders", {
 }, total=False)
 
 
+class CreateBatchBodyOnlineValue(TypedDict):
+    kind: Literal["amount", "percent"]
+    value: int
+
+
 class CreateBatchBody(TypedDict, total=False):
     """Request body of `createBatch`."""
     # Kodun adı (boşsa programın adı)
     name: str
+    # Programın para biriminde, kuruş
     valueMinor: int
+    # İsteğe bağlı: tutarın para birimi (ISO 4217, ör. `TRY`, `EUR`, büyük-küçük harf önemsiz). Tutar **kartın para birimindedir** (programın para birimi: `GET /v1/passes/{serial}` → `currency`, `GET /v1/programs/{id}`); verilirse onunla karşılaştırılır, farklıysa `422 CURRENCY_MISMATCH` (`details.currency` kartınki) ve hiçbir şey yazılmaz. Tutar çevrilmez.
+    currency: str
     usage: Literal["once", "limited", "unlimited"]
     usageLimit: int
     capacity: int
@@ -2850,6 +3190,7 @@ class CreateBatchBody(TypedDict, total=False):
     validUntil: str
     offerText: str
     percent: int
+    onlineValue: CreateBatchBodyOnlineValue
     # Kartların kasada kabul edileceği şubeler (ADR 139); boş ya da yok = programın kuralı. Şube kapsamlı bir kimlik yalnız kendi şubelerini seçebilir.
     locationIds: List[str]
 
@@ -2862,6 +3203,12 @@ class CreateBatchDataCards(TypedDict):
     expired: int
     revoked: int
     uses: int
+
+
+class CreateBatchDataOnlineValue(TypedDict):
+    """Kupon: online mağazada kullanıldığındaki değeri (ADR 179); null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada"""
+    kind: Literal["amount", "percent"]
+    value: int
 
 
 class CreateBatchData(TypedDict):
@@ -2899,6 +3246,8 @@ class CreateBatchData(TypedDict):
     spentMinor: float
     # Hediye kartı: açık kartlarda kalan (defter bakiyeleri), kuruş
     outstandingMinor: float
+    # Kupon: online mağazada kullanıldığındaki değeri (ADR 179); null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada
+    onlineValue: Optional[CreateBatchDataOnlineValue]
 
 # ----------------------------------------------------------------------
 # getBatch · GET /v1/batches/{id}
@@ -2922,6 +3271,12 @@ class GetBatchDataCards(TypedDict):
     expired: int
     revoked: int
     uses: int
+
+
+class GetBatchDataOnlineValue(TypedDict):
+    """Kupon: online mağazada kullanıldığındaki değeri (ADR 179); null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada"""
+    kind: Literal["amount", "percent"]
+    value: int
 
 
 class GetBatchData(TypedDict):
@@ -2959,6 +3314,8 @@ class GetBatchData(TypedDict):
     spentMinor: float
     # Hediye kartı: açık kartlarda kalan (defter bakiyeleri), kuruş
     outstandingMinor: float
+    # Kupon: online mağazada kullanıldığındaki değeri (ADR 179); null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada
+    onlineValue: Optional[GetBatchDataOnlineValue]
 
 # ----------------------------------------------------------------------
 # listBatchCards · GET /v1/batches/{id}/cards
@@ -2995,7 +3352,7 @@ class _ListBatchCardsItemRequired(TypedDict):
     passId: str
     serial: str
     name: str
-    # **Kullanımdan kalkıyor:** 5 Nisan 2027 tarihine kadar gelir; yerine `identifiers`. Kartı alanın adresi. Yerine geçen `identifiers` yalnız `customers.read` yetkisiyle gelir. Deprecated (sunset 2027-04-05, use `identifiers`)
+    # **Kullanımdan kalkıyor:** 5 Nisan 2027 tarihine kadar gelir; yerine `identifiers`. Kartı alanın adresi; `identifiers` gibi yalnız `customers.read` yetkisiyle ve kimliğin şube kapsamındaki kişiler için gelir, yoksa null (ADR 181). Yerine geçen `identifiers`. Deprecated (sunset 2027-04-05, use `identifiers`)
     email: Optional[str]
     status: str
     uses: int
@@ -3059,6 +3416,12 @@ class CloseBatchDataCards(TypedDict):
     uses: int
 
 
+class CloseBatchDataOnlineValue(TypedDict):
+    """Kupon: online mağazada kullanıldığındaki değeri (ADR 179); null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada"""
+    kind: Literal["amount", "percent"]
+    value: int
+
+
 class CloseBatchData(TypedDict):
     """The `data` of `closeBatch`'s answer."""
     id: str
@@ -3094,6 +3457,8 @@ class CloseBatchData(TypedDict):
     spentMinor: float
     # Hediye kartı: açık kartlarda kalan (defter bakiyeleri), kuruş
     outstandingMinor: float
+    # Kupon: online mağazada kullanıldığındaki değeri (ADR 179); null = kodun tutarı, yoksa programın `onlineValue`'su, o da yoksa yalnız mağazada
+    onlineValue: Optional[CloseBatchDataOnlineValue]
 
 # ----------------------------------------------------------------------
 # voidBatchCard · POST /v1/batches/{id}/cards/{passId}/void
@@ -5325,6 +5690,8 @@ class GetAnalyticsQuery(TypedDict, total=False):
     days: Literal[7, 30, 90]
     # Tek bir şube (kapsamınız içinde)
     locationId: str
+    # Tek bir program (kapsamınız içinde). Kapsamı programlarla sınırlı bir kimlik (ör. mağaza eklentisinin anahtarı) yalnız kendi programlarını görür; programsız istekte de yalnız onlar sayılır.
+    programId: str
 
 
 GetAnalyticsHeaders = TypedDict("GetAnalyticsHeaders", {
@@ -5414,7 +5781,8 @@ class ListActivityQuery(TypedDict, total=False):
     seatId: str
     # YYYY-AA-GG
     day: str
-    kind: Literal["earn", "redeem", "spend", "load", "accrue", "visit", "use", "issue", "adjust", "expire"]
+    kind: Literal["earn", "redeem", "spend", "load", "accrue", "visit", "use", "issue", "adjust", "expire", "hold", "release", "refund"]
+    # Tek bir program (kapsamınız içinde). Kapsamı programlarla sınırlı bir kimlik (ör. mağaza eklentisinin anahtarı) yalnız kendi programlarını görür; programsız istekte de yalnız onlar sayılır.
     programId: str
     # Kart numarası ya da başı
     serial: str
@@ -5433,7 +5801,9 @@ class ListActivityItem(TypedDict):
     at: str
     kind: str
     delta: Optional[float]
+    # `delta`'nın birimi: `stamp` damga, `point` puan, `visit` ziyaret, `try_minor` para (kuruş). `try_minor` donmuş bir addır: Türk lirası demek değildir, `currency` biriminin kuruşudur (ör. EUR işletmede euro sent). Kupon ve indirim kullanımında null.
     unit: Optional[str]
+    # Para hareketinde `delta`'nın para birimi (programın, yoksa işletmenin; ISO 4217). Damga, puan ve ziyarette de gelir ama yalnız `unit: "try_minor"` iken anlamlıdır; kupon ve indirim kullanımında null.
     currency: Optional[str]
     serial: str
     personId: Optional[str]
@@ -6133,7 +6503,7 @@ class ListShopsItemOrders(TypedDict):
 class ListShopsItemLastDelivery(TypedDict):
     """Mağazadan gelen son İMZALI istek: ne zaman ve ne oldu (credited işlendi · unmatched kartı yok · below eşiğin altında · paused bağlantı kapalıyken · currency başka para birimi · duplicate zaten kayıtlı siparişin tekrarı · ignored henüz ödenmemiş sipariş (kaydedilmez) · no_id sipariş numarası yok · bad_body gövde JSON değil). Hiç gelmediyse null."""
     at: str
-    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body"]
+    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body", "cancelled", "refunded"]
 
 
 class ListShopsItemLastRefusal(TypedDict):
@@ -6143,10 +6513,57 @@ class ListShopsItemLastRefusal(TypedDict):
 
 
 class ListShopsItemPluginKey(TypedDict):
-    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı; yoksa null. Bağlantı silinince anahtar da iptal edilir."""
+    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir."""
     id: str
     prefix: str
     name: str
+    # Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)
+    abilities: List[Literal["view", "till"]]
+    # Kasa açıksa şubesi; değilse null
+    tillLocationId: Optional[str]
+    # Kasanın şubesinin adı; değilse null
+    tillLocationName: Optional[str]
+    # Kasanın şubesi arşivlendi: kasa orada çalışmaz ve `abilities` içinde `till` yoktur; başka bir şube seçilene kadar
+    tillArchived: bool
+
+
+class ListShopsItemSettingsTax(TypedDict):
+    """Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır."""
+    # Hediye kartı: `payment` (varsayılan) vergiden sonra, ödeme gibi — KDV değişmez; `discount` vergiden önce kupon gibi — KDV matrahı düşer
+    giftcard: Literal["payment", "discount"]
+    # Cashback: `discount` (varsayılan) ya da `payment`
+    cashback: Literal["payment", "discount"]
+    # Tutarlı kupon: `discount` (varsayılan) ya da `payment`. Yüzdelik indirim her zaman `discount`
+    voucher: Literal["payment", "discount"]
+
+
+class ListShopsItemSettings(TypedDict):
+    """Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."""
+    # Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır.
+    tax: ListShopsItemSettingsTax
+    # İade edilen siparişin kazancı: `code_orders` (varsayılan) yalnız Rewloy kodu kullanılan siparişlerde geri alınır, `all` her iade edilen siparişte, `never` hiçbirinde. Hiçbir zaman sıfırın altına inmez.
+    refundReverses: Literal["code_orders", "all", "never"]
+    # Bekletme süresi: ödenmeyen bir siparişin ayırdığı tutar en geç bu kadar gün sonra karta döner (varsayılan 7)
+    holdDays: int
+
+
+class ListShopsItemAcceptsCeilingItem(TypedDict):
+    id: str
+    name: str
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+
+
+class ListShopsItemAccepts(TypedDict):
+    # İşletmenin bu mağazada kodu kabul edilen DİĞER programları (açık olanlar). Bağlantının kendi programı her zaman kabul edilir ve burada yer almaz.
+    programIds: List[str]
+    # Eklentinin anahtarının açabileceği programlar (tavan, `PUT /v1/shops/{id}/ceiling`), her biri adı ve türüyle: eklentinin anahtarı yalnız kendi programını okuyabildiği için adları buradan alır (adlar işletmenin kendi adlarıdır). Eklentinin anahtarı yoksa null: o zaman kodu kullanan kimliğin kendi yetkileri karar verir.
+    ceiling: Optional[List[ListShopsItemAcceptsCeilingItem]]
+
+
+class ListShopsItemUnbacked(TypedDict):
+    """Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`)."""
+    count: int
+    lastAt: Optional[str]
 
 
 class ListShopsItem(TypedDict):
@@ -6173,8 +6590,15 @@ class ListShopsItem(TypedDict):
     lastDelivery: Optional[ListShopsItemLastDelivery]
     # Bu adrese gelen ve imzası tutmadığı için reddedilen son istek (dakikada en çok bir kez yazılır). Sık görünüyorsa mağazadaki gizli anahtar bu bağlantınınki değildir. Hiç olmadıysa null.
     lastRefusal: Optional[ListShopsItemLastRefusal]
-    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı; yoksa null. Bağlantı silinince anahtar da iptal edilir.
+    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir.
     pluginKey: Optional[ListShopsItemPluginKey]
+    # Mağazanın adı (eklenti bağlanırken gönderdi): kart sahibi bir kodun nerede kullanıldığını bu adla görür. Yoksa null.
+    shopName: Optional[str]
+    # Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir.
+    settings: ListShopsItemSettings
+    accepts: ListShopsItemAccepts
+    # Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`).
+    unbacked: ListShopsItemUnbacked
 
 
 ListShopsData = List[ListShopsItem]
@@ -6217,7 +6641,7 @@ class CreateShopDataOrders(TypedDict):
 class CreateShopDataLastDelivery(TypedDict):
     """Mağazadan gelen son İMZALI istek: ne zaman ve ne oldu (credited işlendi · unmatched kartı yok · below eşiğin altında · paused bağlantı kapalıyken · currency başka para birimi · duplicate zaten kayıtlı siparişin tekrarı · ignored henüz ödenmemiş sipariş (kaydedilmez) · no_id sipariş numarası yok · bad_body gövde JSON değil). Hiç gelmediyse null."""
     at: str
-    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body"]
+    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body", "cancelled", "refunded"]
 
 
 class CreateShopDataLastRefusal(TypedDict):
@@ -6227,10 +6651,57 @@ class CreateShopDataLastRefusal(TypedDict):
 
 
 class CreateShopDataPluginKey(TypedDict):
-    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı; yoksa null. Bağlantı silinince anahtar da iptal edilir."""
+    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir."""
     id: str
     prefix: str
     name: str
+    # Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)
+    abilities: List[Literal["view", "till"]]
+    # Kasa açıksa şubesi; değilse null
+    tillLocationId: Optional[str]
+    # Kasanın şubesinin adı; değilse null
+    tillLocationName: Optional[str]
+    # Kasanın şubesi arşivlendi: kasa orada çalışmaz ve `abilities` içinde `till` yoktur; başka bir şube seçilene kadar
+    tillArchived: bool
+
+
+class CreateShopDataSettingsTax(TypedDict):
+    """Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır."""
+    # Hediye kartı: `payment` (varsayılan) vergiden sonra, ödeme gibi — KDV değişmez; `discount` vergiden önce kupon gibi — KDV matrahı düşer
+    giftcard: Literal["payment", "discount"]
+    # Cashback: `discount` (varsayılan) ya da `payment`
+    cashback: Literal["payment", "discount"]
+    # Tutarlı kupon: `discount` (varsayılan) ya da `payment`. Yüzdelik indirim her zaman `discount`
+    voucher: Literal["payment", "discount"]
+
+
+class CreateShopDataSettings(TypedDict):
+    """Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."""
+    # Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır.
+    tax: CreateShopDataSettingsTax
+    # İade edilen siparişin kazancı: `code_orders` (varsayılan) yalnız Rewloy kodu kullanılan siparişlerde geri alınır, `all` her iade edilen siparişte, `never` hiçbirinde. Hiçbir zaman sıfırın altına inmez.
+    refundReverses: Literal["code_orders", "all", "never"]
+    # Bekletme süresi: ödenmeyen bir siparişin ayırdığı tutar en geç bu kadar gün sonra karta döner (varsayılan 7)
+    holdDays: int
+
+
+class CreateShopDataAcceptsCeilingItem(TypedDict):
+    id: str
+    name: str
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+
+
+class CreateShopDataAccepts(TypedDict):
+    # İşletmenin bu mağazada kodu kabul edilen DİĞER programları (açık olanlar). Bağlantının kendi programı her zaman kabul edilir ve burada yer almaz.
+    programIds: List[str]
+    # Eklentinin anahtarının açabileceği programlar (tavan, `PUT /v1/shops/{id}/ceiling`), her biri adı ve türüyle: eklentinin anahtarı yalnız kendi programını okuyabildiği için adları buradan alır (adlar işletmenin kendi adlarıdır). Eklentinin anahtarı yoksa null: o zaman kodu kullanan kimliğin kendi yetkileri karar verir.
+    ceiling: Optional[List[CreateShopDataAcceptsCeilingItem]]
+
+
+class CreateShopDataUnbacked(TypedDict):
+    """Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`)."""
+    count: int
+    lastAt: Optional[str]
 
 
 class CreateShopData(TypedDict):
@@ -6257,8 +6728,15 @@ class CreateShopData(TypedDict):
     lastDelivery: Optional[CreateShopDataLastDelivery]
     # Bu adrese gelen ve imzası tutmadığı için reddedilen son istek (dakikada en çok bir kez yazılır). Sık görünüyorsa mağazadaki gizli anahtar bu bağlantınınki değildir. Hiç olmadıysa null.
     lastRefusal: Optional[CreateShopDataLastRefusal]
-    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı; yoksa null. Bağlantı silinince anahtar da iptal edilir.
+    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir.
     pluginKey: Optional[CreateShopDataPluginKey]
+    # Mağazanın adı (eklenti bağlanırken gönderdi): kart sahibi bir kodun nerede kullanıldığını bu adla görür. Yoksa null.
+    shopName: Optional[str]
+    # Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir.
+    settings: CreateShopDataSettings
+    accepts: CreateShopDataAccepts
+    # Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`).
+    unbacked: CreateShopDataUnbacked
     # WooCommerce: yalnız bu yanıtta; saklanmaz, yeniden gösterilmez
     secret: Optional[str]
 
@@ -6288,7 +6766,7 @@ class GetShopDataOrders(TypedDict):
 class GetShopDataLastDelivery(TypedDict):
     """Mağazadan gelen son İMZALI istek: ne zaman ve ne oldu (credited işlendi · unmatched kartı yok · below eşiğin altında · paused bağlantı kapalıyken · currency başka para birimi · duplicate zaten kayıtlı siparişin tekrarı · ignored henüz ödenmemiş sipariş (kaydedilmez) · no_id sipariş numarası yok · bad_body gövde JSON değil). Hiç gelmediyse null."""
     at: str
-    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body"]
+    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body", "cancelled", "refunded"]
 
 
 class GetShopDataLastRefusal(TypedDict):
@@ -6298,10 +6776,57 @@ class GetShopDataLastRefusal(TypedDict):
 
 
 class GetShopDataPluginKey(TypedDict):
-    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı; yoksa null. Bağlantı silinince anahtar da iptal edilir."""
+    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir."""
     id: str
     prefix: str
     name: str
+    # Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)
+    abilities: List[Literal["view", "till"]]
+    # Kasa açıksa şubesi; değilse null
+    tillLocationId: Optional[str]
+    # Kasanın şubesinin adı; değilse null
+    tillLocationName: Optional[str]
+    # Kasanın şubesi arşivlendi: kasa orada çalışmaz ve `abilities` içinde `till` yoktur; başka bir şube seçilene kadar
+    tillArchived: bool
+
+
+class GetShopDataSettingsTax(TypedDict):
+    """Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır."""
+    # Hediye kartı: `payment` (varsayılan) vergiden sonra, ödeme gibi — KDV değişmez; `discount` vergiden önce kupon gibi — KDV matrahı düşer
+    giftcard: Literal["payment", "discount"]
+    # Cashback: `discount` (varsayılan) ya da `payment`
+    cashback: Literal["payment", "discount"]
+    # Tutarlı kupon: `discount` (varsayılan) ya da `payment`. Yüzdelik indirim her zaman `discount`
+    voucher: Literal["payment", "discount"]
+
+
+class GetShopDataSettings(TypedDict):
+    """Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."""
+    # Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır.
+    tax: GetShopDataSettingsTax
+    # İade edilen siparişin kazancı: `code_orders` (varsayılan) yalnız Rewloy kodu kullanılan siparişlerde geri alınır, `all` her iade edilen siparişte, `never` hiçbirinde. Hiçbir zaman sıfırın altına inmez.
+    refundReverses: Literal["code_orders", "all", "never"]
+    # Bekletme süresi: ödenmeyen bir siparişin ayırdığı tutar en geç bu kadar gün sonra karta döner (varsayılan 7)
+    holdDays: int
+
+
+class GetShopDataAcceptsCeilingItem(TypedDict):
+    id: str
+    name: str
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+
+
+class GetShopDataAccepts(TypedDict):
+    # İşletmenin bu mağazada kodu kabul edilen DİĞER programları (açık olanlar). Bağlantının kendi programı her zaman kabul edilir ve burada yer almaz.
+    programIds: List[str]
+    # Eklentinin anahtarının açabileceği programlar (tavan, `PUT /v1/shops/{id}/ceiling`), her biri adı ve türüyle: eklentinin anahtarı yalnız kendi programını okuyabildiği için adları buradan alır (adlar işletmenin kendi adlarıdır). Eklentinin anahtarı yoksa null: o zaman kodu kullanan kimliğin kendi yetkileri karar verir.
+    ceiling: Optional[List[GetShopDataAcceptsCeilingItem]]
+
+
+class GetShopDataUnbacked(TypedDict):
+    """Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`)."""
+    count: int
+    lastAt: Optional[str]
 
 
 class GetShopData(TypedDict):
@@ -6328,8 +6853,15 @@ class GetShopData(TypedDict):
     lastDelivery: Optional[GetShopDataLastDelivery]
     # Bu adrese gelen ve imzası tutmadığı için reddedilen son istek (dakikada en çok bir kez yazılır). Sık görünüyorsa mağazadaki gizli anahtar bu bağlantınınki değildir. Hiç olmadıysa null.
     lastRefusal: Optional[GetShopDataLastRefusal]
-    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı; yoksa null. Bağlantı silinince anahtar da iptal edilir.
+    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir.
     pluginKey: Optional[GetShopDataPluginKey]
+    # Mağazanın adı (eklenti bağlanırken gönderdi): kart sahibi bir kodun nerede kullanıldığını bu adla görür. Yoksa null.
+    shopName: Optional[str]
+    # Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir.
+    settings: GetShopDataSettings
+    accepts: GetShopDataAccepts
+    # Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`).
+    unbacked: GetShopDataUnbacked
 
 # ----------------------------------------------------------------------
 # setShopEnabled · PATCH /v1/shops/{id}
@@ -6362,7 +6894,7 @@ class SetShopEnabledDataOrders(TypedDict):
 class SetShopEnabledDataLastDelivery(TypedDict):
     """Mağazadan gelen son İMZALI istek: ne zaman ve ne oldu (credited işlendi · unmatched kartı yok · below eşiğin altında · paused bağlantı kapalıyken · currency başka para birimi · duplicate zaten kayıtlı siparişin tekrarı · ignored henüz ödenmemiş sipariş (kaydedilmez) · no_id sipariş numarası yok · bad_body gövde JSON değil). Hiç gelmediyse null."""
     at: str
-    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body"]
+    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body", "cancelled", "refunded"]
 
 
 class SetShopEnabledDataLastRefusal(TypedDict):
@@ -6372,10 +6904,57 @@ class SetShopEnabledDataLastRefusal(TypedDict):
 
 
 class SetShopEnabledDataPluginKey(TypedDict):
-    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı; yoksa null. Bağlantı silinince anahtar da iptal edilir."""
+    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir."""
     id: str
     prefix: str
     name: str
+    # Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)
+    abilities: List[Literal["view", "till"]]
+    # Kasa açıksa şubesi; değilse null
+    tillLocationId: Optional[str]
+    # Kasanın şubesinin adı; değilse null
+    tillLocationName: Optional[str]
+    # Kasanın şubesi arşivlendi: kasa orada çalışmaz ve `abilities` içinde `till` yoktur; başka bir şube seçilene kadar
+    tillArchived: bool
+
+
+class SetShopEnabledDataSettingsTax(TypedDict):
+    """Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır."""
+    # Hediye kartı: `payment` (varsayılan) vergiden sonra, ödeme gibi — KDV değişmez; `discount` vergiden önce kupon gibi — KDV matrahı düşer
+    giftcard: Literal["payment", "discount"]
+    # Cashback: `discount` (varsayılan) ya da `payment`
+    cashback: Literal["payment", "discount"]
+    # Tutarlı kupon: `discount` (varsayılan) ya da `payment`. Yüzdelik indirim her zaman `discount`
+    voucher: Literal["payment", "discount"]
+
+
+class SetShopEnabledDataSettings(TypedDict):
+    """Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."""
+    # Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır.
+    tax: SetShopEnabledDataSettingsTax
+    # İade edilen siparişin kazancı: `code_orders` (varsayılan) yalnız Rewloy kodu kullanılan siparişlerde geri alınır, `all` her iade edilen siparişte, `never` hiçbirinde. Hiçbir zaman sıfırın altına inmez.
+    refundReverses: Literal["code_orders", "all", "never"]
+    # Bekletme süresi: ödenmeyen bir siparişin ayırdığı tutar en geç bu kadar gün sonra karta döner (varsayılan 7)
+    holdDays: int
+
+
+class SetShopEnabledDataAcceptsCeilingItem(TypedDict):
+    id: str
+    name: str
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+
+
+class SetShopEnabledDataAccepts(TypedDict):
+    # İşletmenin bu mağazada kodu kabul edilen DİĞER programları (açık olanlar). Bağlantının kendi programı her zaman kabul edilir ve burada yer almaz.
+    programIds: List[str]
+    # Eklentinin anahtarının açabileceği programlar (tavan, `PUT /v1/shops/{id}/ceiling`), her biri adı ve türüyle: eklentinin anahtarı yalnız kendi programını okuyabildiği için adları buradan alır (adlar işletmenin kendi adlarıdır). Eklentinin anahtarı yoksa null: o zaman kodu kullanan kimliğin kendi yetkileri karar verir.
+    ceiling: Optional[List[SetShopEnabledDataAcceptsCeilingItem]]
+
+
+class SetShopEnabledDataUnbacked(TypedDict):
+    """Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`)."""
+    count: int
+    lastAt: Optional[str]
 
 
 class SetShopEnabledData(TypedDict):
@@ -6402,8 +6981,15 @@ class SetShopEnabledData(TypedDict):
     lastDelivery: Optional[SetShopEnabledDataLastDelivery]
     # Bu adrese gelen ve imzası tutmadığı için reddedilen son istek (dakikada en çok bir kez yazılır). Sık görünüyorsa mağazadaki gizli anahtar bu bağlantınınki değildir. Hiç olmadıysa null.
     lastRefusal: Optional[SetShopEnabledDataLastRefusal]
-    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı; yoksa null. Bağlantı silinince anahtar da iptal edilir.
+    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir.
     pluginKey: Optional[SetShopEnabledDataPluginKey]
+    # Mağazanın adı (eklenti bağlanırken gönderdi): kart sahibi bir kodun nerede kullanıldığını bu adla görür. Yoksa null.
+    shopName: Optional[str]
+    # Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir.
+    settings: SetShopEnabledDataSettings
+    accepts: SetShopEnabledDataAccepts
+    # Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`).
+    unbacked: SetShopEnabledDataUnbacked
 
 # ----------------------------------------------------------------------
 # deleteShop · DELETE /v1/shops/{id}
@@ -6466,6 +7052,12 @@ class ListShopConnectTokensItem(TypedDict):
     expiresAt: str
     # Kodu oluşturan kişinin e-postası
     createdBy: Optional[str]
+    # Kurulacak anahtar Görüntüleme yetkisini alır mı (ADR 178)
+    view: bool
+    # Kurulacak anahtarın kasası bu şubede açılır; null = kasa kapalı (ADR 178)
+    tillLocationId: Optional[str]
+    # Kasanın şubesinin adı
+    tillLocationName: Optional[str]
 
 
 ListShopConnectTokensData = List[ListShopConnectTokensItem]
@@ -6488,6 +7080,10 @@ class _CreateShopConnectTokenBodyRequired(TypedDict):
 class _CreateShopConnectTokenBodyOptional(TypedDict, total=False):
     perAmountMinor: int
     step: int
+    # Görüntüleme: kartlar, durumları, programın sayıları ve son işlemleri. Gönderilmezse kapalı (ADR 178'in incelemesi): eski istemcinin anahtarı eskisi gibi kalır
+    view: bool
+    # Kasa: bu şubenin kasası; gönderilmezse ya da null ise kasa kapalı
+    tillLocationId: Optional[str]
 
 
 class CreateShopConnectTokenBody(_CreateShopConnectTokenBodyRequired, _CreateShopConnectTokenBodyOptional):
@@ -6507,6 +7103,12 @@ class CreateShopConnectTokenData(TypedDict):
     expiresAt: str
     # Kodu oluşturan kişinin e-postası
     createdBy: Optional[str]
+    # Kurulacak anahtar Görüntüleme yetkisini alır mı (ADR 178)
+    view: bool
+    # Kurulacak anahtarın kasası bu şubede açılır; null = kasa kapalı (ADR 178)
+    tillLocationId: Optional[str]
+    # Kasanın şubesinin adı
+    tillLocationName: Optional[str]
     # Eklentiye yapıştırılacak kod: yalnız bu yanıtta; saklanmaz, yeniden gösterilmez.
     token: str
 
@@ -6551,7 +7153,7 @@ class ConnectShopDataShopOrders(TypedDict):
 class ConnectShopDataShopLastDelivery(TypedDict):
     """Mağazadan gelen son İMZALI istek: ne zaman ve ne oldu (credited işlendi · unmatched kartı yok · below eşiğin altında · paused bağlantı kapalıyken · currency başka para birimi · duplicate zaten kayıtlı siparişin tekrarı · ignored henüz ödenmemiş sipariş (kaydedilmez) · no_id sipariş numarası yok · bad_body gövde JSON değil). Hiç gelmediyse null."""
     at: str
-    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body"]
+    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body", "cancelled", "refunded"]
 
 
 class ConnectShopDataShopLastRefusal(TypedDict):
@@ -6561,10 +7163,57 @@ class ConnectShopDataShopLastRefusal(TypedDict):
 
 
 class ConnectShopDataShopPluginKey(TypedDict):
-    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı; yoksa null. Bağlantı silinince anahtar da iptal edilir."""
+    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir."""
     id: str
     prefix: str
     name: str
+    # Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)
+    abilities: List[Literal["view", "till"]]
+    # Kasa açıksa şubesi; değilse null
+    tillLocationId: Optional[str]
+    # Kasanın şubesinin adı; değilse null
+    tillLocationName: Optional[str]
+    # Kasanın şubesi arşivlendi: kasa orada çalışmaz ve `abilities` içinde `till` yoktur; başka bir şube seçilene kadar
+    tillArchived: bool
+
+
+class ConnectShopDataShopSettingsTax(TypedDict):
+    """Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır."""
+    # Hediye kartı: `payment` (varsayılan) vergiden sonra, ödeme gibi — KDV değişmez; `discount` vergiden önce kupon gibi — KDV matrahı düşer
+    giftcard: Literal["payment", "discount"]
+    # Cashback: `discount` (varsayılan) ya da `payment`
+    cashback: Literal["payment", "discount"]
+    # Tutarlı kupon: `discount` (varsayılan) ya da `payment`. Yüzdelik indirim her zaman `discount`
+    voucher: Literal["payment", "discount"]
+
+
+class ConnectShopDataShopSettings(TypedDict):
+    """Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."""
+    # Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır.
+    tax: ConnectShopDataShopSettingsTax
+    # İade edilen siparişin kazancı: `code_orders` (varsayılan) yalnız Rewloy kodu kullanılan siparişlerde geri alınır, `all` her iade edilen siparişte, `never` hiçbirinde. Hiçbir zaman sıfırın altına inmez.
+    refundReverses: Literal["code_orders", "all", "never"]
+    # Bekletme süresi: ödenmeyen bir siparişin ayırdığı tutar en geç bu kadar gün sonra karta döner (varsayılan 7)
+    holdDays: int
+
+
+class ConnectShopDataShopAcceptsCeilingItem(TypedDict):
+    id: str
+    name: str
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+
+
+class ConnectShopDataShopAccepts(TypedDict):
+    # İşletmenin bu mağazada kodu kabul edilen DİĞER programları (açık olanlar). Bağlantının kendi programı her zaman kabul edilir ve burada yer almaz.
+    programIds: List[str]
+    # Eklentinin anahtarının açabileceği programlar (tavan, `PUT /v1/shops/{id}/ceiling`), her biri adı ve türüyle: eklentinin anahtarı yalnız kendi programını okuyabildiği için adları buradan alır (adlar işletmenin kendi adlarıdır). Eklentinin anahtarı yoksa null: o zaman kodu kullanan kimliğin kendi yetkileri karar verir.
+    ceiling: Optional[List[ConnectShopDataShopAcceptsCeilingItem]]
+
+
+class ConnectShopDataShopUnbacked(TypedDict):
+    """Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`)."""
+    count: int
+    lastAt: Optional[str]
 
 
 class ConnectShopDataShop(TypedDict):
@@ -6590,8 +7239,15 @@ class ConnectShopDataShop(TypedDict):
     lastDelivery: Optional[ConnectShopDataShopLastDelivery]
     # Bu adrese gelen ve imzası tutmadığı için reddedilen son istek (dakikada en çok bir kez yazılır). Sık görünüyorsa mağazadaki gizli anahtar bu bağlantınınki değildir. Hiç olmadıysa null.
     lastRefusal: Optional[ConnectShopDataShopLastRefusal]
-    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı; yoksa null. Bağlantı silinince anahtar da iptal edilir.
+    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir.
     pluginKey: Optional[ConnectShopDataShopPluginKey]
+    # Mağazanın adı (eklenti bağlanırken gönderdi): kart sahibi bir kodun nerede kullanıldığını bu adla görür. Yoksa null.
+    shopName: Optional[str]
+    # Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir.
+    settings: ConnectShopDataShopSettings
+    accepts: ConnectShopDataShopAccepts
+    # Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`).
+    unbacked: ConnectShopDataShopUnbacked
 
 
 class ConnectShopDataApiKey(TypedDict):
@@ -6601,6 +7257,10 @@ class ConnectShopDataApiKey(TypedDict):
     role: str
     # `rwk_…` (test ortamında `rwk_test_…`): yalnız bu yanıtta; Rewloy yalnız özetini saklar.
     token: str
+    # Kodu alan kişinin seçtiği yetkiler (ADR 178): `view`, `till`
+    abilities: List[Literal["view", "till"]]
+    # Kasa açıksa şubesi (işlemlerde `locationId`); değilse null
+    tillLocationId: Optional[str]
 
 
 class ConnectShopData(TypedDict):
@@ -6610,6 +7270,1088 @@ class ConnectShopData(TypedDict):
     secret: str
     apiKey: ConnectShopDataApiKey
     mode: Literal["live", "test"]
+
+# ----------------------------------------------------------------------
+# setShopPluginAbilities · PUT /v1/shops/{id}/plugin-abilities
+
+class SetShopPluginAbilitiesParams(TypedDict):
+    """Path parameters of `setShopPluginAbilities`."""
+    id: str
+
+
+SetShopPluginAbilitiesHeaders = TypedDict("SetShopPluginAbilitiesHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class SetShopPluginAbilitiesBody(TypedDict):
+    """Request body of `setShopPluginAbilities`."""
+    view: bool
+    # Kasanın şubesi; null = kasa kapalı
+    tillLocationId: Optional[str]
+    # Neden (yalnız ekibiniz görür)
+    reason: str
+    password: str
+
+
+class SetShopPluginAbilitiesDataOrders(TypedDict):
+    """Kayıtlı siparişler sonucuna göre: credited işlendi · unmatched e-postası müşteriyle eşleşmedi · below eşiğin altında · paused bağlantı kapalıyken · currency para birimi farklı"""
+    credited: int
+    unmatched: int
+    below: int
+    paused: int
+    currency: int
+
+
+class SetShopPluginAbilitiesDataLastDelivery(TypedDict):
+    """Mağazadan gelen son İMZALI istek: ne zaman ve ne oldu (credited işlendi · unmatched kartı yok · below eşiğin altında · paused bağlantı kapalıyken · currency başka para birimi · duplicate zaten kayıtlı siparişin tekrarı · ignored henüz ödenmemiş sipariş (kaydedilmez) · no_id sipariş numarası yok · bad_body gövde JSON değil). Hiç gelmediyse null."""
+    at: str
+    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body", "cancelled", "refunded"]
+
+
+class SetShopPluginAbilitiesDataLastRefusal(TypedDict):
+    """Bu adrese gelen ve imzası tutmadığı için reddedilen son istek (dakikada en çok bir kez yazılır). Sık görünüyorsa mağazadaki gizli anahtar bu bağlantınınki değildir. Hiç olmadıysa null."""
+    at: str
+    reason: Literal["bad_signature"]
+
+
+class SetShopPluginAbilitiesDataPluginKey(TypedDict):
+    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir."""
+    id: str
+    prefix: str
+    name: str
+    # Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)
+    abilities: List[Literal["view", "till"]]
+    # Kasa açıksa şubesi; değilse null
+    tillLocationId: Optional[str]
+    # Kasanın şubesinin adı; değilse null
+    tillLocationName: Optional[str]
+    # Kasanın şubesi arşivlendi: kasa orada çalışmaz ve `abilities` içinde `till` yoktur; başka bir şube seçilene kadar
+    tillArchived: bool
+
+
+class SetShopPluginAbilitiesDataSettingsTax(TypedDict):
+    """Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır."""
+    # Hediye kartı: `payment` (varsayılan) vergiden sonra, ödeme gibi — KDV değişmez; `discount` vergiden önce kupon gibi — KDV matrahı düşer
+    giftcard: Literal["payment", "discount"]
+    # Cashback: `discount` (varsayılan) ya da `payment`
+    cashback: Literal["payment", "discount"]
+    # Tutarlı kupon: `discount` (varsayılan) ya da `payment`. Yüzdelik indirim her zaman `discount`
+    voucher: Literal["payment", "discount"]
+
+
+class SetShopPluginAbilitiesDataSettings(TypedDict):
+    """Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."""
+    # Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır.
+    tax: SetShopPluginAbilitiesDataSettingsTax
+    # İade edilen siparişin kazancı: `code_orders` (varsayılan) yalnız Rewloy kodu kullanılan siparişlerde geri alınır, `all` her iade edilen siparişte, `never` hiçbirinde. Hiçbir zaman sıfırın altına inmez.
+    refundReverses: Literal["code_orders", "all", "never"]
+    # Bekletme süresi: ödenmeyen bir siparişin ayırdığı tutar en geç bu kadar gün sonra karta döner (varsayılan 7)
+    holdDays: int
+
+
+class SetShopPluginAbilitiesDataAcceptsCeilingItem(TypedDict):
+    id: str
+    name: str
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+
+
+class SetShopPluginAbilitiesDataAccepts(TypedDict):
+    # İşletmenin bu mağazada kodu kabul edilen DİĞER programları (açık olanlar). Bağlantının kendi programı her zaman kabul edilir ve burada yer almaz.
+    programIds: List[str]
+    # Eklentinin anahtarının açabileceği programlar (tavan, `PUT /v1/shops/{id}/ceiling`), her biri adı ve türüyle: eklentinin anahtarı yalnız kendi programını okuyabildiği için adları buradan alır (adlar işletmenin kendi adlarıdır). Eklentinin anahtarı yoksa null: o zaman kodu kullanan kimliğin kendi yetkileri karar verir.
+    ceiling: Optional[List[SetShopPluginAbilitiesDataAcceptsCeilingItem]]
+
+
+class SetShopPluginAbilitiesDataUnbacked(TypedDict):
+    """Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`)."""
+    count: int
+    lastAt: Optional[str]
+
+
+class SetShopPluginAbilitiesData(TypedDict):
+    """The `data` of `setShopPluginAbilities`'s answer."""
+    id: str
+    platform: Literal["shopify", "woocommerce"]
+    programId: str
+    programName: str
+    programType: str
+    currency: str
+    # order: her sipariş · amount: her `perAmountMinor` tutar için
+    rule: Literal["order", "amount"]
+    perAmountMinor: int
+    # Her seferinde eklenen damga/puan/ziyaret (cashback kartında tutar oranla hesaplanır)
+    step: int
+    enabled: bool
+    lastOrderAt: Optional[str]
+    createdAt: str
+    # Mağazanızın sipariş bildirimini göndereceği adres
+    webhookUrl: str
+    # Kayıtlı siparişler sonucuna göre: credited işlendi · unmatched e-postası müşteriyle eşleşmedi · below eşiğin altında · paused bağlantı kapalıyken · currency para birimi farklı
+    orders: SetShopPluginAbilitiesDataOrders
+    # Mağazadan gelen son İMZALI istek: ne zaman ve ne oldu (credited işlendi · unmatched kartı yok · below eşiğin altında · paused bağlantı kapalıyken · currency başka para birimi · duplicate zaten kayıtlı siparişin tekrarı · ignored henüz ödenmemiş sipariş (kaydedilmez) · no_id sipariş numarası yok · bad_body gövde JSON değil). Hiç gelmediyse null.
+    lastDelivery: Optional[SetShopPluginAbilitiesDataLastDelivery]
+    # Bu adrese gelen ve imzası tutmadığı için reddedilen son istek (dakikada en çok bir kez yazılır). Sık görünüyorsa mağazadaki gizli anahtar bu bağlantınınki değildir. Hiç olmadıysa null.
+    lastRefusal: Optional[SetShopPluginAbilitiesDataLastRefusal]
+    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir.
+    pluginKey: Optional[SetShopPluginAbilitiesDataPluginKey]
+    # Mağazanın adı (eklenti bağlanırken gönderdi): kart sahibi bir kodun nerede kullanıldığını bu adla görür. Yoksa null.
+    shopName: Optional[str]
+    # Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir.
+    settings: SetShopPluginAbilitiesDataSettings
+    accepts: SetShopPluginAbilitiesDataAccepts
+    # Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`).
+    unbacked: SetShopPluginAbilitiesDataUnbacked
+
+# ----------------------------------------------------------------------
+# quoteCheckoutCode · POST /v1/shops/{id}/checkout-codes/quote
+
+class QuoteCheckoutCodeParams(TypedDict):
+    """Path parameters of `quoteCheckoutCode`."""
+    id: str
+
+
+QuoteCheckoutCodeHeaders = TypedDict("QuoteCheckoutCodeHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class _QuoteCheckoutCodeBodyRequired(TypedDict):
+    # Müşterinin yazdığı kod: `RW-XXXX-XXXX` (büyük/küçük harf, boşluk ve tire fark etmez)
+    code: str
+    # Siparişin para birimi (ISO 4217, örn. TRY)
+    currency: str
+
+
+class _QuoteCheckoutCodeBodyOptional(TypedDict, total=False):
+    # İsteğe bağlı: alışverişçinin kişisel veri taşımayan anahtarı (ör. WooCommerce oturumunun HMAC'i); kendi soru bütçesi olur
+    shopper: str
+    # İsteğe bağlı: kodu soran sipariş. Kod bu siparişteyse `CODE_USED` yerine bu siparişin kullanımı döner (ADR 180).
+    orderId: str
+
+
+class QuoteCheckoutCodeBody(_QuoteCheckoutCodeBodyRequired, _QuoteCheckoutCodeBodyOptional):
+    """Request body of `quoteCheckoutCode`."""
+
+
+
+class QuoteCheckoutCodeDataRedemption(TypedDict):
+    """Yalnız `orderId` gönderildiyse: bu siparişin bu koddaki kullanımı; kod bu siparişin değilse null"""
+    id: str
+    orderId: str
+    # Kodun son 4 karakteri (sipariş notu için)
+    codeLast4: str
+    # Kartın bu mağazaya özel, opak kimliği: bir siparişteki kodların aynı karta ait olup olmadığını karşılaştırmak için; başka bir şey söylemez
+    cardId: Optional[str]
+    # Kart numarasının son 4 karakteri; seri numarası mağazaya verilmez
+    cardLast4: str
+    # balance: bakiye (hediye kartı, cashback) · percent: yüzde indirim · amount: kuponun tutarı · link: değer yok, sipariş bu karta işlenir (damga, puan, VIP)
+    kind: Literal["balance", "percent", "amount", "link"]
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    programId: str
+    programName: str
+    # balance: ayrılan tutar; amount/percent: siparişe uygulanan indirim (bilgi için); link: 0
+    amountMinor: int
+    percent: Optional[int]
+    currency: str
+    # held ayrıldı · captured düşüldü · released bırakıldı · expired süresi dolup bırakıldı · refunded iade edildi · unbacked karşılıksız (ayırma bittikten sonra ödendi, kartta değer kalmamıştı)
+    state: Literal["held", "captured", "released", "expired", "refunded", "unbacked"]
+    # Aynı sipariş aynı kodu bıraktıktan sonra yeniden ayırdıkça artar
+    generation: int
+    # Ayrılmışken: ödenmezse tutarın karta döneceği an (bağlantının bekletme süresi)
+    heldUntil: Optional[str]
+    capturedMinor: int
+    refundedMinor: int
+    # Ayırmanın süresi dolduktan sonra düşüldü (ya da karşılıksız kaldı)
+    late: bool
+    releaseReason: Literal["cancelled", "failed", "expired", "merchant", "shop", None]
+    createdAt: str
+    capturedAt: Optional[str]
+    releasedAt: Optional[str]
+
+
+class _QuoteCheckoutCodeDataRequired(TypedDict):
+    kind: Literal["balance", "percent", "amount", "link"]
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    programId: str
+    programName: str
+    currency: str
+    maxMinor: Optional[int]
+    percent: Optional[int]
+    amountMinor: Optional[int]
+    tax: Literal["payment", "discount", None]
+    cardId: str
+    cardLast4: str
+    codeLast4: str
+    firstUseBy: str
+    # Kodun bir siparişe bağlanabileceği son an
+    attachBy: str
+
+
+class _QuoteCheckoutCodeDataOptional(TypedDict, total=False):
+    # Yalnız `orderId` gönderildiyse: bu siparişin bu koddaki kullanımı; kod bu siparişin değilse null
+    redemption: Optional[QuoteCheckoutCodeDataRedemption]
+
+
+class QuoteCheckoutCodeData(_QuoteCheckoutCodeDataRequired, _QuoteCheckoutCodeDataOptional):
+    """The `data` of `quoteCheckoutCode`'s answer."""
+
+
+# ----------------------------------------------------------------------
+# listOrderRedemptions · GET /v1/shops/{id}/orders/{orderId}/redemptions
+
+class ListOrderRedemptionsParams(TypedDict):
+    """Path parameters of `listOrderRedemptions`."""
+    id: str
+    # Mağazanın sipariş numarası (WooCommerce: sipariş kimliği)
+    orderId: str
+
+
+ListOrderRedemptionsHeaders = TypedDict("ListOrderRedemptionsHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class ListOrderRedemptionsItem(TypedDict):
+    """One item of `listOrderRedemptions`'s list."""
+    id: str
+    orderId: str
+    # Kodun son 4 karakteri (sipariş notu için)
+    codeLast4: str
+    # Kartın bu mağazaya özel, opak kimliği: bir siparişteki kodların aynı karta ait olup olmadığını karşılaştırmak için; başka bir şey söylemez
+    cardId: Optional[str]
+    # Kart numarasının son 4 karakteri; seri numarası mağazaya verilmez
+    cardLast4: str
+    # balance: bakiye (hediye kartı, cashback) · percent: yüzde indirim · amount: kuponun tutarı · link: değer yok, sipariş bu karta işlenir (damga, puan, VIP)
+    kind: Literal["balance", "percent", "amount", "link"]
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    programId: str
+    programName: str
+    # balance: ayrılan tutar; amount/percent: siparişe uygulanan indirim (bilgi için); link: 0
+    amountMinor: int
+    percent: Optional[int]
+    currency: str
+    # held ayrıldı · captured düşüldü · released bırakıldı · expired süresi dolup bırakıldı · refunded iade edildi · unbacked karşılıksız (ayırma bittikten sonra ödendi, kartta değer kalmamıştı)
+    state: Literal["held", "captured", "released", "expired", "refunded", "unbacked"]
+    # Aynı sipariş aynı kodu bıraktıktan sonra yeniden ayırdıkça artar
+    generation: int
+    # Ayrılmışken: ödenmezse tutarın karta döneceği an (bağlantının bekletme süresi)
+    heldUntil: Optional[str]
+    capturedMinor: int
+    refundedMinor: int
+    # Ayırmanın süresi dolduktan sonra düşüldü (ya da karşılıksız kaldı)
+    late: bool
+    releaseReason: Literal["cancelled", "failed", "expired", "merchant", "shop", None]
+    createdAt: str
+    capturedAt: Optional[str]
+    releasedAt: Optional[str]
+
+
+ListOrderRedemptionsData = List[ListOrderRedemptionsItem]
+
+# ----------------------------------------------------------------------
+# holdCheckoutCode · POST /v1/shops/{id}/orders/{orderId}/redemptions
+
+class HoldCheckoutCodeParams(TypedDict):
+    """Path parameters of `holdCheckoutCode`."""
+    id: str
+    # Mağazanın sipariş numarası (WooCommerce: sipariş kimliği)
+    orderId: str
+
+
+HoldCheckoutCodeHeaders = TypedDict("HoldCheckoutCodeHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class _HoldCheckoutCodeBodyRequired(TypedDict):
+    # Müşterinin yazdığı kod: `RW-XXXX-XXXX` (büyük/küçük harf, boşluk ve tire fark etmez)
+    code: str
+    # Siparişin para birimi (ISO 4217, örn. TRY)
+    currency: str
+
+
+class _HoldCheckoutCodeBodyOptional(TypedDict, total=False):
+    amountMinor: int
+    # Siparişin indirimden önceki toplamı (kuruş); verilirse amountMinor onu aşamaz
+    orderTotalMinor: int
+
+
+class HoldCheckoutCodeBody(_HoldCheckoutCodeBodyRequired, _HoldCheckoutCodeBodyOptional):
+    """Request body of `holdCheckoutCode`."""
+
+
+
+class HoldCheckoutCodeData(TypedDict):
+    """The `data` of `holdCheckoutCode`'s answer."""
+    id: str
+    orderId: str
+    # Kodun son 4 karakteri (sipariş notu için)
+    codeLast4: str
+    # Kartın bu mağazaya özel, opak kimliği: bir siparişteki kodların aynı karta ait olup olmadığını karşılaştırmak için; başka bir şey söylemez
+    cardId: Optional[str]
+    # Kart numarasının son 4 karakteri; seri numarası mağazaya verilmez
+    cardLast4: str
+    # balance: bakiye (hediye kartı, cashback) · percent: yüzde indirim · amount: kuponun tutarı · link: değer yok, sipariş bu karta işlenir (damga, puan, VIP)
+    kind: Literal["balance", "percent", "amount", "link"]
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    programId: str
+    programName: str
+    # balance: ayrılan tutar; amount/percent: siparişe uygulanan indirim (bilgi için); link: 0
+    amountMinor: int
+    percent: Optional[int]
+    currency: str
+    # held ayrıldı · captured düşüldü · released bırakıldı · expired süresi dolup bırakıldı · refunded iade edildi · unbacked karşılıksız (ayırma bittikten sonra ödendi, kartta değer kalmamıştı)
+    state: Literal["held", "captured", "released", "expired", "refunded", "unbacked"]
+    # Aynı sipariş aynı kodu bıraktıktan sonra yeniden ayırdıkça artar
+    generation: int
+    # Ayrılmışken: ödenmezse tutarın karta döneceği an (bağlantının bekletme süresi)
+    heldUntil: Optional[str]
+    capturedMinor: int
+    refundedMinor: int
+    # Ayırmanın süresi dolduktan sonra düşüldü (ya da karşılıksız kaldı)
+    late: bool
+    releaseReason: Literal["cancelled", "failed", "expired", "merchant", "shop", None]
+    createdAt: str
+    capturedAt: Optional[str]
+    releasedAt: Optional[str]
+
+# ----------------------------------------------------------------------
+# captureCheckoutOrder · POST /v1/shops/{id}/orders/{orderId}/capture
+
+class CaptureCheckoutOrderParams(TypedDict):
+    """Path parameters of `captureCheckoutOrder`."""
+    id: str
+    # Mağazanın sipariş numarası (WooCommerce: sipariş kimliği)
+    orderId: str
+
+
+CaptureCheckoutOrderHeaders = TypedDict("CaptureCheckoutOrderHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class CaptureCheckoutOrderBodyCapturesItem(TypedDict):
+    id: str
+    amountMinor: int
+
+
+class CaptureCheckoutOrderBody(TypedDict, total=False):
+    """Request body of `captureCheckoutOrder`."""
+    captures: List[CaptureCheckoutOrderBodyCapturesItem]
+
+
+class CaptureCheckoutOrderItem(TypedDict):
+    """One item of `captureCheckoutOrder`'s list."""
+    id: str
+    orderId: str
+    # Kodun son 4 karakteri (sipariş notu için)
+    codeLast4: str
+    # Kartın bu mağazaya özel, opak kimliği: bir siparişteki kodların aynı karta ait olup olmadığını karşılaştırmak için; başka bir şey söylemez
+    cardId: Optional[str]
+    # Kart numarasının son 4 karakteri; seri numarası mağazaya verilmez
+    cardLast4: str
+    # balance: bakiye (hediye kartı, cashback) · percent: yüzde indirim · amount: kuponun tutarı · link: değer yok, sipariş bu karta işlenir (damga, puan, VIP)
+    kind: Literal["balance", "percent", "amount", "link"]
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    programId: str
+    programName: str
+    # balance: ayrılan tutar; amount/percent: siparişe uygulanan indirim (bilgi için); link: 0
+    amountMinor: int
+    percent: Optional[int]
+    currency: str
+    # held ayrıldı · captured düşüldü · released bırakıldı · expired süresi dolup bırakıldı · refunded iade edildi · unbacked karşılıksız (ayırma bittikten sonra ödendi, kartta değer kalmamıştı)
+    state: Literal["held", "captured", "released", "expired", "refunded", "unbacked"]
+    # Aynı sipariş aynı kodu bıraktıktan sonra yeniden ayırdıkça artar
+    generation: int
+    # Ayrılmışken: ödenmezse tutarın karta döneceği an (bağlantının bekletme süresi)
+    heldUntil: Optional[str]
+    capturedMinor: int
+    refundedMinor: int
+    # Ayırmanın süresi dolduktan sonra düşüldü (ya da karşılıksız kaldı)
+    late: bool
+    releaseReason: Literal["cancelled", "failed", "expired", "merchant", "shop", None]
+    createdAt: str
+    capturedAt: Optional[str]
+    releasedAt: Optional[str]
+
+
+CaptureCheckoutOrderData = List[CaptureCheckoutOrderItem]
+
+# ----------------------------------------------------------------------
+# releaseCheckoutOrder · POST /v1/shops/{id}/orders/{orderId}/release
+
+class ReleaseCheckoutOrderParams(TypedDict):
+    """Path parameters of `releaseCheckoutOrder`."""
+    id: str
+    # Mağazanın sipariş numarası (WooCommerce: sipariş kimliği)
+    orderId: str
+
+
+ReleaseCheckoutOrderHeaders = TypedDict("ReleaseCheckoutOrderHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class ReleaseCheckoutOrderBody(TypedDict, total=False):
+    """Request body of `releaseCheckoutOrder`."""
+    reason: Literal["cancelled", "failed", "shop"]
+
+
+class ReleaseCheckoutOrderItem(TypedDict):
+    """One item of `releaseCheckoutOrder`'s list."""
+    id: str
+    orderId: str
+    # Kodun son 4 karakteri (sipariş notu için)
+    codeLast4: str
+    # Kartın bu mağazaya özel, opak kimliği: bir siparişteki kodların aynı karta ait olup olmadığını karşılaştırmak için; başka bir şey söylemez
+    cardId: Optional[str]
+    # Kart numarasının son 4 karakteri; seri numarası mağazaya verilmez
+    cardLast4: str
+    # balance: bakiye (hediye kartı, cashback) · percent: yüzde indirim · amount: kuponun tutarı · link: değer yok, sipariş bu karta işlenir (damga, puan, VIP)
+    kind: Literal["balance", "percent", "amount", "link"]
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    programId: str
+    programName: str
+    # balance: ayrılan tutar; amount/percent: siparişe uygulanan indirim (bilgi için); link: 0
+    amountMinor: int
+    percent: Optional[int]
+    currency: str
+    # held ayrıldı · captured düşüldü · released bırakıldı · expired süresi dolup bırakıldı · refunded iade edildi · unbacked karşılıksız (ayırma bittikten sonra ödendi, kartta değer kalmamıştı)
+    state: Literal["held", "captured", "released", "expired", "refunded", "unbacked"]
+    # Aynı sipariş aynı kodu bıraktıktan sonra yeniden ayırdıkça artar
+    generation: int
+    # Ayrılmışken: ödenmezse tutarın karta döneceği an (bağlantının bekletme süresi)
+    heldUntil: Optional[str]
+    capturedMinor: int
+    refundedMinor: int
+    # Ayırmanın süresi dolduktan sonra düşüldü (ya da karşılıksız kaldı)
+    late: bool
+    releaseReason: Literal["cancelled", "failed", "expired", "merchant", "shop", None]
+    createdAt: str
+    capturedAt: Optional[str]
+    releasedAt: Optional[str]
+
+
+ReleaseCheckoutOrderData = List[ReleaseCheckoutOrderItem]
+
+# ----------------------------------------------------------------------
+# refundCheckoutOrder · POST /v1/shops/{id}/orders/{orderId}/refund
+
+class RefundCheckoutOrderParams(TypedDict):
+    """Path parameters of `refundCheckoutOrder`."""
+    id: str
+    # Mağazanın sipariş numarası (WooCommerce: sipariş kimliği)
+    orderId: str
+
+
+RefundCheckoutOrderHeaders = TypedDict("RefundCheckoutOrderHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class RefundCheckoutOrderBody(TypedDict, total=False):
+    """Request body of `refundCheckoutOrder`."""
+    amountMinor: int
+    redemptionId: str
+
+
+class RefundCheckoutOrderDataRedemptionsItem(TypedDict):
+    id: str
+    orderId: str
+    # Kodun son 4 karakteri (sipariş notu için)
+    codeLast4: str
+    # Kartın bu mağazaya özel, opak kimliği: bir siparişteki kodların aynı karta ait olup olmadığını karşılaştırmak için; başka bir şey söylemez
+    cardId: Optional[str]
+    # Kart numarasının son 4 karakteri; seri numarası mağazaya verilmez
+    cardLast4: str
+    # balance: bakiye (hediye kartı, cashback) · percent: yüzde indirim · amount: kuponun tutarı · link: değer yok, sipariş bu karta işlenir (damga, puan, VIP)
+    kind: Literal["balance", "percent", "amount", "link"]
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    programId: str
+    programName: str
+    # balance: ayrılan tutar; amount/percent: siparişe uygulanan indirim (bilgi için); link: 0
+    amountMinor: int
+    percent: Optional[int]
+    currency: str
+    # held ayrıldı · captured düşüldü · released bırakıldı · expired süresi dolup bırakıldı · refunded iade edildi · unbacked karşılıksız (ayırma bittikten sonra ödendi, kartta değer kalmamıştı)
+    state: Literal["held", "captured", "released", "expired", "refunded", "unbacked"]
+    # Aynı sipariş aynı kodu bıraktıktan sonra yeniden ayırdıkça artar
+    generation: int
+    # Ayrılmışken: ödenmezse tutarın karta döneceği an (bağlantının bekletme süresi)
+    heldUntil: Optional[str]
+    capturedMinor: int
+    refundedMinor: int
+    # Ayırmanın süresi dolduktan sonra düşüldü (ya da karşılıksız kaldı)
+    late: bool
+    releaseReason: Literal["cancelled", "failed", "expired", "merchant", "shop", None]
+    createdAt: str
+    capturedAt: Optional[str]
+    releasedAt: Optional[str]
+
+
+class RefundCheckoutOrderDataUnearned(TypedDict):
+    cardLast4: str
+    # stamp, point, visit ya da try_minor (kuruş)
+    unit: str
+    earned: int
+    reversed: int
+    # Kartta kalmadığı için geri alınamayan kısım
+    short: int
+
+
+class RefundCheckoutOrderData(TypedDict):
+    """The `data` of `refundCheckoutOrder`'s answer."""
+    redemptions: List[RefundCheckoutOrderDataRedemptionsItem]
+    unearned: Optional[RefundCheckoutOrderDataUnearned]
+
+# ----------------------------------------------------------------------
+# listShopRedemptions · GET /v1/shops/{id}/redemptions
+
+class ListShopRedemptionsParams(TypedDict):
+    """Path parameters of `listShopRedemptions`."""
+    id: str
+
+
+class ListShopRedemptionsQuery(TypedDict, total=False):
+    """Query parameters of `listShopRedemptions`."""
+    state: Literal["held", "captured", "released", "expired", "refunded", "unbacked"]
+    page: int
+    limit: int
+
+
+ListShopRedemptionsHeaders = TypedDict("ListShopRedemptionsHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class ListShopRedemptionsItem(TypedDict):
+    """One item of `listShopRedemptions`'s list."""
+    id: str
+    orderId: str
+    # Kodun son 4 karakteri (sipariş notu için)
+    codeLast4: str
+    # Kartın bu mağazaya özel, opak kimliği: bir siparişteki kodların aynı karta ait olup olmadığını karşılaştırmak için; başka bir şey söylemez
+    cardId: Optional[str]
+    # Kart numarasının son 4 karakteri; seri numarası mağazaya verilmez
+    cardLast4: str
+    # balance: bakiye (hediye kartı, cashback) · percent: yüzde indirim · amount: kuponun tutarı · link: değer yok, sipariş bu karta işlenir (damga, puan, VIP)
+    kind: Literal["balance", "percent", "amount", "link"]
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    programId: str
+    programName: str
+    # balance: ayrılan tutar; amount/percent: siparişe uygulanan indirim (bilgi için); link: 0
+    amountMinor: int
+    percent: Optional[int]
+    currency: str
+    # held ayrıldı · captured düşüldü · released bırakıldı · expired süresi dolup bırakıldı · refunded iade edildi · unbacked karşılıksız (ayırma bittikten sonra ödendi, kartta değer kalmamıştı)
+    state: Literal["held", "captured", "released", "expired", "refunded", "unbacked"]
+    # Aynı sipariş aynı kodu bıraktıktan sonra yeniden ayırdıkça artar
+    generation: int
+    # Ayrılmışken: ödenmezse tutarın karta döneceği an (bağlantının bekletme süresi)
+    heldUntil: Optional[str]
+    capturedMinor: int
+    refundedMinor: int
+    # Ayırmanın süresi dolduktan sonra düşüldü (ya da karşılıksız kaldı)
+    late: bool
+    releaseReason: Literal["cancelled", "failed", "expired", "merchant", "shop", None]
+    createdAt: str
+    capturedAt: Optional[str]
+    releasedAt: Optional[str]
+
+# ----------------------------------------------------------------------
+# releaseShopRedemption · POST /v1/shops/{id}/redemptions/{redemptionId}/release
+
+class ReleaseShopRedemptionParams(TypedDict):
+    """Path parameters of `releaseShopRedemption`."""
+    id: str
+    redemptionId: str
+
+
+ReleaseShopRedemptionHeaders = TypedDict("ReleaseShopRedemptionHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class ReleaseShopRedemptionBody(TypedDict):
+    """Request body of `releaseShopRedemption`."""
+    # Neden (kayda geçer, defter kaydının notu olur)
+    reason: str
+
+
+class ReleaseShopRedemptionData(TypedDict):
+    """The `data` of `releaseShopRedemption`'s answer."""
+    id: str
+    orderId: str
+    # Kodun son 4 karakteri (sipariş notu için)
+    codeLast4: str
+    # Kartın bu mağazaya özel, opak kimliği: bir siparişteki kodların aynı karta ait olup olmadığını karşılaştırmak için; başka bir şey söylemez
+    cardId: Optional[str]
+    # Kart numarasının son 4 karakteri; seri numarası mağazaya verilmez
+    cardLast4: str
+    # balance: bakiye (hediye kartı, cashback) · percent: yüzde indirim · amount: kuponun tutarı · link: değer yok, sipariş bu karta işlenir (damga, puan, VIP)
+    kind: Literal["balance", "percent", "amount", "link"]
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    programId: str
+    programName: str
+    # balance: ayrılan tutar; amount/percent: siparişe uygulanan indirim (bilgi için); link: 0
+    amountMinor: int
+    percent: Optional[int]
+    currency: str
+    # held ayrıldı · captured düşüldü · released bırakıldı · expired süresi dolup bırakıldı · refunded iade edildi · unbacked karşılıksız (ayırma bittikten sonra ödendi, kartta değer kalmamıştı)
+    state: Literal["held", "captured", "released", "expired", "refunded", "unbacked"]
+    # Aynı sipariş aynı kodu bıraktıktan sonra yeniden ayırdıkça artar
+    generation: int
+    # Ayrılmışken: ödenmezse tutarın karta döneceği an (bağlantının bekletme süresi)
+    heldUntil: Optional[str]
+    capturedMinor: int
+    refundedMinor: int
+    # Ayırmanın süresi dolduktan sonra düşüldü (ya da karşılıksız kaldı)
+    late: bool
+    releaseReason: Literal["cancelled", "failed", "expired", "merchant", "shop", None]
+    createdAt: str
+    capturedAt: Optional[str]
+    releasedAt: Optional[str]
+
+# ----------------------------------------------------------------------
+# refundShopRedemption · POST /v1/shops/{id}/redemptions/{redemptionId}/refund
+
+class RefundShopRedemptionParams(TypedDict):
+    """Path parameters of `refundShopRedemption`."""
+    id: str
+    redemptionId: str
+
+
+_RefundShopRedemptionHeadersRequired = TypedDict("_RefundShopRedemptionHeadersRequired", {
+    # Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür.
+    "Idempotency-Key": str,
+})
+
+
+_RefundShopRedemptionHeadersOptional = TypedDict("_RefundShopRedemptionHeadersOptional", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class RefundShopRedemptionHeaders(_RefundShopRedemptionHeadersRequired, _RefundShopRedemptionHeadersOptional):
+    """Header parameters of `refundShopRedemption`, as sent on the wire."""
+
+
+
+class RefundShopRedemptionBody(TypedDict):
+    """Request body of `refundShopRedemption`."""
+    amountMinor: int
+    # Neden (kayda geçer, defter kaydının notu olur)
+    reason: str
+
+
+class RefundShopRedemptionData(TypedDict):
+    """The `data` of `refundShopRedemption`'s answer."""
+    id: str
+    orderId: str
+    # Kodun son 4 karakteri (sipariş notu için)
+    codeLast4: str
+    # Kartın bu mağazaya özel, opak kimliği: bir siparişteki kodların aynı karta ait olup olmadığını karşılaştırmak için; başka bir şey söylemez
+    cardId: Optional[str]
+    # Kart numarasının son 4 karakteri; seri numarası mağazaya verilmez
+    cardLast4: str
+    # balance: bakiye (hediye kartı, cashback) · percent: yüzde indirim · amount: kuponun tutarı · link: değer yok, sipariş bu karta işlenir (damga, puan, VIP)
+    kind: Literal["balance", "percent", "amount", "link"]
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+    programId: str
+    programName: str
+    # balance: ayrılan tutar; amount/percent: siparişe uygulanan indirim (bilgi için); link: 0
+    amountMinor: int
+    percent: Optional[int]
+    currency: str
+    # held ayrıldı · captured düşüldü · released bırakıldı · expired süresi dolup bırakıldı · refunded iade edildi · unbacked karşılıksız (ayırma bittikten sonra ödendi, kartta değer kalmamıştı)
+    state: Literal["held", "captured", "released", "expired", "refunded", "unbacked"]
+    # Aynı sipariş aynı kodu bıraktıktan sonra yeniden ayırdıkça artar
+    generation: int
+    # Ayrılmışken: ödenmezse tutarın karta döneceği an (bağlantının bekletme süresi)
+    heldUntil: Optional[str]
+    capturedMinor: int
+    refundedMinor: int
+    # Ayırmanın süresi dolduktan sonra düşüldü (ya da karşılıksız kaldı)
+    late: bool
+    releaseReason: Literal["cancelled", "failed", "expired", "merchant", "shop", None]
+    createdAt: str
+    capturedAt: Optional[str]
+    releasedAt: Optional[str]
+
+# ----------------------------------------------------------------------
+# setShopSettings · PATCH /v1/shops/{id}/settings
+
+class SetShopSettingsParams(TypedDict):
+    """Path parameters of `setShopSettings`."""
+    id: str
+
+
+SetShopSettingsHeaders = TypedDict("SetShopSettingsHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class SetShopSettingsBodyTax(TypedDict, total=False):
+    giftcard: Literal["payment", "discount"]
+    cashback: Literal["payment", "discount"]
+    voucher: Literal["payment", "discount"]
+
+
+class SetShopSettingsBodyAccepts(TypedDict):
+    programIds: List[str]
+
+
+class SetShopSettingsBody(TypedDict, total=False):
+    """Request body of `setShopSettings`."""
+    tax: SetShopSettingsBodyTax
+    refundReverses: Literal["code_orders", "all", "never"]
+    holdDays: int
+    accepts: SetShopSettingsBodyAccepts
+
+
+class SetShopSettingsDataOrders(TypedDict):
+    """Kayıtlı siparişler sonucuna göre: credited işlendi · unmatched e-postası müşteriyle eşleşmedi · below eşiğin altında · paused bağlantı kapalıyken · currency para birimi farklı"""
+    credited: int
+    unmatched: int
+    below: int
+    paused: int
+    currency: int
+
+
+class SetShopSettingsDataLastDelivery(TypedDict):
+    """Mağazadan gelen son İMZALI istek: ne zaman ve ne oldu (credited işlendi · unmatched kartı yok · below eşiğin altında · paused bağlantı kapalıyken · currency başka para birimi · duplicate zaten kayıtlı siparişin tekrarı · ignored henüz ödenmemiş sipariş (kaydedilmez) · no_id sipariş numarası yok · bad_body gövde JSON değil). Hiç gelmediyse null."""
+    at: str
+    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body", "cancelled", "refunded"]
+
+
+class SetShopSettingsDataLastRefusal(TypedDict):
+    """Bu adrese gelen ve imzası tutmadığı için reddedilen son istek (dakikada en çok bir kez yazılır). Sık görünüyorsa mağazadaki gizli anahtar bu bağlantınınki değildir. Hiç olmadıysa null."""
+    at: str
+    reason: Literal["bad_signature"]
+
+
+class SetShopSettingsDataPluginKey(TypedDict):
+    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir."""
+    id: str
+    prefix: str
+    name: str
+    # Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)
+    abilities: List[Literal["view", "till"]]
+    # Kasa açıksa şubesi; değilse null
+    tillLocationId: Optional[str]
+    # Kasanın şubesinin adı; değilse null
+    tillLocationName: Optional[str]
+    # Kasanın şubesi arşivlendi: kasa orada çalışmaz ve `abilities` içinde `till` yoktur; başka bir şube seçilene kadar
+    tillArchived: bool
+
+
+class SetShopSettingsDataSettingsTax(TypedDict):
+    """Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır."""
+    # Hediye kartı: `payment` (varsayılan) vergiden sonra, ödeme gibi — KDV değişmez; `discount` vergiden önce kupon gibi — KDV matrahı düşer
+    giftcard: Literal["payment", "discount"]
+    # Cashback: `discount` (varsayılan) ya da `payment`
+    cashback: Literal["payment", "discount"]
+    # Tutarlı kupon: `discount` (varsayılan) ya da `payment`. Yüzdelik indirim her zaman `discount`
+    voucher: Literal["payment", "discount"]
+
+
+class SetShopSettingsDataSettings(TypedDict):
+    """Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."""
+    # Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır.
+    tax: SetShopSettingsDataSettingsTax
+    # İade edilen siparişin kazancı: `code_orders` (varsayılan) yalnız Rewloy kodu kullanılan siparişlerde geri alınır, `all` her iade edilen siparişte, `never` hiçbirinde. Hiçbir zaman sıfırın altına inmez.
+    refundReverses: Literal["code_orders", "all", "never"]
+    # Bekletme süresi: ödenmeyen bir siparişin ayırdığı tutar en geç bu kadar gün sonra karta döner (varsayılan 7)
+    holdDays: int
+
+
+class SetShopSettingsDataAcceptsCeilingItem(TypedDict):
+    id: str
+    name: str
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+
+
+class SetShopSettingsDataAccepts(TypedDict):
+    # İşletmenin bu mağazada kodu kabul edilen DİĞER programları (açık olanlar). Bağlantının kendi programı her zaman kabul edilir ve burada yer almaz.
+    programIds: List[str]
+    # Eklentinin anahtarının açabileceği programlar (tavan, `PUT /v1/shops/{id}/ceiling`), her biri adı ve türüyle: eklentinin anahtarı yalnız kendi programını okuyabildiği için adları buradan alır (adlar işletmenin kendi adlarıdır). Eklentinin anahtarı yoksa null: o zaman kodu kullanan kimliğin kendi yetkileri karar verir.
+    ceiling: Optional[List[SetShopSettingsDataAcceptsCeilingItem]]
+
+
+class SetShopSettingsDataUnbacked(TypedDict):
+    """Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`)."""
+    count: int
+    lastAt: Optional[str]
+
+
+class SetShopSettingsData(TypedDict):
+    """The `data` of `setShopSettings`'s answer."""
+    id: str
+    platform: Literal["shopify", "woocommerce"]
+    programId: str
+    programName: str
+    programType: str
+    currency: str
+    # order: her sipariş · amount: her `perAmountMinor` tutar için
+    rule: Literal["order", "amount"]
+    perAmountMinor: int
+    # Her seferinde eklenen damga/puan/ziyaret (cashback kartında tutar oranla hesaplanır)
+    step: int
+    enabled: bool
+    lastOrderAt: Optional[str]
+    createdAt: str
+    # Mağazanızın sipariş bildirimini göndereceği adres
+    webhookUrl: str
+    # Kayıtlı siparişler sonucuna göre: credited işlendi · unmatched e-postası müşteriyle eşleşmedi · below eşiğin altında · paused bağlantı kapalıyken · currency para birimi farklı
+    orders: SetShopSettingsDataOrders
+    # Mağazadan gelen son İMZALI istek: ne zaman ve ne oldu (credited işlendi · unmatched kartı yok · below eşiğin altında · paused bağlantı kapalıyken · currency başka para birimi · duplicate zaten kayıtlı siparişin tekrarı · ignored henüz ödenmemiş sipariş (kaydedilmez) · no_id sipariş numarası yok · bad_body gövde JSON değil). Hiç gelmediyse null.
+    lastDelivery: Optional[SetShopSettingsDataLastDelivery]
+    # Bu adrese gelen ve imzası tutmadığı için reddedilen son istek (dakikada en çok bir kez yazılır). Sık görünüyorsa mağazadaki gizli anahtar bu bağlantınınki değildir. Hiç olmadıysa null.
+    lastRefusal: Optional[SetShopSettingsDataLastRefusal]
+    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir.
+    pluginKey: Optional[SetShopSettingsDataPluginKey]
+    # Mağazanın adı (eklenti bağlanırken gönderdi): kart sahibi bir kodun nerede kullanıldığını bu adla görür. Yoksa null.
+    shopName: Optional[str]
+    # Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir.
+    settings: SetShopSettingsDataSettings
+    accepts: SetShopSettingsDataAccepts
+    # Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`).
+    unbacked: SetShopSettingsDataUnbacked
+
+# ----------------------------------------------------------------------
+# setShopCeiling · PUT /v1/shops/{id}/ceiling
+
+class SetShopCeilingParams(TypedDict):
+    """Path parameters of `setShopCeiling`."""
+    id: str
+
+
+SetShopCeilingHeaders = TypedDict("SetShopCeilingHeaders", {
+    # Ekip oturumu birden fazla işletmede koltuk taşıyorsa hangi işletme için olduğu (tek işletmede gerekmez).
+    "Rewloy-Merchant": str,
+}, total=False)
+
+
+class SetShopCeilingBody(TypedDict):
+    """Request body of `setShopCeiling`."""
+    programIds: List[str]
+
+
+class SetShopCeilingDataOrders(TypedDict):
+    """Kayıtlı siparişler sonucuna göre: credited işlendi · unmatched e-postası müşteriyle eşleşmedi · below eşiğin altında · paused bağlantı kapalıyken · currency para birimi farklı"""
+    credited: int
+    unmatched: int
+    below: int
+    paused: int
+    currency: int
+
+
+class SetShopCeilingDataLastDelivery(TypedDict):
+    """Mağazadan gelen son İMZALI istek: ne zaman ve ne oldu (credited işlendi · unmatched kartı yok · below eşiğin altında · paused bağlantı kapalıyken · currency başka para birimi · duplicate zaten kayıtlı siparişin tekrarı · ignored henüz ödenmemiş sipariş (kaydedilmez) · no_id sipariş numarası yok · bad_body gövde JSON değil). Hiç gelmediyse null."""
+    at: str
+    result: Literal["credited", "unmatched", "below", "paused", "currency", "duplicate", "ignored", "no_id", "bad_body", "cancelled", "refunded"]
+
+
+class SetShopCeilingDataLastRefusal(TypedDict):
+    """Bu adrese gelen ve imzası tutmadığı için reddedilen son istek (dakikada en çok bir kez yazılır). Sık görünüyorsa mağazadaki gizli anahtar bu bağlantınınki değildir. Hiç olmadıysa null."""
+    at: str
+    reason: Literal["bad_signature"]
+
+
+class SetShopCeilingDataPluginKey(TypedDict):
+    """Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir."""
+    id: str
+    prefix: str
+    name: str
+    # Anahtarın bağlantının dışında yapabildikleri (ADR 178): `view` Görüntüleme (kartlar, durumları, programın sayıları ve son işlemleri; kişisel veri yok), `till` Kasa (tek bir şubede)
+    abilities: List[Literal["view", "till"]]
+    # Kasa açıksa şubesi; değilse null
+    tillLocationId: Optional[str]
+    # Kasanın şubesinin adı; değilse null
+    tillLocationName: Optional[str]
+    # Kasanın şubesi arşivlendi: kasa orada çalışmaz ve `abilities` içinde `till` yoktur; başka bir şube seçilene kadar
+    tillArchived: bool
+
+
+class SetShopCeilingDataSettingsTax(TypedDict):
+    """Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır."""
+    # Hediye kartı: `payment` (varsayılan) vergiden sonra, ödeme gibi — KDV değişmez; `discount` vergiden önce kupon gibi — KDV matrahı düşer
+    giftcard: Literal["payment", "discount"]
+    # Cashback: `discount` (varsayılan) ya da `payment`
+    cashback: Literal["payment", "discount"]
+    # Tutarlı kupon: `discount` (varsayılan) ya da `payment`. Yüzdelik indirim her zaman `discount`
+    voucher: Literal["payment", "discount"]
+
+
+class SetShopCeilingDataSettings(TypedDict):
+    """Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir."""
+    # Kart değerinin siparişe nasıl uygulanacağı; eklenti uygular. Hangisinin doğru olduğu muhasebecinizin kararıdır.
+    tax: SetShopCeilingDataSettingsTax
+    # İade edilen siparişin kazancı: `code_orders` (varsayılan) yalnız Rewloy kodu kullanılan siparişlerde geri alınır, `all` her iade edilen siparişte, `never` hiçbirinde. Hiçbir zaman sıfırın altına inmez.
+    refundReverses: Literal["code_orders", "all", "never"]
+    # Bekletme süresi: ödenmeyen bir siparişin ayırdığı tutar en geç bu kadar gün sonra karta döner (varsayılan 7)
+    holdDays: int
+
+
+class SetShopCeilingDataAcceptsCeilingItem(TypedDict):
+    id: str
+    name: str
+    type: Literal["stamp", "points", "discount", "vip", "giftcard", "voucher", "cashback"]
+
+
+class SetShopCeilingDataAccepts(TypedDict):
+    # İşletmenin bu mağazada kodu kabul edilen DİĞER programları (açık olanlar). Bağlantının kendi programı her zaman kabul edilir ve burada yer almaz.
+    programIds: List[str]
+    # Eklentinin anahtarının açabileceği programlar (tavan, `PUT /v1/shops/{id}/ceiling`), her biri adı ve türüyle: eklentinin anahtarı yalnız kendi programını okuyabildiği için adları buradan alır (adlar işletmenin kendi adlarıdır). Eklentinin anahtarı yoksa null: o zaman kodu kullanan kimliğin kendi yetkileri karar verir.
+    ceiling: Optional[List[SetShopCeilingDataAcceptsCeilingItem]]
+
+
+class SetShopCeilingDataUnbacked(TypedDict):
+    """Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`)."""
+    count: int
+    lastAt: Optional[str]
+
+
+class SetShopCeilingData(TypedDict):
+    """The `data` of `setShopCeiling`'s answer."""
+    id: str
+    platform: Literal["shopify", "woocommerce"]
+    programId: str
+    programName: str
+    programType: str
+    currency: str
+    # order: her sipariş · amount: her `perAmountMinor` tutar için
+    rule: Literal["order", "amount"]
+    perAmountMinor: int
+    # Her seferinde eklenen damga/puan/ziyaret (cashback kartında tutar oranla hesaplanır)
+    step: int
+    enabled: bool
+    lastOrderAt: Optional[str]
+    createdAt: str
+    # Mağazanızın sipariş bildirimini göndereceği adres
+    webhookUrl: str
+    # Kayıtlı siparişler sonucuna göre: credited işlendi · unmatched e-postası müşteriyle eşleşmedi · below eşiğin altında · paused bağlantı kapalıyken · currency para birimi farklı
+    orders: SetShopCeilingDataOrders
+    # Mağazadan gelen son İMZALI istek: ne zaman ve ne oldu (credited işlendi · unmatched kartı yok · below eşiğin altında · paused bağlantı kapalıyken · currency başka para birimi · duplicate zaten kayıtlı siparişin tekrarı · ignored henüz ödenmemiş sipariş (kaydedilmez) · no_id sipariş numarası yok · bad_body gövde JSON değil). Hiç gelmediyse null.
+    lastDelivery: Optional[SetShopCeilingDataLastDelivery]
+    # Bu adrese gelen ve imzası tutmadığı için reddedilen son istek (dakikada en çok bir kez yazılır). Sık görünüyorsa mağazadaki gizli anahtar bu bağlantınınki değildir. Hiç olmadıysa null.
+    lastRefusal: Optional[SetShopCeilingDataLastRefusal]
+    # Bağlantı koduyla kurulduysa (`POST /v1/shops/connect`) eklentinin yalnız bu bağlantıya bağlı, etkin API anahtarı ve yetkileri; yoksa null. Bağlantı silinince anahtar da iptal edilir. Yetkiler `PUT /v1/shops/{id}/plugin-abilities` ile değişir.
+    pluginKey: Optional[SetShopCeilingDataPluginKey]
+    # Mağazanın adı (eklenti bağlanırken gönderdi): kart sahibi bir kodun nerede kullanıldığını bu adla görür. Yoksa null.
+    shopName: Optional[str]
+    # Ödeme adımındaki kart kodlarının ayarları (ADR 179). `PATCH /v1/shops/{id}/settings` değiştirir.
+    settings: SetShopCeilingDataSettings
+    accepts: SetShopCeilingDataAccepts
+    # Karşılıksız kalan kod kullanımları: ayırmanın süresi dolduktan sonra ödenen ve kartta artık yetecek değer bulunmayan siparişler (`GET /v1/shops/{id}/redemptions?state=unbacked`).
+    unbacked: SetShopCeilingDataUnbacked
+
+# ----------------------------------------------------------------------
+# holderCheckoutCodes · GET /v1/holder/cards/{serial}/checkout-codes
+
+class HolderCheckoutCodesParams(TypedDict):
+    """Path parameters of `holderCheckoutCodes`."""
+    # Kart seri numarası, XXXX-XXXX-XXXX
+    serial: str
+
+
+class HolderCheckoutCodesDataOffer(TypedDict):
+    kind: Literal["balance", "percent", "amount", "link"]
+    currency: str
+    maxMinor: Optional[int]
+    percent: Optional[int]
+    amountMinor: Optional[int]
+    # Kupon ve indirim kartı: kullanım hakkı sınırlıysa kalan hak (açık ayırmalar düşülmüş); sınırsızsa ve diğer kartlarda null. 1 ise kod son hakkı ayırır.
+    usesLeft: Optional[int]
+
+
+class HolderCheckoutCodesDataHoldsItem(TypedDict):
+    amountMinor: int
+    heldUntil: str
+    shop: str
+
+
+class HolderCheckoutCodesDataCodesItemOrder(TypedDict):
+    shop: str
+    amountMinor: int
+    state: Literal["held", "captured", "released", "expired", "refunded", "unbacked"]
+    heldUntil: Optional[str]
+    kind: Literal["balance", "percent", "amount", "link"]
+    # Bırakılan ya da süresi dolan ayırmada kimin ya da neyin bıraktığı: cancelled mağaza siparişi iptal etti · failed ödeme tamamlanmadı · shop mağaza bıraktı · merchant işletme elle bıraktı · expired süre doldu
+    releaseReason: Literal["cancelled", "failed", "shop", "merchant", "expired", None]
+
+
+class HolderCheckoutCodesDataCodesItem(TypedDict):
+    id: str
+    last4: str
+    capMinor: Optional[int]
+    # open kullanılabilir · attached bir siparişe bağlandı · expired süresi doldu · cancelled iptal edildi
+    state: Literal["open", "attached", "expired", "cancelled"]
+    firstUseBy: str
+    attachBy: str
+    createdAt: str
+    order: Optional[HolderCheckoutCodesDataCodesItemOrder]
+
+
+class HolderCheckoutCodesData(TypedDict):
+    """The `data` of `holderCheckoutCodes`'s answer."""
+    online: bool
+    offer: Optional[HolderCheckoutCodesDataOffer]
+    refusal: Optional[str]
+    holds: List[HolderCheckoutCodesDataHoldsItem]
+    codes: List[HolderCheckoutCodesDataCodesItem]
+
+# ----------------------------------------------------------------------
+# mintHolderCheckoutCode · POST /v1/holder/cards/{serial}/checkout-codes
+
+class MintHolderCheckoutCodeParams(TypedDict):
+    """Path parameters of `mintHolderCheckoutCode`."""
+    # Kart seri numarası, XXXX-XXXX-XXXX
+    serial: str
+
+
+class MintHolderCheckoutCodeBody(TypedDict, total=False):
+    """Request body of `mintHolderCheckoutCode`."""
+    amountMinor: int
+
+
+class MintHolderCheckoutCodeData(TypedDict):
+    """The `data` of `mintHolderCheckoutCode`'s answer."""
+    id: str
+    # Kod: yalnız bu yanıtta; Rewloy saklamaz. Kişiye gösterin, "Kopyala" ile verin; günlüğe, adrese ya da bildirime yazmayın.
+    code: str
+    # Bakiyeli kartta kodun en fazla düşebileceği tutar
+    capMinor: Optional[int]
+    currency: str
+    kind: Literal["balance", "percent", "amount", "link"]
+    percent: Optional[int]
+    # Kupon: online tutarı
+    amountMinor: Optional[int]
+    # Kod bu ana kadar ödeme adımında kullanılmaya başlanmalı (15 dakika)
+    firstUseBy: str
+    # Kullanılmaya başlanan kod bu ana kadar bir siparişe bağlanmalı (45 dakika)
+    attachBy: str
+
+# ----------------------------------------------------------------------
+# cancelHolderCheckoutCode · DELETE /v1/holder/cards/{serial}/checkout-codes/{id}
+
+class CancelHolderCheckoutCodeParams(TypedDict):
+    """Path parameters of `cancelHolderCheckoutCode`."""
+    # Kart seri numarası, XXXX-XXXX-XXXX
+    serial: str
+    id: str
 
 # ----------------------------------------------------------------------
 # listTeam · GET /v1/team
@@ -7182,6 +8924,12 @@ class ListWebhooksItemWeek(TypedDict):
     pending: int
 
 
+class ListWebhooksItemCreatedByKey(TypedDict):
+    """Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182)."""
+    id: str
+    name: str
+
+
 class ListWebhooksItem(TypedDict):
     """One item of `listWebhooks`'s list."""
     id: str
@@ -7195,6 +8943,8 @@ class ListWebhooksItem(TypedDict):
     # Son 7 günde oluşan teslimler
     week: ListWebhooksItemWeek
     lastDelivered: Optional[str]
+    # Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182).
+    createdByKey: Optional[ListWebhooksItemCreatedByKey]
 
 
 ListWebhooksData = List[ListWebhooksItem]
@@ -7221,6 +8971,12 @@ class CreateWebhookDataWebhookWeek(TypedDict):
     pending: int
 
 
+class CreateWebhookDataWebhookCreatedByKey(TypedDict):
+    """Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182)."""
+    id: str
+    name: str
+
+
 class CreateWebhookDataWebhook(TypedDict):
     id: str
     url: str
@@ -7233,6 +8989,8 @@ class CreateWebhookDataWebhook(TypedDict):
     # Son 7 günde oluşan teslimler
     week: CreateWebhookDataWebhookWeek
     lastDelivered: Optional[str]
+    # Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182).
+    createdByKey: Optional[CreateWebhookDataWebhookCreatedByKey]
 
 
 class CreateWebhookData(TypedDict):
@@ -7262,6 +9020,12 @@ class GetWebhookDataWeek(TypedDict):
     pending: int
 
 
+class GetWebhookDataCreatedByKey(TypedDict):
+    """Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182)."""
+    id: str
+    name: str
+
+
 class GetWebhookData(TypedDict):
     """The `data` of `getWebhook`'s answer."""
     id: str
@@ -7275,6 +9039,8 @@ class GetWebhookData(TypedDict):
     # Son 7 günde oluşan teslimler
     week: GetWebhookDataWeek
     lastDelivered: Optional[str]
+    # Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182).
+    createdByKey: Optional[GetWebhookDataCreatedByKey]
 
 # ----------------------------------------------------------------------
 # setWebhookStatus · PATCH /v1/developers/webhooks/{id}
@@ -7302,6 +9068,12 @@ class SetWebhookStatusDataWeek(TypedDict):
     pending: int
 
 
+class SetWebhookStatusDataCreatedByKey(TypedDict):
+    """Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182)."""
+    id: str
+    name: str
+
+
 class SetWebhookStatusData(TypedDict):
     """The `data` of `setWebhookStatus`'s answer."""
     id: str
@@ -7315,6 +9087,8 @@ class SetWebhookStatusData(TypedDict):
     # Son 7 günde oluşan teslimler
     week: SetWebhookStatusDataWeek
     lastDelivered: Optional[str]
+    # Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur (ADR 182).
+    createdByKey: Optional[SetWebhookStatusDataCreatedByKey]
 
 # ----------------------------------------------------------------------
 # listWebhookDeliveries · GET /v1/developers/webhooks/{id}/deliveries
@@ -8599,6 +10373,12 @@ class RemoveHolderPasskeyParams(TypedDict):
 # ----------------------------------------------------------------------
 # addHolderEmail · POST /v1/holder/identities/email
 
+AddHolderEmailHeaders = TypedDict("AddHolderEmailHeaders", {
+    # Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür.
+    "Idempotency-Key": str,
+}, total=False)
+
+
 class AddHolderEmailBody(TypedDict):
     """Request body of `addHolderEmail`."""
     email: str
@@ -8627,6 +10407,12 @@ class VerifyHolderEmailData(TypedDict):
 
 # ----------------------------------------------------------------------
 # addHolderPhone · POST /v1/holder/identities/phone
+
+AddHolderPhoneHeaders = TypedDict("AddHolderPhoneHeaders", {
+    # Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür.
+    "Idempotency-Key": str,
+}, total=False)
+
 
 class _AddHolderPhoneBodyRequired(TypedDict):
     # Bir Türkiye cep telefonu numarası: `+905321234567`, `05321234567`, `532 123 45 67` (boşluklar yok sayılır). Telefonla giriş açık değilse `501 NOT_ENABLED`.
@@ -8719,6 +10505,12 @@ class RemoveHolderEmailParams(TypedDict):
 class ReplaceHolderIdentityParams(TypedDict):
     """Path parameters of `replaceHolderIdentity`."""
     id: str
+
+
+ReplaceHolderIdentityHeaders = TypedDict("ReplaceHolderIdentityHeaders", {
+    # Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür.
+    "Idempotency-Key": str,
+}, total=False)
 
 
 class ReplaceHolderIdentityBody(TypedDict, total=False):
@@ -9089,8 +10881,8 @@ class HolderNotificationsItemBusiness(TypedDict):
 class HolderNotificationsItem(TypedDict):
     """One item of `holderNotifications`'s list."""
     id: str
-    # campaign: bir işletmenin kampanyası; automation: otomatik mesaj ya da mesaj dizisinin adımı; reward_ready: "Ödülünüz hazır"; test: kişinin kendi denemesi; security: hesabın giriş yolunun değişmesi (yolda ya da yapıldı) ya da onaylanan bir kurtarma talebi
-    kind: Literal["campaign", "automation", "reward_ready", "test", "security"]
+    # campaign: bir işletmenin kampanyası; automation: otomatik mesaj ya da mesaj dizisinin adımı; reward_ready: "Ödülünüz hazır"; test: kişinin kendi denemesi; security: hesabın giriş yolunun değişmesi (yolda ya da yapıldı) ya da onaylanan bir kurtarma talebi; checkout_code: kartlarınızdan biri için online ödeme kodu oluşturuldu (bir İşlem bildirimi; kodu oluşturan cihaza gitmez)
+    kind: Literal["campaign", "automation", "reward_ready", "test", "security", "checkout_code"]
     title: str
     body: str
     # Bildirimin işletmesi (`merchantSlug`); denemede `null`
@@ -9243,6 +11035,12 @@ class TestHolderDevicePushData(TypedDict):
 # ----------------------------------------------------------------------
 # startHolderRecovery · POST /v1/holder/recovery
 
+StartHolderRecoveryHeaders = TypedDict("StartHolderRecoveryHeaders", {
+    # Aynı işlemin iki kez yapılmasını önler: aynı anahtarla tekrar, ilk sonucu döndürür.
+    "Idempotency-Key": str,
+}, total=False)
+
+
 class _StartHolderRecoveryBodyRequired(TypedDict):
     # Değişen: e-posta ya da numara (eski ve yeni aynı türden)
     kind: Literal["email", "phone"]
@@ -9370,6 +11168,11 @@ __all__ = [
     "IssuePassData",
     "GetPassParams",
     "GetPassHeaders",
+    "GetPassDataStamps",
+    "GetPassDataMoney",
+    "GetPassDataCustomer",
+    "GetPassDataActionsItem",
+    "GetPassDataSale",
     "GetPassData",
     "GetPassTillParams",
     "GetPassTillQuery",
@@ -9382,6 +11185,15 @@ __all__ = [
     "PassActionBody",
     "PassActionDataPromotion",
     "PassActionData",
+    "RecordSaleParams",
+    "RecordSaleHeaders",
+    "RecordSaleBody",
+    "RecordSaleDataPromotion",
+    "RecordSaleData",
+    "ReverseSaleParams",
+    "ReverseSaleHeaders",
+    "ReverseSaleBody",
+    "ReverseSaleData",
     "PublicProgramParams",
     "PublicProgramHeaders",
     "PublicProgramDataFieldsItem",
@@ -9403,6 +11215,8 @@ __all__ = [
     "EmailCardLinkHeaders",
     "EmailCardLinkBody",
     "EmailCardLinkData",
+    "GetMetaHeaders",
+    "GetMetaData",
     "LoginBody",
     "LoginDataUser",
     "LoginDataBusinessesItem",
@@ -9419,6 +11233,7 @@ __all__ = [
     "MeDataOption2Business",
     "MeDataOption2",
     "MeData",
+    "HolderLoginHeaders",
     "HolderLoginBody",
     "HolderLoginData",
     "HolderSessionBody",
@@ -9451,6 +11266,7 @@ __all__ = [
     "InvitePreviewParams",
     "InvitePreviewData",
     "AcceptInviteParams",
+    "AcceptInviteHeaders",
     "AcceptInviteBody",
     "AcceptInviteDataUser",
     "AcceptInviteDataBusinessesItem",
@@ -9498,6 +11314,7 @@ __all__ = [
     "ListProgramsHeaders",
     "ListProgramsItemArtwork",
     "ListProgramsItemStats",
+    "ListProgramsItemSale",
     "ListProgramsItem",
     "ListProgramsData",
     "CreateProgramHeaders",
@@ -9508,9 +11325,11 @@ __all__ = [
     "CreateProgramBodyDesign",
     "CreateProgramBodyPointsRewardsItem",
     "CreateProgramBodyTiersItem",
+    "CreateProgramBodyOnlineValue",
     "CreateProgramBody",
     "CreateProgramDataArtwork",
     "CreateProgramDataStats",
+    "CreateProgramDataSale",
     "CreateProgramData",
     "ProgramDesignOptionsHeaders",
     "ProgramDesignOptionsDataPresetsItem",
@@ -9524,6 +11343,7 @@ __all__ = [
     "GetProgramHeaders",
     "GetProgramDataArtwork",
     "GetProgramDataStats",
+    "GetProgramDataSale",
     "GetProgramData",
     "UpdateProgramParams",
     "UpdateProgramHeaders",
@@ -9534,9 +11354,11 @@ __all__ = [
     "UpdateProgramBodyDesign",
     "UpdateProgramBodyPointsRewardsItem",
     "UpdateProgramBodyTiersItem",
+    "UpdateProgramBodyOnlineValue",
     "UpdateProgramBody",
     "UpdateProgramDataArtwork",
     "UpdateProgramDataStats",
+    "UpdateProgramDataSale",
     "UpdateProgramData",
     "DeleteProgramParams",
     "DeleteProgramQuery",
@@ -9549,6 +11371,7 @@ __all__ = [
     "PreviewProgramBodyConfigDesign",
     "PreviewProgramBodyConfigPointsRewardsItem",
     "PreviewProgramBodyConfigTiersItem",
+    "PreviewProgramBodyConfigOnlineValue",
     "PreviewProgramBodyConfig",
     "PreviewProgramBody",
     "PreviewProgramData",
@@ -9646,12 +11469,15 @@ __all__ = [
     "ListBatchesData",
     "CreateBatchParams",
     "CreateBatchHeaders",
+    "CreateBatchBodyOnlineValue",
     "CreateBatchBody",
     "CreateBatchDataCards",
+    "CreateBatchDataOnlineValue",
     "CreateBatchData",
     "GetBatchParams",
     "GetBatchHeaders",
     "GetBatchDataCards",
+    "GetBatchDataOnlineValue",
     "GetBatchData",
     "ListBatchCardsParams",
     "ListBatchCardsQuery",
@@ -9665,6 +11491,7 @@ __all__ = [
     "CloseBatchParams",
     "CloseBatchHeaders",
     "CloseBatchDataCards",
+    "CloseBatchDataOnlineValue",
     "CloseBatchData",
     "VoidBatchCardParams",
     "VoidBatchCardHeaders",
@@ -9954,6 +11781,11 @@ __all__ = [
     "ListShopsItemLastDelivery",
     "ListShopsItemLastRefusal",
     "ListShopsItemPluginKey",
+    "ListShopsItemSettingsTax",
+    "ListShopsItemSettings",
+    "ListShopsItemAcceptsCeilingItem",
+    "ListShopsItemAccepts",
+    "ListShopsItemUnbacked",
     "ListShopsItem",
     "ListShopsData",
     "CreateShopHeaders",
@@ -9962,6 +11794,11 @@ __all__ = [
     "CreateShopDataLastDelivery",
     "CreateShopDataLastRefusal",
     "CreateShopDataPluginKey",
+    "CreateShopDataSettingsTax",
+    "CreateShopDataSettings",
+    "CreateShopDataAcceptsCeilingItem",
+    "CreateShopDataAccepts",
+    "CreateShopDataUnbacked",
     "CreateShopData",
     "GetShopParams",
     "GetShopHeaders",
@@ -9969,6 +11806,11 @@ __all__ = [
     "GetShopDataLastDelivery",
     "GetShopDataLastRefusal",
     "GetShopDataPluginKey",
+    "GetShopDataSettingsTax",
+    "GetShopDataSettings",
+    "GetShopDataAcceptsCeilingItem",
+    "GetShopDataAccepts",
+    "GetShopDataUnbacked",
     "GetShopData",
     "SetShopEnabledParams",
     "SetShopEnabledHeaders",
@@ -9977,6 +11819,11 @@ __all__ = [
     "SetShopEnabledDataLastDelivery",
     "SetShopEnabledDataLastRefusal",
     "SetShopEnabledDataPluginKey",
+    "SetShopEnabledDataSettingsTax",
+    "SetShopEnabledDataSettings",
+    "SetShopEnabledDataAcceptsCeilingItem",
+    "SetShopEnabledDataAccepts",
+    "SetShopEnabledDataUnbacked",
     "SetShopEnabledData",
     "DeleteShopParams",
     "DeleteShopHeaders",
@@ -9997,9 +11844,107 @@ __all__ = [
     "ConnectShopDataShopLastDelivery",
     "ConnectShopDataShopLastRefusal",
     "ConnectShopDataShopPluginKey",
+    "ConnectShopDataShopSettingsTax",
+    "ConnectShopDataShopSettings",
+    "ConnectShopDataShopAcceptsCeilingItem",
+    "ConnectShopDataShopAccepts",
+    "ConnectShopDataShopUnbacked",
     "ConnectShopDataShop",
     "ConnectShopDataApiKey",
     "ConnectShopData",
+    "SetShopPluginAbilitiesParams",
+    "SetShopPluginAbilitiesHeaders",
+    "SetShopPluginAbilitiesBody",
+    "SetShopPluginAbilitiesDataOrders",
+    "SetShopPluginAbilitiesDataLastDelivery",
+    "SetShopPluginAbilitiesDataLastRefusal",
+    "SetShopPluginAbilitiesDataPluginKey",
+    "SetShopPluginAbilitiesDataSettingsTax",
+    "SetShopPluginAbilitiesDataSettings",
+    "SetShopPluginAbilitiesDataAcceptsCeilingItem",
+    "SetShopPluginAbilitiesDataAccepts",
+    "SetShopPluginAbilitiesDataUnbacked",
+    "SetShopPluginAbilitiesData",
+    "QuoteCheckoutCodeParams",
+    "QuoteCheckoutCodeHeaders",
+    "QuoteCheckoutCodeBody",
+    "QuoteCheckoutCodeDataRedemption",
+    "QuoteCheckoutCodeData",
+    "ListOrderRedemptionsParams",
+    "ListOrderRedemptionsHeaders",
+    "ListOrderRedemptionsItem",
+    "ListOrderRedemptionsData",
+    "HoldCheckoutCodeParams",
+    "HoldCheckoutCodeHeaders",
+    "HoldCheckoutCodeBody",
+    "HoldCheckoutCodeData",
+    "CaptureCheckoutOrderParams",
+    "CaptureCheckoutOrderHeaders",
+    "CaptureCheckoutOrderBodyCapturesItem",
+    "CaptureCheckoutOrderBody",
+    "CaptureCheckoutOrderItem",
+    "CaptureCheckoutOrderData",
+    "ReleaseCheckoutOrderParams",
+    "ReleaseCheckoutOrderHeaders",
+    "ReleaseCheckoutOrderBody",
+    "ReleaseCheckoutOrderItem",
+    "ReleaseCheckoutOrderData",
+    "RefundCheckoutOrderParams",
+    "RefundCheckoutOrderHeaders",
+    "RefundCheckoutOrderBody",
+    "RefundCheckoutOrderDataRedemptionsItem",
+    "RefundCheckoutOrderDataUnearned",
+    "RefundCheckoutOrderData",
+    "ListShopRedemptionsParams",
+    "ListShopRedemptionsQuery",
+    "ListShopRedemptionsHeaders",
+    "ListShopRedemptionsItem",
+    "ReleaseShopRedemptionParams",
+    "ReleaseShopRedemptionHeaders",
+    "ReleaseShopRedemptionBody",
+    "ReleaseShopRedemptionData",
+    "RefundShopRedemptionParams",
+    "RefundShopRedemptionHeaders",
+    "RefundShopRedemptionBody",
+    "RefundShopRedemptionData",
+    "SetShopSettingsParams",
+    "SetShopSettingsHeaders",
+    "SetShopSettingsBodyTax",
+    "SetShopSettingsBodyAccepts",
+    "SetShopSettingsBody",
+    "SetShopSettingsDataOrders",
+    "SetShopSettingsDataLastDelivery",
+    "SetShopSettingsDataLastRefusal",
+    "SetShopSettingsDataPluginKey",
+    "SetShopSettingsDataSettingsTax",
+    "SetShopSettingsDataSettings",
+    "SetShopSettingsDataAcceptsCeilingItem",
+    "SetShopSettingsDataAccepts",
+    "SetShopSettingsDataUnbacked",
+    "SetShopSettingsData",
+    "SetShopCeilingParams",
+    "SetShopCeilingHeaders",
+    "SetShopCeilingBody",
+    "SetShopCeilingDataOrders",
+    "SetShopCeilingDataLastDelivery",
+    "SetShopCeilingDataLastRefusal",
+    "SetShopCeilingDataPluginKey",
+    "SetShopCeilingDataSettingsTax",
+    "SetShopCeilingDataSettings",
+    "SetShopCeilingDataAcceptsCeilingItem",
+    "SetShopCeilingDataAccepts",
+    "SetShopCeilingDataUnbacked",
+    "SetShopCeilingData",
+    "HolderCheckoutCodesParams",
+    "HolderCheckoutCodesDataOffer",
+    "HolderCheckoutCodesDataHoldsItem",
+    "HolderCheckoutCodesDataCodesItemOrder",
+    "HolderCheckoutCodesDataCodesItem",
+    "HolderCheckoutCodesData",
+    "MintHolderCheckoutCodeParams",
+    "MintHolderCheckoutCodeBody",
+    "MintHolderCheckoutCodeData",
+    "CancelHolderCheckoutCodeParams",
     "ListTeamHeaders",
     "ListTeamDataMembersItemGrantsItem",
     "ListTeamDataMembersItem",
@@ -10069,21 +12014,25 @@ __all__ = [
     "WebhookEventsData",
     "ListWebhooksHeaders",
     "ListWebhooksItemWeek",
+    "ListWebhooksItemCreatedByKey",
     "ListWebhooksItem",
     "ListWebhooksData",
     "CreateWebhookHeaders",
     "CreateWebhookBody",
     "CreateWebhookDataWebhookWeek",
+    "CreateWebhookDataWebhookCreatedByKey",
     "CreateWebhookDataWebhook",
     "CreateWebhookData",
     "GetWebhookParams",
     "GetWebhookHeaders",
     "GetWebhookDataWeek",
+    "GetWebhookDataCreatedByKey",
     "GetWebhookData",
     "SetWebhookStatusParams",
     "SetWebhookStatusHeaders",
     "SetWebhookStatusBody",
     "SetWebhookStatusDataWeek",
+    "SetWebhookStatusDataCreatedByKey",
     "SetWebhookStatusData",
     "ListWebhookDeliveriesParams",
     "ListWebhookDeliveriesQuery",
@@ -10222,10 +12171,12 @@ __all__ = [
     "AddHolderPasskeyBody",
     "AddHolderPasskeyData",
     "RemoveHolderPasskeyParams",
+    "AddHolderEmailHeaders",
     "AddHolderEmailBody",
     "AddHolderEmailData",
     "VerifyHolderEmailBody",
     "VerifyHolderEmailData",
+    "AddHolderPhoneHeaders",
     "AddHolderPhoneBody",
     "AddHolderPhoneData",
     "VerifyHolderPhoneBody",
@@ -10236,6 +12187,7 @@ __all__ = [
     "MergeHolderAccountsData",
     "RemoveHolderEmailParams",
     "ReplaceHolderIdentityParams",
+    "ReplaceHolderIdentityHeaders",
     "ReplaceHolderIdentityBody",
     "ReplaceHolderIdentityData",
     "VerifyHolderIdentityReplaceParams",
@@ -10286,6 +12238,7 @@ __all__ = [
     "SetHolderDevicePushBody",
     "SetHolderDevicePushData",
     "TestHolderDevicePushData",
+    "StartHolderRecoveryHeaders",
     "StartHolderRecoveryBody",
     "StartHolderRecoveryData",
     "VerifyHolderRecoveryBody",

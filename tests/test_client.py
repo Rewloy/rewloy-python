@@ -49,8 +49,8 @@ def test_has_defaults_and_never_shows_the_credential() -> None:
 
 def test_has_a_method_for_every_operation_and_a_mapping_from_the_operation_id() -> None:
     c = Rewloy()
-    assert len(OPERATIONS) == 237
-    assert len(set(METHOD_NAMES.values())) == 237
+    # The snapshot is regenerated daily: the count follows it, not a constant.
+    assert len(OPERATIONS) == len(set(METHOD_NAMES.values())) > 237
     for operation_id, meta in OPERATIONS.items():
         assert callable(getattr(c, meta.method_name)), operation_id
         assert METHOD_NAMES[operation_id] == meta.method_name
@@ -62,7 +62,7 @@ def test_has_a_method_for_every_operation_and_a_mapping_from_the_operation_id() 
 def test_says_the_version_it_is() -> None:
     import rewloy
 
-    assert rewloy.__version__ == VERSION == "0.1.0"
+    assert rewloy.__version__ == VERSION == "0.2.0"
 
 
 @pytest.fixture

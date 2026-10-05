@@ -45,7 +45,7 @@ def test_the_snapshot_is_written_the_way_the_other_libraries_write_it() -> None:
 def test_makes_one_method_per_operation_of_the_snapshot() -> None:
     doc = snapshot()
     ids = [op["operationId"] for item in doc["paths"].values() for m, op in item.items() if m in ("get", "post", "put", "patch", "delete")]
-    assert len(ids) == 237 == len(set(ids))
+    assert len(ids) == len(set(ids))  # the count follows the snapshot, not a constant
     methods = next(f.content for f in generate(doc) if f.path.endswith("methods.py"))
     for operation_id in ids:
         assert re.search(rf"^    def {snake(operation_id)}\($", methods, re.M), operation_id
