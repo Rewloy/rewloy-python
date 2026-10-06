@@ -2766,7 +2766,7 @@ class RewloyMethods:
     ) -> T.SendBatchLinkData:
         """Bağlantıyı e-postayla gönder
 
-        Kodun alma bağlantısını bir adrese gönderir; alıcı kartını kendisi alır (e-postası ve onayıyla). Sonuç: `queued` gönderildi, `duplicate` bu adrese bu kod zaten gönderilmişti, `suppressed` adres e-posta almayı reddetmiş ya da geri dönmüş. İşletme başına günde 300.
+        Kodun alma bağlantısını bir adrese gönderir; alıcı kartını kendisi alır (e-postası ve onayıyla). Sonuç: `queued` gönderildi, `duplicate` bu adrese bu kod zaten gönderilmişti, `suppressed` adres e-posta almayı reddetmiş ya da geri dönmüş. İşletme başına günde 300. Bağlantı yalnız kart verirken gönderilir: kod durdurulduysa `BATCH_CLOSED`, süresi dolduysa `BATCH_EXPIRED`, kartları bittiyse `BATCH_FULL`, kodun programı arşivdeyse `409 PROGRAM_ARCHIVED` (1.2.0'dan önce bu durumlarda da gönderilirdi).
 
         **Kimlik:** API anahtarı, ekip oturumu.
 

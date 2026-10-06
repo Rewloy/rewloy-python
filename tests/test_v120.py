@@ -12,6 +12,25 @@ from .helpers import LOCATION, SERIAL, Ctx, Stub, api_error, make_client
 
 StubFactory = Callable[[Callable[[Ctx], None]], Stub]
 WEBHOOK = "0192f7c1-0000-7000-8000-0000000000aa"
+REFUSALS = {"b-closed": (410, "BATCH_CLOSED"), "b-expired": (410, "BATCH_EXPIRED"), "b-full": (410, "BATCH_FULL"), "b-archived": (409, "PROGRAM_ARCHIVED")}
+
+
+def webhook_row(paused_until: str | None, resumable_until: str | None) -> dict[str, object]:
+    """A webhook object as 1.2.0 answers: pausedUntil and resumableUntil are always present."""
+    return {
+        "id": WEBHOOK,
+        "url": "https://ornek.com/rewloy/webhook",
+        "events": ["pass.activity"],
+        "status": "active",
+        "failures": 0,
+        "disabledReason": None,
+        "createdAt": "2026-10-06T09:00:00.000Z",
+        "week": {"delivered": 3, "failed": 0, "pending": 1},
+        "lastDelivered": "2026-10-06T09:30:00.000Z",
+        "createdByKey": None,
+        "pausedUntil": paused_until,
+        "resumableUntil": resumable_until,
+    }
 
 
 def handle(c: Ctx) -> None:
@@ -21,6 +40,13 @@ def handle(c: Ctx) -> None:
             "data": [{"id": "o1", "kind": "earn", "delta": 1, "unit": "stamp", "saleKey": "kasa3-z0187-fis0042", "undoWith": "sale/reverse", "reversible": True, "byCaller": True}],
             "meta": {"page": 1, "pageSize": 50, "total": 1},
         })
+    elif url.startswith("/v1/batches/b-") and url.endswith("/send"):
+        status, code = REFUSALS[url.split("/")[3]]
+        c.json(status, api_error(code, status, code))
+    elif url == "/v1/developers/webhooks" and c.req.method == "GET":
+        c.json(200, {"data": [webhook_row("2026-10-06T10:01:00.000Z", None), webhook_row(None, "2026-10-07T09:45:00.000Z")]})
+    elif url == f"/v1/developers/webhooks/{WEBHOOK}" and c.req.method == "PATCH":
+        c.json(200, {"data": webhook_row(None, None)})
     elif url.startswith("/v1/batches"):
         c.json(200, {"data": [{"id": "b1", "status": "open", "state": "archived"}], "meta": {"page": 1, "pageSize": 50, "total": 1}})
     elif url == f"/v1/developers/webhooks/{WEBHOOK}/rotate-secret":
@@ -96,3 +122,28 @@ def test_surfaces_program_archived(stub: StubFactory) -> None:
         c.create_batch("p1", body={})
     assert info.value.status == 409
     assert info.value.code == "PROGRAM_ARCHIVED"
+
+
+def test_reads_the_webhook_state_fields_a_date_time_or_none(stub: StubFactory) -> None:
+    s = stub(handle)
+    c = make_client(s)
+    rows = c.list_webhooks()
+    paused: str | None = rows[0]["pausedUntil"]
+    resumable: str | None = rows[1]["resumableUntil"]
+    assert paused == "2026-10-06T10:01:00.000Z"
+    assert rows[0]["resumableUntil"] is None
+    assert rows[1]["pausedUntil"] is None
+    assert resumable == "2026-10-07T09:45:00.000Z"
+    turned_on = c.set_webhook_status(WEBHOOK, body={"active": True})
+    assert (turned_on["pausedUntil"], turned_on["resumableUntil"]) == (None, None)
+    assert s.requests[-1].method == "PATCH"
+
+
+@pytest.mark.parametrize("batch", sorted(REFUSALS))
+def test_surfaces_what_send_batch_link_refuses(stub: StubFactory, batch: str) -> None:
+    c = make_client(stub(handle))
+    status, code = REFUSALS[batch]
+    with pytest.raises(RewloyError) as info:
+        c.send_batch_link(batch, body={"email": "ali@ornek.com"})
+    assert info.value.status == status
+    assert info.value.code == code

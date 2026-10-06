@@ -10,13 +10,16 @@ This library's releases. The API's own changes are listed at the link above.
 Rewloy API 1.2.0'ı izler (API sürümü, `info.version`): 260 işlem (0.2.2'de 256),
 hiçbiri kaldırılmadı. Kasa yazımlarının yanıtında `card`, kartın işlem listesi,
 webhook sırrını yenileme ve silme, POS anahtarları, test ortamını silmeden
-sıfırlama, bütün kodların listesi. Ayrıca README'deki `rewardReady` örneği
-`actions[].ready` okuyacak şekilde düzeltildi. 0.2.3 yalnız .NET ve Kotlin'in
-paket sürümüydü; beş kütüphane 0.2.4'te aynı sürüme gelir.
+sıfırlama, bütün kodların listesi. Webhook nesnesinde `pausedUntil` ve
+`resumableUntil`; kod bağlantısı göndermede `BATCH_CLOSED`, `BATCH_EXPIRED`,
+`BATCH_FULL` ve `PROGRAM_ARCHIVED` hataları. Ayrıca README'deki `rewardReady`
+örneği `actions[].ready` okuyacak şekilde düzeltildi. 0.2.3 yalnız .NET ve
+Kotlin'in paket sürümüydü; beş kütüphane 0.2.4'te aynı sürüme gelir.
 
 Follows Rewloy API 1.2.0 (the product version in `info.version`): 260
 operations (256 in 0.2.2), none removed. All five client libraries are 0.2.4.
-Additive, except that `closed` in the test-reset answer is now always `null`.
+Additive, except that `closed` in the test-reset answer is now always `null`
+and `sendBatchLink` now refuses a code that issues no card (see below).
 
 - **New operation `listPassOperations`** (`GET /v1/passes/{serial}/operations`,
   paged): a card's ledger operations and coupon / discount-card uses, newest
@@ -71,6 +74,26 @@ Additive, except that `closed` in the test-reset answer is now always `null`.
 - **Programme rows** (`listPrograms`, `getProgram`, `createProgram`,
   `updateProgram`) carry `programName`, always equal to `name` (the field name
   that `createProgram` takes and `getPass` returns).
+- **Webhook state: `pausedUntil` and `resumableUntil`** on every webhook object
+  (the rows of `listWebhooks`, and the `webhook` of `createWebhook`, `getWebhook`,
+  `setWebhookStatus` and `rotateWebhookSecret`). Both are always present, a
+  date-time or `null`. `pausedUntil`: an open webhook is paused (its receiver
+  failed twice in a row with a `5xx`, a `429`, a connection error or no answer):
+  its deliveries wait until this moment and are retried on their own, 60
+  seconds; `null` when it is not paused or the webhook is off.
+  `resumableUntil`: the rules turned the webhook off and keep its pending
+  deliveries; turned on before this moment (24 hours after it was closed, with
+  `setWebhookStatus` `{ "active": true }`) it carries on where it stopped, the
+  kept deliveries go at once and the events that happened meanwhile arrive too;
+  `null` while it is on, when a person or a key turned it off, or once the time
+  has passed.
+- **`sendBatchLink` refusals** (`POST /v1/batches/{id}/send`): the link of a code
+  is e-mailed only while the code issues a card. A stopped code answers
+  `410 BATCH_CLOSED`, one past its date `410 BATCH_EXPIRED`, one whose cards
+  are all given `410 BATCH_FULL`, and a code whose programme is archived
+  `409 PROGRAM_ARCHIVED` (a new `409` on this operation); no mail goes. Before
+  1.2.0 the last three were sent anyway. The error codes were already in the
+  library's list of codes; the operation's description now names all four.
 - Descriptions only: `earnRate` / `cashbackRate` round down on a sale
   (`floor(amountMinor / 100 × earnRate)`, `floor(amountMinor × cashbackRate / 100)`);
   `currencyLocked` also for an open amount-valued coupon; `actions30` on a key
@@ -80,9 +103,14 @@ Additive, except that `closed` in the test-reset answer is now always `null`.
   `me` → `key.abilities` is not the key's permissions (those are `permissions`).
 - **Fixed in the README**: the first example read `rewardReady` as "ready to
   redeem". It now reads `actions[].ready` (see `getPass`).
+- Python: `pausedUntil` and `resumableUntil` are `Optional[str]` keys of the
+  webhook `TypedDict`s (`list_webhooks`, `create_webhook`, `get_webhook`,
+  `set_webhook_status`, `rotate_webhook_secret`); the `send_batch_link`
+  docstring names the four refusals, and the codes are in `rewloy.types.ErrorCode`.
 - Python: new tests in `tests/test_v120.py` (the four new operations, paging,
   `kind: "pos"`, `revokeKeys`, a replayed sale with `card: None`,
-  `PROGRAM_ARCHIVED`); `RewloyError.details` documents `reason`. The
+  `PROGRAM_ARCHIVED`, the webhook state fields, the four refusals of
+  `send_batch_link`); `RewloyError.details` documents `reason`. The
   `# type: ignore` in a retry test now also silences mypy's
   `comparison-overlap` (the typed answer has more required fields).
 

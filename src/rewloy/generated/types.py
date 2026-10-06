@@ -9429,6 +9429,10 @@ class ListWebhooksItem(TypedDict):
     lastDelivered: Optional[str]
     # Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur.
     createdByKey: Optional[ListWebhooksItemCreatedByKey]
+    # Açık webhook bekletiliyor: alıcı art arda 2 kez `5xx`, `429` verdi ya da yanıt vermedi; teslimler bu ana kadar ertelenir, sonra kendiliğinden yeniden denenir (60 saniye). Bekletilmiyorsa ya da webhook kapalıysa null (1.2.0).
+    pausedUntil: Optional[str]
+    # Webhook'u kurallar kapattı ve bekleyen teslimleri saklanıyor: bu andan önce açılırsa (`PATCH` `{ "active": true }`) kaldığı yerden devam eder, saklananlar hemen gönderilir ve kapalıyken olan olaylar da gelir. Kapanıştan 24 saat sonrası. Açıksa, bir kişi ya da anahtar kapattıysa ya da süre geçtiyse null (1.2.0).
+    resumableUntil: Optional[str]
 
 
 ListWebhooksData = List[ListWebhooksItem]
@@ -9475,6 +9479,10 @@ class CreateWebhookDataWebhook(TypedDict):
     lastDelivered: Optional[str]
     # Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur.
     createdByKey: Optional[CreateWebhookDataWebhookCreatedByKey]
+    # Açık webhook bekletiliyor: alıcı art arda 2 kez `5xx`, `429` verdi ya da yanıt vermedi; teslimler bu ana kadar ertelenir, sonra kendiliğinden yeniden denenir (60 saniye). Bekletilmiyorsa ya da webhook kapalıysa null (1.2.0).
+    pausedUntil: Optional[str]
+    # Webhook'u kurallar kapattı ve bekleyen teslimleri saklanıyor: bu andan önce açılırsa (`PATCH` `{ "active": true }`) kaldığı yerden devam eder, saklananlar hemen gönderilir ve kapalıyken olan olaylar da gelir. Kapanıştan 24 saat sonrası. Açıksa, bir kişi ya da anahtar kapattıysa ya da süre geçtiyse null (1.2.0).
+    resumableUntil: Optional[str]
 
 
 class _CreateWebhookDataRequired(TypedDict):
@@ -9534,6 +9542,10 @@ class GetWebhookData(TypedDict):
     lastDelivered: Optional[str]
     # Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur.
     createdByKey: Optional[GetWebhookDataCreatedByKey]
+    # Açık webhook bekletiliyor: alıcı art arda 2 kez `5xx`, `429` verdi ya da yanıt vermedi; teslimler bu ana kadar ertelenir, sonra kendiliğinden yeniden denenir (60 saniye). Bekletilmiyorsa ya da webhook kapalıysa null (1.2.0).
+    pausedUntil: Optional[str]
+    # Webhook'u kurallar kapattı ve bekleyen teslimleri saklanıyor: bu andan önce açılırsa (`PATCH` `{ "active": true }`) kaldığı yerden devam eder, saklananlar hemen gönderilir ve kapalıyken olan olaylar da gelir. Kapanıştan 24 saat sonrası. Açıksa, bir kişi ya da anahtar kapattıysa ya da süre geçtiyse null (1.2.0).
+    resumableUntil: Optional[str]
 
 # ----------------------------------------------------------------------
 # setWebhookStatus · PATCH /v1/developers/webhooks/{id}
@@ -9582,6 +9594,10 @@ class SetWebhookStatusData(TypedDict):
     lastDelivered: Optional[str]
     # Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur.
     createdByKey: Optional[SetWebhookStatusDataCreatedByKey]
+    # Açık webhook bekletiliyor: alıcı art arda 2 kez `5xx`, `429` verdi ya da yanıt vermedi; teslimler bu ana kadar ertelenir, sonra kendiliğinden yeniden denenir (60 saniye). Bekletilmiyorsa ya da webhook kapalıysa null (1.2.0).
+    pausedUntil: Optional[str]
+    # Webhook'u kurallar kapattı ve bekleyen teslimleri saklanıyor: bu andan önce açılırsa (`PATCH` `{ "active": true }`) kaldığı yerden devam eder, saklananlar hemen gönderilir ve kapalıyken olan olaylar da gelir. Kapanıştan 24 saat sonrası. Açıksa, bir kişi ya da anahtar kapattıysa ya da süre geçtiyse null (1.2.0).
+    resumableUntil: Optional[str]
 
 # ----------------------------------------------------------------------
 # deleteWebhook · DELETE /v1/developers/webhooks/{id}
@@ -9688,6 +9704,10 @@ class RotateWebhookSecretDataWebhook(TypedDict):
     lastDelivered: Optional[str]
     # Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur.
     createdByKey: Optional[RotateWebhookSecretDataWebhookCreatedByKey]
+    # Açık webhook bekletiliyor: alıcı art arda 2 kez `5xx`, `429` verdi ya da yanıt vermedi; teslimler bu ana kadar ertelenir, sonra kendiliğinden yeniden denenir (60 saniye). Bekletilmiyorsa ya da webhook kapalıysa null (1.2.0).
+    pausedUntil: Optional[str]
+    # Webhook'u kurallar kapattı ve bekleyen teslimleri saklanıyor: bu andan önce açılırsa (`PATCH` `{ "active": true }`) kaldığı yerden devam eder, saklananlar hemen gönderilir ve kapalıyken olan olaylar da gelir. Kapanıştan 24 saat sonrası. Açıksa, bir kişi ya da anahtar kapattıysa ya da süre geçtiyse null (1.2.0).
+    resumableUntil: Optional[str]
 
 
 class RotateWebhookSecretData(TypedDict):

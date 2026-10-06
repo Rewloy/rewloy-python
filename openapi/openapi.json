@@ -31217,7 +31217,7 @@
           "Kodlar"
         ],
         "summary": "Bağlantıyı e-postayla gönder",
-        "description": "Kodun alma bağlantısını bir adrese gönderir; alıcı kartını kendisi alır (e-postası ve onayıyla). Sonuç: `queued` gönderildi, `duplicate` bu adrese bu kod zaten gönderilmişti, `suppressed` adres e-posta almayı reddetmiş ya da geri dönmüş. İşletme başına günde 300.\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `instruments.issue` — Hediye kartı ve kupon üretme.",
+        "description": "Kodun alma bağlantısını bir adrese gönderir; alıcı kartını kendisi alır (e-postası ve onayıyla). Sonuç: `queued` gönderildi, `duplicate` bu adrese bu kod zaten gönderilmişti, `suppressed` adres e-posta almayı reddetmiş ya da geri dönmüş. İşletme başına günde 300. Bağlantı yalnız kart verirken gönderilir: kod durdurulduysa `BATCH_CLOSED`, süresi dolduysa `BATCH_EXPIRED`, kartları bittiyse `BATCH_FULL`, kodun programı arşivdeyse `409 PROGRAM_ARCHIVED` (1.2.0'dan önce bu durumlarda da gönderilirdi).\n\n**Kimlik:** API anahtarı, ekip oturumu.\n\n**Yetki:** `instruments.issue` — Hediye kartı ve kupon üretme.",
         "x-permission": "instruments.issue",
         "x-credentials": [
           "key",
@@ -31478,8 +31478,32 @@
               }
             }
           },
+          "409": {
+            "description": "`PROGRAM_ARCHIVED` — Program arşivde",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "PROGRAM_ARCHIVED": {
+                    "summary": "Program arşivde",
+                    "value": {
+                      "error": {
+                        "code": "PROGRAM_ARCHIVED",
+                        "message": "Program arşivde",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 409,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#PROGRAM_ARCHIVED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "410": {
-            "description": "`BATCH_CLOSED` — Kodla kayıt kapandı<br>`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "description": "`BATCH_CLOSED` — Kodla kayıt kapandı<br>`BATCH_EXPIRED` — Kodun süresi doldu<br>`BATCH_FULL` — Kodun kartları bitti<br>`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
             "content": {
               "application/json": {
                 "schema": {
@@ -31495,6 +31519,30 @@
                         "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
                         "status": 410,
                         "docs": "https://rewloy.com/gelistiriciler/hatalar#BATCH_CLOSED"
+                      }
+                    }
+                  },
+                  "BATCH_EXPIRED": {
+                    "summary": "Kodun süresi doldu",
+                    "value": {
+                      "error": {
+                        "code": "BATCH_EXPIRED",
+                        "message": "Kodun süresi doldu",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 410,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#BATCH_EXPIRED"
+                      }
+                    }
+                  },
+                  "BATCH_FULL": {
+                    "summary": "Kodun kartları bitti",
+                    "value": {
+                      "error": {
+                        "code": "BATCH_FULL",
+                        "message": "Kodun kartları bitti",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 410,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#BATCH_FULL"
                       }
                     }
                   },
@@ -80473,6 +80521,22 @@
                               "name"
                             ],
                             "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur."
+                          },
+                          "pausedUntil": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date-time",
+                            "description": "Açık webhook bekletiliyor: alıcı art arda 2 kez `5xx`, `429` verdi ya da yanıt vermedi; teslimler bu ana kadar ertelenir, sonra kendiliğinden yeniden denenir (60 saniye). Bekletilmiyorsa ya da webhook kapalıysa null (1.2.0)."
+                          },
+                          "resumableUntil": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date-time",
+                            "description": "Webhook'u kurallar kapattı ve bekleyen teslimleri saklanıyor: bu andan önce açılırsa (`PATCH` `{ \"active\": true }`) kaldığı yerden devam eder, saklananlar hemen gönderilir ve kapalıyken olan olaylar da gelir. Kapanıştan 24 saat sonrası. Açıksa, bir kişi ya da anahtar kapattıysa ya da süre geçtiyse null (1.2.0)."
                           }
                         },
                         "required": [
@@ -80485,7 +80549,9 @@
                           "createdAt",
                           "week",
                           "lastDelivered",
-                          "createdByKey"
+                          "createdByKey",
+                          "pausedUntil",
+                          "resumableUntil"
                         ]
                       }
                     }
@@ -80896,6 +80962,22 @@
                                 "name"
                               ],
                               "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur."
+                            },
+                            "pausedUntil": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date-time",
+                              "description": "Açık webhook bekletiliyor: alıcı art arda 2 kez `5xx`, `429` verdi ya da yanıt vermedi; teslimler bu ana kadar ertelenir, sonra kendiliğinden yeniden denenir (60 saniye). Bekletilmiyorsa ya da webhook kapalıysa null (1.2.0)."
+                            },
+                            "resumableUntil": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date-time",
+                              "description": "Webhook'u kurallar kapattı ve bekleyen teslimleri saklanıyor: bu andan önce açılırsa (`PATCH` `{ \"active\": true }`) kaldığı yerden devam eder, saklananlar hemen gönderilir ve kapalıyken olan olaylar da gelir. Kapanıştan 24 saat sonrası. Açıksa, bir kişi ya da anahtar kapattıysa ya da süre geçtiyse null (1.2.0)."
                             }
                           },
                           "required": [
@@ -80908,7 +80990,9 @@
                             "createdAt",
                             "week",
                             "lastDelivered",
-                            "createdByKey"
+                            "createdByKey",
+                            "pausedUntil",
+                            "resumableUntil"
                           ]
                         },
                         "secret": {
@@ -81369,6 +81453,22 @@
                             "name"
                           ],
                           "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur."
+                        },
+                        "pausedUntil": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time",
+                          "description": "Açık webhook bekletiliyor: alıcı art arda 2 kez `5xx`, `429` verdi ya da yanıt vermedi; teslimler bu ana kadar ertelenir, sonra kendiliğinden yeniden denenir (60 saniye). Bekletilmiyorsa ya da webhook kapalıysa null (1.2.0)."
+                        },
+                        "resumableUntil": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time",
+                          "description": "Webhook'u kurallar kapattı ve bekleyen teslimleri saklanıyor: bu andan önce açılırsa (`PATCH` `{ \"active\": true }`) kaldığı yerden devam eder, saklananlar hemen gönderilir ve kapalıyken olan olaylar da gelir. Kapanıştan 24 saat sonrası. Açıksa, bir kişi ya da anahtar kapattıysa ya da süre geçtiyse null (1.2.0)."
                         }
                       },
                       "required": [
@@ -81381,7 +81481,9 @@
                         "createdAt",
                         "week",
                         "lastDelivered",
-                        "createdByKey"
+                        "createdByKey",
+                        "pausedUntil",
+                        "resumableUntil"
                       ]
                     }
                   }
@@ -81804,6 +81906,22 @@
                             "name"
                           ],
                           "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur."
+                        },
+                        "pausedUntil": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time",
+                          "description": "Açık webhook bekletiliyor: alıcı art arda 2 kez `5xx`, `429` verdi ya da yanıt vermedi; teslimler bu ana kadar ertelenir, sonra kendiliğinden yeniden denenir (60 saniye). Bekletilmiyorsa ya da webhook kapalıysa null (1.2.0)."
+                        },
+                        "resumableUntil": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time",
+                          "description": "Webhook'u kurallar kapattı ve bekleyen teslimleri saklanıyor: bu andan önce açılırsa (`PATCH` `{ \"active\": true }`) kaldığı yerden devam eder, saklananlar hemen gönderilir ve kapalıyken olan olaylar da gelir. Kapanıştan 24 saat sonrası. Açıksa, bir kişi ya da anahtar kapattıysa ya da süre geçtiyse null (1.2.0)."
                         }
                       },
                       "required": [
@@ -81816,7 +81934,9 @@
                         "createdAt",
                         "week",
                         "lastDelivered",
-                        "createdByKey"
+                        "createdByKey",
+                        "pausedUntil",
+                        "resumableUntil"
                       ]
                     }
                   }
@@ -83276,6 +83396,22 @@
                                 "name"
                               ],
                               "description": "Webhook'u ekleyen API anahtarı; bir kişi eklediyse null. Anahtar kaldırılınca, süresi dolunca ya da olayları okuyamaz olunca webhook kendiliğinden kapanır (`disabledReason`). Bir kişi onu yeniden açarsa webhook o kişinin olur."
+                            },
+                            "pausedUntil": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date-time",
+                              "description": "Açık webhook bekletiliyor: alıcı art arda 2 kez `5xx`, `429` verdi ya da yanıt vermedi; teslimler bu ana kadar ertelenir, sonra kendiliğinden yeniden denenir (60 saniye). Bekletilmiyorsa ya da webhook kapalıysa null (1.2.0)."
+                            },
+                            "resumableUntil": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date-time",
+                              "description": "Webhook'u kurallar kapattı ve bekleyen teslimleri saklanıyor: bu andan önce açılırsa (`PATCH` `{ \"active\": true }`) kaldığı yerden devam eder, saklananlar hemen gönderilir ve kapalıyken olan olaylar da gelir. Kapanıştan 24 saat sonrası. Açıksa, bir kişi ya da anahtar kapattıysa ya da süre geçtiyse null (1.2.0)."
                             }
                           },
                           "required": [
@@ -83288,7 +83424,9 @@
                             "createdAt",
                             "week",
                             "lastDelivered",
-                            "createdByKey"
+                            "createdByKey",
+                            "pausedUntil",
+                            "resumableUntil"
                           ]
                         },
                         "secret": {

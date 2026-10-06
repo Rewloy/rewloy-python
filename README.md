@@ -462,6 +462,26 @@ her deneme yeni bir `t` ile imzalanır. Sonuç `PassEvent` ya da
 yeni bir tür için bir `else` dalı bırakın. Kendi işleyicinizi test etmek için
 `sign_webhook(govde, sir)` aynı başlığı üretir.
 
+**Webhook'un durumu.** Webhook nesnesinde (`list_webhooks`, `get_webhook`,
+`set_webhook_status`, `create_webhook` ve `rotate_webhook_secret`'ın webhook'u)
+iki tarih alanı hep vardır, ikisi de boş olabilir (`str | None`, bir tarih):
+- `pausedUntil`: alıcınız art arda iki kez `5xx`, `429` verdi ya da yanıt vermedi;
+  açık webhook'un teslimleri bu ana kadar bekler, sonra kendiliğinden yeniden
+  denenir (60 saniye). Bekletilmiyorsa ya da webhook kapalıysa boştur.
+- `resumableUntil`: webhook'u **kurallar** kapattı ve bekleyen teslimleri
+  saklanıyor (kapanıştan 24 saat sonrasına kadar). Bu andan önce
+  `set_webhook_status(id, body={"active": True})` ile
+  açarsanız kaldığı yerden devam eder: saklananlar hemen gider, kapalıyken olan
+  olaylar da gelir. Açıksa, bir kişi ya da anahtar kapattıysa ya da süre geçtiyse boştur.
+
+```python
+for w in rewloy.list_webhooks():
+    if w["pausedUntil"]:
+        print(f'{w["url"]}: {w["pausedUntil"]} anına kadar bekletiliyor')
+    if w["resumableUntil"]:
+        print(f'{w["url"]}: {w["resumableUntil"]} öncesinde açın, kaldığı yerden sürer')
+```
+
 ## Hatalar ve yeniden deneme
 
 ```python
@@ -592,6 +612,11 @@ yanit.mode   # "test"
   `archived`; satırın `state`'i de bunlardan biri: `archived` kodun programı
   arşivde demektir, bağlantısı kart vermez). Arşivdeki bir programa kod
   oluşturmak `409 PROGRAM_ARCHIVED` verir.
+- `send_batch_link` kodun bağlantısını yalnız kod kart verirken e-postayla
+  gönderir: durdurulmuş kod `410 BATCH_CLOSED`, süresi dolmuş `410 BATCH_EXPIRED`,
+  kartları bitmiş `410 BATCH_FULL`, programı arşivde olan `409 PROGRAM_ARCHIVED`
+  verir ve e-posta gitmez (1.2.0'dan önce son üçünde de giderdi). Kodları
+  `rewloy.types.ErrorCode` değerleri içindedir.
 
 Ayrıntı: https://rewloy.com/gelistiriciler#test-ortamı
 
@@ -838,12 +863,32 @@ two `v1` values and the delivery has `Rewloy-Signature-Rotating: 1`.
 `[new_secret, old_secret]`. `delete_webhook` removes a webhook and its delivery
 history for good.
 
+A webhook object (`list_webhooks`, `get_webhook`, `set_webhook_status`, and the
+`webhook` of `create_webhook` and `rotate_webhook_secret`) always carries two
+fields, each `str | None` (a date-time), null when it does not apply:
+
+- `pausedUntil`: your receiver failed twice in a row (`5xx`, `429`, a connection
+  error or no answer), so the open webhook's deliveries wait until this moment
+  and are then retried on their own (60 seconds). Null when it is not paused
+  or the webhook is off.
+- `resumableUntil`: the **rules** turned the webhook off and its pending
+  deliveries are kept (until 24 hours after it closed). Turn it on before this
+  moment (`set_webhook_status(id, body={"active": True})`) and it
+  carries on where it stopped: the kept deliveries go at once and the events
+  that happened meanwhile arrive too. Null while it is on, when a person or a
+  key turned it off, or once the time has passed.
+
 Also in Rewloy 1.2.0 (library 0.2.4): `create_api_key(body={"kind": "pos", "locationId": …, "register": …, "password": …})`
 (a till key bound to one branch); `reset_test_environment(body={"revokeKeys": True})`
 (keeps the test business, programmes and keys; revokes keys only when asked);
 `list_all_batches` (every gift-card, coupon and discount code of the business,
 with the `archived` state); `409 PROGRAM_ARCHIVED` when creating a code for an
 archived programme.
+`send_batch_link` e-mails a code's link only while the code issues a card:
+`410 BATCH_CLOSED` (stopped), `410 BATCH_EXPIRED` (past its date),
+`410 BATCH_FULL` (every card given) and `409 PROGRAM_ARCHIVED` (its programme is
+archived) refuse it and no mail goes; before 1.2.0 the last three were sent
+anyway. The codes are in the `rewloy.types.ErrorCode` values.
 
 ### Errors, retries, deprecations
 
