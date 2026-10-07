@@ -680,6 +680,33 @@ mypy && pytest
 - CI her gün canlı belgeyi okur ve bir değişiklik varsa bir pull request açar.
 - Kararlar: [docs/DECISIONS.md](docs/DECISIONS.md).
 
+### Canlı testler
+
+Kütüphanenin gerçek bir Rewloy **DEV** sunucusuna karşı uçtan uca denemesi
+(sürüm adayı yayına çıkmadan önce). Kütüphane üzerinden çalışır, ham HTTP
+kullanmaz; normal `pytest` bunları listelemez bile.
+
+```sh
+REWLOY_BASE_URL=https://dev.ornek.com REWLOY_API_KEY=rwk_test_… REWLOY_STAFF_TOKEN=rws_… python -m pytest -m live
+```
+
+- `REWLOY_BASE_URL` ve `REWLOY_API_KEY` yoksa testler **atlanır** (hata değil), nedeni yazılır.
+- `REWLOY_STAFF_TOKEN` (ekip oturumu) isteğe bağlıdır: `reset_test_environment` bir
+  API anahtarıyla çağrılamaz. Yoksa yalnız sıfırlama atlanır; `REWLOY_MERCHANT_ID`
+  oturumun birden fazla işletmesi varsa hangisi olduğunu söyler.
+- **Güvenlik:** önce kimliksiz `GET /v1/meta` sorulur ve `"environment": "dev"`
+  değilse (başka değer ya da alan yok) koşu hata koduyla (3) durur. Yalnız
+  `rwk_test_` anahtarı kabul edilir; ilk yanıt `Rewloy-Mode: test` demelidir.
+- Kapsam: meta ve işletme, programlar (damga, hediye kartı), kart verme, kasa
+  görünümü, `record_sale`, `pass_action`, işlem listesi, `reverse_sale` ve
+  `reverse_action`, müşteri arama, kod grupları (`list_all_batches`, bağlantı
+  gönderme ret durumları), webhook'lar, `Idempotency-Key`, `RateLimit-*`, hata
+  nesneleri, sayfalama, ve en sonda test ortamını sıfırlama. Alanlara göre
+  geçen/kalan özeti basılır; bir testin hata vermesi çıkış kodunu sıfırdan farklı yapar.
+- Testler oluşturduklarını kaldırır (webhook silinir, kod kapatılır, programlar
+  sıfırlamadan sonra silinir); sıfırlama günde en çok 5 kez yapılabilir.
+- Henüz kapsanmayanlar: [tests/live/TODO.md](tests/live/TODO.md).
+
 ## Belgeler
 
 | | |
@@ -906,6 +933,27 @@ anyway. The codes are in the `rewloy.types.ErrorCode` values.
   `Sunset` and `Link`. The client issues one `DeprecationWarning` per
   operation, attributed to your calling line. Under `-W error` the call still
   returns and the notice goes to the `rewloy` logger.
+
+### Live tests
+
+An end-to-end run of the library against a real Rewloy **DEV** server, for release candidates. It goes through the
+library, never raw HTTP; a normal `pytest` does not even list these tests.
+
+```sh
+REWLOY_BASE_URL=https://dev.example.com REWLOY_API_KEY=rwk_test_… REWLOY_STAFF_TOKEN=rws_… python -m pytest -m live
+```
+
+- Without `REWLOY_BASE_URL` and `REWLOY_API_KEY` the tests are **skipped** with the reason, not failed.
+- `REWLOY_STAFF_TOKEN` (a team session) is optional: `reset_test_environment` cannot be called with an API key. Without it only the
+  reset is skipped. `REWLOY_MERCHANT_ID` names the business if the session has several.
+- **Safety:** the run first asks `GET /v1/meta` without credentials and stops with exit code 3 unless it says `"environment": "dev"`
+  (another value or a missing field stops it). Only an `rwk_test_` key is accepted, and the first answer must carry `Rewloy-Mode: test`.
+- Covers: meta and business, programs (stamp, gift card), issuing, the till view, `record_sale`, `pass_action`, the operations
+  list, `reverse_sale` and `reverse_action`, customer search, batches (`list_all_batches`, `send_batch_link` refusals), webhooks,
+  `Idempotency-Key`, `RateLimit-*`, error objects, pagination, and last the test reset. A passed/failed summary per area is
+  printed, and any failure makes the exit code non-zero.
+- It removes what it creates (webhooks deleted, codes closed, programs deleted after the reset); a business may reset five times a day.
+- Not covered yet: [tests/live/TODO.md](tests/live/TODO.md).
 
 ### Security and licence
 

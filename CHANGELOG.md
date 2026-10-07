@@ -5,6 +5,10 @@ https://rewloy.com/gelistiriciler/degisiklikler
 
 This library's releases. The API's own changes are listed at the link above.
 
+## Unreleased
+
+Canlı testler / Live tests: `pytest -m live` runs the library against a Rewloy DEV server (README, "Canlı testler / Live tests"). No change to the library itself.
+
 ## 0.2.4 (2026-10-06)
 
 Rewloy API 1.2.0'ı izler (API sürümü, `info.version`): 260 işlem (0.2.2'de 256),

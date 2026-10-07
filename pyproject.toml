@@ -51,6 +51,7 @@ include = ["/src", "/tests", "/scripts", "/docs", "/openapi", "/README.md", "/CH
 testpaths = ["tests"]
 pythonpath = ["scripts"]
 addopts = "-ra"
+markers = ["live: runs against a Rewloy DEV server (tests/live); needs -m live, REWLOY_BASE_URL and REWLOY_API_KEY"]
 filterwarnings = ["error::pytest.PytestUnraisableExceptionWarning"]
 
 [tool.mypy]
