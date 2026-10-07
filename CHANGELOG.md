@@ -5,9 +5,125 @@ https://rewloy.com/gelistiriciler/degisiklikler
 
 This library's releases. The API's own changes are listed at the link above.
 
-## Unreleased
+## 0.3.0 (2026-10-07)
 
-Canlı testler / Live tests: `pytest -m live` runs the library against a Rewloy DEV server (README, "Canlı testler / Live tests"). No change to the library itself.
+Rewloy API 1.3.0'ı izler (API sürümü, `info.version`): 298 işlem (0.2.4'te 260),
+hiçbiri kaldırılmadı. Kazanım kuralları (ürün grupları, kurallar, önizleme),
+fiş satırlı satış ve satır iadesi, şube QR'ı (herkese açık sayfa, görüntü ve
+baskı, QR listesi), şube dondurma, kodu düzenleme, kartın kopyası ve kartları
+uzatma; yeni webhook olayları (`pass.extended`, `location.frozen`,
+`location.unfrozen`, `business.paused`, `business.resumed`) ve 31 yeni hata
+kodu (`LOCATION_FROZEN`, `BUSINESS_FROZEN`, `REVISION_CONFLICT`, `TOO_MANY_LINES`
+ve öbürleri); `NOT_AN_INSTRUMENT` artık `copyProgram`da da döner.
+Beş kütüphane 0.3.0'da aynı sürüme gelir. Ayrıca `pytest -m live` (README,
+"Canlı testler / Live tests") kütüphaneyi bir Rewloy DEV sunucusuna karşı çalıştırır.
+
+Follows Rewloy API 1.3.0 (the product version in `info.version`): 298
+operations (260 in 0.2.4), none removed, and 31 new error codes. All five client
+libraries are 0.3.0.
+Additive: every 0.2.4 method keeps its name, its parameters and its meaning
+(new keyword arguments are optional). The one change that a type checker can
+see in existing code is in the webhook types (see "Typing note" below).
+
+- **Earn rules** (38 new operations in all; the others below). A program's earn
+  now follows product groups: `createEarnGroup`, `listEarnGroups`,
+  `getEarnGroup`, `updateEarnGroup`, `deleteEarnGroup` (`409 GROUP_IN_USE`
+  while a rule uses it), the categories and products the tills have sent
+  (`listSeenLines`, `ignoreSeenLine`, `unignoreSeenLine`, `listEarnSources`),
+  ready-made rule sets (`listEarnTemplates`) and the rules themselves:
+  `getEarnRules`, `putEarnRules` (the whole set, with the `revision` you read:
+  `409 REVISION_CONFLICT`), `createEarnRule`, `updateEarnRule`,
+  `deleteEarnRule`, `deleteEarnRules`, `listEarnRuleRevisions`. Rule kinds:
+  `stamp.perUnit`, `stamp.perLine`, `stamp.perReceipt`, `points.rate`,
+  `points.multiplier`, `cashback.rate`, `cashback.groupRate`, `vip.visit`;
+  `settings` hold the excluded groups, the receipt minimum, the receipt / day /
+  month caps, `noLines`, `countLoyaltyPaid`, `spendShareMaxPct`,
+  `unitPriceBasis`, `capsAfterPromotion` and `restrictedGoods`. New errors:
+  `RULE_KIND_NOT_FOR_TYPE`, `EARN_RULE_NOT_FOUND`, `EARN_RULES_NOT_FOUND`,
+  `BILL_REQUIRED` and `SPEND_SHARE_EXCEEDED` (cashback paid for a share of a
+  bill; `passAction` `spend` takes the new `billMinor`).
+- **Receipt lines on a sale.** `recordSale` takes `lines` (up to 500: `lineId`,
+  `name`, `unitPriceMinor`, `quantity`, `unit`, `sku`, `category`,
+  `discountMinor`, `totalMinor`, `kind`, `tags`) and `receiptDiscountMinor`.
+  The answer of a sale sent with lines carries `earn`: what each line earned
+  (`status`, `groups`, `rules`, `earned`), what each rule did and the total step
+  by step (`beforeRounding`, `receiptCap`, `promotion`, `caps`, `credited`).
+  `reason` has new values (`no_earning_lines`, `no_lines`, `location_frozen`,
+  `business_paused`, …). New errors, only when lines are sent: `TOO_MANY_LINES`,
+  `LINE_AMOUNT_INVALID`, `LINES_TOTAL_MISMATCH`. A sale without lines, and a
+  program without rules, earn as before.
+- **New operation `previewSale`** (`POST /v1/passes/{serial}/sale/preview`):
+  the body of `recordSale`, the answer of `recordSale` with `preview: true`,
+  nothing written, no `Idempotency-Key`. **New operation `previewEarn`**
+  (`POST /v1/programs/{id}/earn-rules/preview`): what a receipt would earn
+  without a card, with unsaved draft rules (`ruleSet`), a branch's till
+  campaign (`locationId`), an earlier moment (`occurredAt`) and a card's state
+  (`context`).
+- **Line refunds.** `reverseSale` takes `lines: [{lineId, quantity?, amountMinor?}]`
+  (needs an `Idempotency-Key`): the sale is judged again with the remaining
+  lines and only the difference is taken back (`reversed` may be 0). The answer
+  carries `earn` and `linesLeft`; new errors `LINE_NOT_FOUND` and
+  `LINE_ALREADY_REFUNDED`. `reverse_sale` now takes `idempotency_key=` (the key
+  of the refund; required with `lines`, optional without).
+- **Branch QR.** Every branch has a permanent QR: `Location.qr` (`code`, `url`,
+  `state`), `stats.qrCards30`. `publicBranch` (`GET /v1/public/branches/{code}`,
+  no credentials), `holderBranch` and `joinHolderBranch` (a Rewloy Cüzdan
+  session), the images and the print sheet (`locationQrSvg`, `locationQrPng`,
+  `locationQrSheetPdf`, `locationQrSheetSvg`, returned as `bytes`), the QR list
+  (`getLocationQrItems`, `putLocationQrItems` with the `version` you read:
+  `409 QR_LIST_CHANGED`, `addQrItems`, `previewLocationQr`). Codes can sit on a
+  branch QR (`channels`, `qrLocationIds`, `claimFrom` / `claimUntil`,
+  `proofRequired` on `createBatch`); `joinWindow` on a program; new errors
+  `BRANCH_NOT_FOUND`, `BRANCH_GONE`, `ITEM_NOT_OFFERED`, `PROOF_REQUIRED`,
+  `QR_ITEM_INVALID`, `NOT_VALID_HERE`, `BATCH_CAP_REQUIRED`,
+  `BATCH_PER_PERSON_REQUIRED`, `CLAIM_AFTER_CARD_END`,
+  `CAPACITY_BELOW_CLAIMED`.
+- **Branch freeze.** `freezeLocation`, `updateLocationFreeze`,
+  `cancelLocationFreeze`, `unfreezeLocation`, `listLocationFreezes`;
+  `Location.frozen`. Freezing needs a team session and the person's password: a
+  key gets `403 CREDENTIAL_NOT_ALLOWED`. A frozen branch's till answers
+  `409 LOCATION_FROZEN` (`getPassTill` says `allowed: false` and `frozen`), a
+  business whose every branch is frozen `BUSINESS_FROZEN`; reversals of earlier
+  operations still work. Also `ALREADY_FROZEN`, `NOT_FROZEN`, `LOCATION_ARCHIVED`,
+  `FREEZE_LIMIT`, `FREEZE_STARTED`. `getPlan` has `billing.days`.
+- **Codes and cards.** New `updateBatch` (`PATCH /v1/batches/{id}`: `name`,
+  `claimUntil`, `capacity`, `perPerson`, `locationIds`, `channels`,
+  `qrLocationIds`), `copyProgram` (`POST /v1/programs/{id}/copy`: a gift card,
+  coupon or discount card with another value; a loyalty card is refused with
+  `422 NOT_AN_INSTRUMENT`), `extendProgramCards` (`POST /v1/programs/{id}/extend`).
+  A program's terms are now fields (`giftValueMinor`, `offerValueMinor`,
+  `usage`, `validity`, `terms`), each card keeps the terms of the day it was
+  taken, and `listAllBatches` rows have the state `scheduled`.
+- **Webhook events.** `pass.extended` (a card's end moved later: `reason`
+  `merchant` or `branch_frozen`, `from`, `to`), `location.frozen`,
+  `location.unfrozen`, `business.paused`, `business.resumed` (not about a card:
+  `card` and `customer_id` are null); `partial: true` on the `pass.activity`
+  `adjust` event of a line refund. Existing webhooks do not receive them unless
+  they select them.
+- **Smaller:** `getMeta` is typed with `environment` (`live` | `dev`); stores:
+  `createShop` accepts the platform `rewloy`, orders with lines earn by the
+  rules, `lastDelivery.result` has new values; `getHolderData` carries
+  `receipts`, `holderCard` carries `notices`; `programJoinQr` takes `branchCode`
+  and `format`; `joinHolderProgram` and `claimHolderCode` take `branchCode`;
+  `createLocation` takes `qrListFrom` and `programIds`; the notification kind
+  `branch`.
+- **Typing note (the only visible change in existing code).** `WebhookEvent` is
+  now `PassEvent | BranchEvent | WebhookTestEvent` and `PassEvent.type` includes
+  `pass.extended`. A handler that narrowed with only `event["type"] == "webhook.test"`
+  and then read `event["data"]["unit"]` must also narrow on the type
+  (`event["type"] == "pass.activity"`) for `mypy`; nothing changes at run time.
+  `PassEventData` gained `reference`, `occurredAt`, `undone` and `partial`.
+  New exports: `BranchEvent`, `BranchEventData`, `PassExtendedData`.
+- Python: the new tests are `tests/test_v130.py` (the operations and errors, a
+  group, rules and previews, lines on a sale and the `earn` explanation, a line
+  refund, binary downloads, the refusals) and one for the 1.3.0 webhook events.
+  The live suite (`pytest -m live`, README) gained two areas, `earn` (a group,
+  saved rules and a stale revision, `preview_earn` with and without a draft,
+  `preview_sale`, a sale with lines and its `earn`, a line refund and its
+  refusals, `TOO_MANY_LINES`) and `branch_qr` (a branch's public page, the
+  images and the sheet, the QR list, the freeze refusals for a key,
+  `copy_program`), plus `update_batch` and the 1.3.0 webhook events. Not
+  covered: [tests/live/TODO.md](tests/live/TODO.md).
 
 ## 0.2.4 (2026-10-06)
 

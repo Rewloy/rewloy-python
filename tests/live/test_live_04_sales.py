@@ -1,8 +1,6 @@
 """recordSale and passAction: earn, redeem, spend."""
 from __future__ import annotations
 
-import pytest
-
 from .conftest import World
 
 
@@ -21,9 +19,22 @@ def test_record_sale_without_receipt_lines(world: World) -> None:
     world.state["sale_a_key"] = key
 
 
-@pytest.mark.skip(reason="TODO 0.3.0: recordSale receipt lines (line items) are not in API 1.2.0 / library 0.2.4; see tests/live/TODO.md")
-def test_record_sale_with_receipt_lines(world: World) -> None:
-    raise AssertionError("add when the regenerated library has the line-item schema")
+def test_record_sale_with_receipt_lines_on_a_program_without_rules(world: World) -> None:
+    """A program with no earn rules earns as before; the lines are only recorded (the rules area tests the explanation)."""
+    serial = world.state["stamp_a"]
+    sale = world.client.record_sale(
+        serial, idempotency_key=world.key("sale-lines"),
+        body={
+            "locationId": world.location_id, "amountMinor": 3000, "currency": world.currency, "reference": f"fis-lines-{world.run}",
+            "lines": [{"lineId": "1", "name": "Filtre kahve", "unitPriceMinor": 1500, "quantity": 2, "category": "İçecek > Sıcak"}],
+        },
+    )
+    assert sale["applied"] == "stamps"
+    assert sale["credited"] == 1
+    assert sale["balance"] == 2
+    # undo it, so that the balances the next tests expect (0 -> 4 stamps) hold: the sale is taken back by its key
+    back = world.client.reverse_sale(serial, idempotency_key=world.key("sale-lines-back"), body={"saleKey": world.key("sale-lines")})
+    assert back["balance"] == 1
 
 
 def test_sale_on_gift_card_writes_nothing(world: World) -> None:

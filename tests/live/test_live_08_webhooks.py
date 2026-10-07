@@ -19,6 +19,7 @@ def test_event_catalogue(world: World) -> None:
     catalogue = world.client.webhook_events()
     names = {e["event"] for e in catalogue["events"]}
     assert {"pass.issued", "pass.activity", "pass.voided"} <= names
+    assert {"pass.extended", "location.frozen", "location.unfrozen", "business.paused", "business.resumed"} <= names  # 1.3.0
 
 
 def test_unresolvable_https_url_is_created_or_refused_as_documented(world: World) -> None:
@@ -52,6 +53,17 @@ def test_rotate_secret(world: World) -> None:
     assert rotated["secret"].startswith("whsec_")
     assert rotated["secret"] != world.state["webhook_secret"]
     assert rotated["previousValidUntil"]  # the old secret keeps working for a while
+
+
+def test_subscribe_to_the_1_3_0_events(world: World) -> None:
+    if "webhook" not in world.state:
+        pytest.skip("no webhook was created")
+    events = ["pass.extended", "location.frozen", "location.unfrozen", "business.paused", "business.resumed"]
+    created = world.client.create_webhook(body={"url": URL + "/branches", "events": events})
+    world.webhook_ids.append(created["webhook"]["id"])
+    assert sorted(created["webhook"]["events"]) == sorted(events)
+    assert world.client.delete_webhook(created["webhook"]["id"]) is None
+    world.webhook_ids.remove(created["webhook"]["id"])
 
 
 def test_delete(world: World) -> None:

@@ -82,6 +82,7 @@ class World:
     programs: List[Dict[str, Any]] = field(default_factory=list)  # every program this run created
     batch_ids: List[str] = field(default_factory=list)
     webhook_ids: List[str] = field(default_factory=list)
+    earn_group_ids: List[str] = field(default_factory=list)  # product groups this run created (1.3.0)
     emails: List[str] = field(default_factory=list)
     state: Dict[str, Any] = field(default_factory=dict)  # serials and keys passed between areas
     notes: List[str] = field(default_factory=list)  # cleanup report, printed in the summary
@@ -165,6 +166,17 @@ def _cleanup(w: World) -> None:
             c.close_batch(batch_id)
         except RewloyError:
             pass
+    for program in w.programs:  # saved earn rules hold their groups: take them away first
+        try:
+            c.delete_earn_rules(program["id"])
+        except RewloyError:
+            pass  # none saved, or the program is gone
+    for group_id in w.earn_group_ids:
+        try:
+            c.delete_earn_group(group_id)
+            w.notes.append(f"earn group {group_id[:8]} deleted")
+        except RewloyError:
+            pass  # already deleted by its test
     deleted = archived = left = 0
     for program in w.programs:
         try:

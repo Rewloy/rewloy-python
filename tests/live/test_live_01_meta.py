@@ -1,8 +1,6 @@
 """Meta and business: the server says what it is, the key sees its test business."""
 from __future__ import annotations
 
-from typing import Any
-
 from rewloy import Rewloy
 
 from .conftest import World
@@ -10,7 +8,7 @@ from .conftest import World
 
 def test_meta_says_dev(world: World) -> None:
     with Rewloy(base_url=world.base_url) as anonymous:
-        meta: Any = anonymous.get_meta()  # 0.2.4's GetMetaData has no 'environment' yet (TODO 0.3.0)
+        meta = anonymous.get_meta()
     assert meta["environment"] == "dev"
     assert meta["apiVersion"] == "v1"
     assert meta["version"].count(".") == 2

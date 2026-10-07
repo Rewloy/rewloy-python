@@ -17,8 +17,11 @@ from .generated.operations import API_VERSION, ERROR_TITLES, METHOD_NAMES, OPERA
 from .sse import EventStream, ServerSentEvent, SseParser
 from .transport import HttpRequest, HttpResponse, StreamResponse, Transport, TransportError, TransportTimeout, UrllibTransport
 from .webhooks import (
+    BranchEvent,
+    BranchEventData,
     PassEvent,
     PassEventData,
+    PassExtendedData,
     WebhookEvent,
     WebhookSignatureError,
     WebhookTestEvent,
@@ -31,7 +34,7 @@ VERSION = __version__
 __all__ = [
     "API_VERSION", "ApiResponse", "AuthKind", "DEFAULT_BASE_URL", "Deprecation", "ERROR_TITLES", "EventStream",
     "Headers", "HttpMethod", "HttpRequest", "HttpResponse", "METHOD_NAMES", "OPERATIONS", "OPERATION_IDS",
-    "OperationMeta", "Page", "PassEvent", "PassEventData", "RateLimit", "RateLimitError", "ResponseKind", "Rewloy",
+    "OperationMeta", "Page", "BranchEvent", "BranchEventData", "PassEvent", "PassEventData", "PassExtendedData", "RateLimit", "RateLimitError", "ResponseKind", "Rewloy",
     "RewloyConnectionError", "RewloyError", "RewloyTimeoutError", "ServerSentEvent", "SseParser", "StreamResponse",
     "Transport", "TransportError", "TransportTimeout", "UrllibTransport", "VERSION", "WebhookEvent",
     "WebhookSignatureError", "WebhookTestEvent", "__version__", "parse_rate_limit", "sign_webhook", "verify_webhook",

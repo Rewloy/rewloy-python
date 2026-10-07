@@ -41,6 +41,17 @@ def test_list_all_batches_filters_and_pages(world: World) -> None:
     assert batch["id"] not in [b["id"] for b in closed.data]
 
 
+def test_update_a_code_after_it_was_made(world: World) -> None:
+    batch = world.state["batch"]
+    updated = world.client.update_batch(batch["id"], body={"name": f"Live codes {world.run} renamed", "capacity": 4})
+    assert updated["name"] == f"Live codes {world.run} renamed"
+    assert updated["capacity"] == 4
+    assert world.client.get_batch(batch["id"])["capacity"] == 4
+    with pytest.raises(RewloyError) as below:
+        world.client.update_batch(batch["id"], body={"capacity": -1})
+    assert (below.value.status, below.value.code) == (400, "VALIDATION")
+
+
 def test_send_link_to_an_open_batch_is_queued(world: World) -> None:
     sent = world.client.send_batch_link(world.state["batch"]["id"], body={"email": world.email("link")})
     assert sent["result"] == "queued"

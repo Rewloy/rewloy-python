@@ -8,7 +8,7 @@ from typing import Any, Callable, List
 
 import pytest
 
-from rewloy import WebhookSignatureError, sign_webhook, verify_webhook
+from rewloy import BranchEvent, PassExtendedData, WebhookSignatureError, sign_webhook, verify_webhook
 
 SECRET = "whsec_dGVzdC1zZWNyZXQtZm9yLXJld2xveS1ub2RlLXRlc3Rz"
 T = 1790000000
@@ -129,10 +129,10 @@ def test_a_parsed_object_as_the_payload_and_an_empty_secret_are_programming_erro
 
 def test_the_event_is_typed_for_a_default_branch() -> None:
     event = verify_webhook(BODY, FIXED, SECRET, now=T)
-    if event["type"] == "webhook.test":
-        pytest.fail("not a test")
-    else:
+    if event["type"] == "pass.activity":
         assert event["data"]["unit"] == "stamp"
+    else:
+        pytest.fail("a card activity")
 
 
 def test_sign_webhook_signs_as_the_platform_does_for_testing_your_own_handler() -> None:
@@ -155,3 +155,18 @@ def test_the_comparison_is_constant_time_by_construction(monkeypatch: pytest.Mon
     # Two secrets times two candidates: every pair is compared even though the first one matches.
     verify_webhook(BODY, f"{FIXED},{other}", [SECRET, "whsec_other"], now=T)
     assert len(calls) == 4
+
+
+def test_the_1_3_0_events_are_typed_and_verify() -> None:
+    extended = '{"id":"e1","type":"pass.extended","created_at":"2026-10-07T09:00:00.000Z","data":{"kind":"expiry_extended","card":"ABCD-EFGH-JKLM","reason":"branch_frozen","from":"2026-12-31T00:00:00.000Z","to":"2027-01-14T00:00:00.000Z"}}'
+    frozen = '{"id":"e2","type":"location.frozen","created_at":"2026-10-07T09:00:00.000Z","data":{"kind":"location_frozen","card":null,"customer_id":null,"location_id":"l1","reason":"renovation","startsOn":"2026-10-08","reopensOn":null}}'
+    a = verify_webhook(extended, sign_webhook(extended, SECRET, timestamp=T), SECRET, now=T)
+    b = verify_webhook(frozen, sign_webhook(frozen, SECRET, timestamp=T), SECRET, now=T)
+    assert a["type"] == "pass.extended"
+    assert b["type"] == "location.frozen"
+    if b["type"] == "location.frozen":
+        branch: BranchEvent = b
+        assert branch["data"]["startsOn"] == "2026-10-08"
+        assert branch["data"].get("reopensOn") is None
+    moved: PassExtendedData = a["data"]  # type: ignore[assignment]
+    assert moved["from"] == "2026-12-31T00:00:00.000Z"

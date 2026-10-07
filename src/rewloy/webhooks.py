@@ -40,16 +40,74 @@ class PassEventData(TypedDict, total=False):
     reward: Any
     use: Any
     reason: str
+    #: The receipt or order number of the sale behind the event, when there is one.
+    reference: str
+    #: When a sale written later really happened (ISO 8601).
+    occurredAt: str
+    #: True on the reversal of a till action.
+    undone: bool
+    #: 1.3.0: true when a refund took back only some of a sale's lines (``reason: "sale_reversed"``).
+    partial: bool
+
+
+#: What a ``pass.extended`` delivery's ``data`` holds (1.3.0): the card's last valid day moved later (a card never
+#: ends earlier). ``from`` is a Python keyword, so this is the functional form of ``TypedDict``.
+PassExtendedData = TypedDict(
+    "PassExtendedData",
+    {
+        "kind": str,
+        "card": Optional[str],
+        "program_id": Optional[str],
+        "location_id": Optional[str],
+        "customer_id": Optional[str],
+        #: ``merchant`` ("extend the existing cards too") or ``branch_frozen`` (a freeze's end).
+        "reason": str,
+        #: The card's end before and after (ISO 8601); ``from`` is ``None`` for a card that had no end.
+        "from": Optional[str],
+        "to": Optional[str],
+    },
+    total=False,
+)
 
 
 class PassEvent(TypedDict):
-    """A ``pass.issued``, ``pass.activity`` or ``pass.voided`` delivery."""
+    """A ``pass.issued``, ``pass.activity`` or ``pass.voided`` delivery, and (1.3.0) ``pass.extended``, whose ``data``
+    also has ``from`` and ``to``: read it as :class:`PassExtendedData`."""
 
     #: The event's id.
     id: str
-    type: Literal["pass.issued", "pass.activity", "pass.voided"]
+    type: Literal["pass.issued", "pass.activity", "pass.voided", "pass.extended"]
     created_at: str
     data: PassEventData
+
+
+class BranchEventData(TypedDict, total=False):
+    """What a ``location.frozen``, ``location.unfrozen``, ``business.paused`` or ``business.resumed`` delivery holds.
+    Not about a card: ``card`` and ``customer_id`` are ``None`` and ``location_id`` names the branch. New keys may
+    appear without notice."""
+
+    kind: str
+    card: Optional[str]
+    program_id: Optional[str]
+    location_id: Optional[str]
+    customer_id: Optional[str]
+    #: ``location.frozen``: the freeze reason (``renovation``, ``seasonal``, ``temporary``, ``other``);
+    #: ``location.unfrozen``: ``hand``, ``scheduled`` (the reopening day came) or ``archived``.
+    reason: str
+    #: ``location.frozen``: the first day of the freeze (YYYY-MM-DD, the business's time zone).
+    startsOn: Optional[str]
+    #: ``location.frozen``: the day the branch opens by itself, or ``None`` when that is not set.
+    reopensOn: Optional[str]
+
+
+class BranchEvent(TypedDict):
+    """1.3.0: a ``location.frozen``, ``location.unfrozen``, ``business.paused`` (every branch frozen) or
+    ``business.resumed`` delivery. Subscribing needs ``locations.read`` in every branch."""
+
+    id: str
+    type: Literal["location.frozen", "location.unfrozen", "business.paused", "business.resumed"]
+    created_at: str
+    data: BranchEventData
 
 
 class WebhookTestData(TypedDict):
@@ -66,7 +124,7 @@ class WebhookTestEvent(TypedDict):
 
 #: A webhook delivery's body. Read the person behind ``customer_id`` from the API; new event types may appear, so keep
 #: a default branch.
-WebhookEvent = Union[PassEvent, WebhookTestEvent]
+WebhookEvent = Union[PassEvent, BranchEvent, WebhookTestEvent]
 
 #: Why a delivery was refused.
 WebhookSignatureReason = Literal["missing", "malformed", "expired", "mismatch", "payload"]

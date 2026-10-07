@@ -284,3 +284,26 @@ regeneration workflow (24).
 31. **`regenerate.yml`** is Node's decision 24, with `mypy` and `pytest` as its
     check, on Python 3.13, at 06:17 UTC (Node's runs at 05:23, PHP's at 05:41,
     .NET's at 05:59).
+
+## 0.3.0 (API 1.3.0)
+
+32. **The webhook event types are split, not widened.** The 1.3.0 events that
+    are not about a card (`location.frozen`, `location.unfrozen`,
+    `business.paused`, `business.resumed`) are a `BranchEvent` with its own
+    `data` (`BranchEventData`: `card` and `customer_id` are `None`), and
+    `WebhookEvent` is `PassEvent | BranchEvent | WebhookTestEvent`. A single
+    type with every key optional would have kept old code compiling, but it
+    would say a branch event has a `unit` and a `delta`. The cost is one
+    visible change for a type checker (narrow on `event["type"]` before reading
+    `event["data"]["unit"]`); nothing changes at run time, and the CHANGELOG
+    lists it. `pass.extended` stays a `PassEvent` (a card event), with
+    `PassExtendedData` for its `from` / `to` (`from` is a keyword, so that type
+    is the functional form of `TypedDict`).
+33. **No `lines` helper.** A receipt line is a plain `TypedDict`
+    (`RecordSaleBodyLinesItem`, `PreviewSaleBodyLinesItem`, …); the API checks
+    the totals, the library does not. The three line item types of
+    `record_sale`, `preview_sale` and `preview_earn` are separate classes with
+    the same keys, as the generator makes one class per place in the document.
+34. **The live suite never freezes a branch.** Freezing needs a password, which
+    a suite that runs on a key must not hold; `LOCATION_FROZEN` is tested
+    against the stub only (`tests/live/TODO.md`).

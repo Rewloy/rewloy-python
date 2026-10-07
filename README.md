@@ -288,6 +288,84 @@ for islem in rewloy.paginate("listPassOperations", path={"serial": seri}):
 eski), `before_issue` (kart o anda yoktu: `occurredAt` olmadan yeniden
 gönderin), `invalid`. Tanımadığınız bir `reason`'ı `invalid` gibi ele alın.
 
+### Fiş satırları, kazanım kuralları ve satır iadesi (API 1.3.0, kütüphane 0.3.0)
+
+`record_sale` isteğe bağlı `lines` (en çok 500) ve yalnız onunla
+`receiptDiscountMinor` alır. Programda **kazanım kuralı** varsa satırlar ürün
+gruplarına göre sınıflanır ve kurallar uygulanır; kuralı olmayan program ve
+satırsız satış bugünkü gibi kazanır (satırlar yalnız kaydedilir). Satırlı bir
+satışın yanıtı `earn` taşır: her satırın durumu (`earned`, `no_rule`…) ve payı,
+her kuralın ne yaptığı ve toplamın adım adım dökümü.
+
+```python
+# 1) Ürün grubu ve kural: "Sıcak içeceklerde her ürüne 1 damga"
+grup = rewloy.create_earn_group(body={
+    "name": "Sıcak içecek",
+    "members": [{"effect": "include", "match": "category", "value": "İçecek > Sıcak"}],
+})
+kurallar = rewloy.get_earn_rules(program_id)              # revision: okuduğunuz sürüm (hiç kaydedilmediyse 0)
+rewloy.put_earn_rules(program_id, body={                  # tamamı yazılır; aradan biri kaydettiyse 409 REVISION_CONFLICT
+    "revision": kurallar["revision"],
+    "rules": [{"kind": "stamp.perUnit", "groupId": grup["id"], "stamps": 1}],
+})
+
+# 2) Fiş kapanmadan önce: bu fiş ne kazandırır? (hiçbir şey yazmaz, Idempotency-Key istemez)
+satirlar = [
+    {"lineId": "1", "name": "Latte", "unitPriceMinor": 9000, "quantity": 2, "category": "İçecek > Sıcak"},
+    {"lineId": "2", "name": "Kek", "unitPriceMinor": 5000, "category": "Tatlı"},
+]
+onizleme = rewloy.preview_sale(seri, body={"locationId": sube_id, "amountMinor": 23000, "lines": satirlar})
+print(onizleme["credited"], onizleme["preview"])          # 2 True
+
+# 3) Yaz; yanıttaki earn "neden iki damga?" sorusunu yanıtlar
+satis = rewloy.record_sale(
+    seri,
+    body={"locationId": sube_id, "amountMinor": 23000, "reference": f"fis-{fis_no}", "lines": satirlar},
+    idempotency_key=anahtar,
+)
+for satir in satis["earn"]["lines"]:
+    print(satir["lineId"], satir["status"], satir["earned"])   # 1 earned 2 / 2 no_rule 0
+
+# 4) Satır iadesi: yalnız farkı geri alır. Idempotency-Key ister; kalan satırlar linesLeft'te
+iade = rewloy.reverse_sale(
+    seri,
+    body={"saleKey": anahtar, "lines": [{"lineId": "1", "quantity": 1}]},
+    idempotency_key=f"{anahtar}-iade1",
+)
+print(iade["reversed"], iade["linesLeft"])
+```
+
+`preview_earn(program_id, body={...})` aynı hesabı kart olmadan yapar; ayrıca
+kaydedilmemiş taslak kurallarla (`ruleSet`), bir şubenin kasa kampanyasıyla
+(`locationId`) ve bir anla (`occurredAt`) deneyebilirsiniz. Hatalar:
+`TOO_MANY_LINES`, `LINE_AMOUNT_INVALID`, `LINES_TOTAL_MISMATCH`,
+`LINE_NOT_FOUND`, `LINE_ALREADY_REFUNDED`, `GROUP_IN_USE`,
+`REVISION_CONFLICT`. Kasaların gönderdiği kategoriler `list_seen_lines`,
+hazır kural setleri `list_earn_templates` ile okunur.
+
+### Şube QR'ı, dondurma, kodlar (API 1.3.0)
+
+Her şubenin kalıcı bir QR'ı vardır (`sube["qr"]`: `code`, `url`, `state`).
+Herkese açık sayfası kimliksiz okunur, görüntüsü ve baskısı `bytes` döner:
+
+```python
+sayfa = Rewloy().public_branch(sube["qr"]["code"])            # kimlik gerekmez
+png = rewloy.location_qr_png(sube_id, query={"size": 1024})
+open("sube-qr.png", "wb").write(png)
+afis = rewloy.location_qr_sheet_pdf(sube_id)                  # A4 afiş, A6 masa standı, etiket
+liste = rewloy.get_location_qr_items(sube_id)                 # QR'da hangi kartlar, hangi sırayla
+rewloy.put_location_qr_items(sube_id, body={"version": liste["version"], "items": [...]})  # 409 QR_LIST_CHANGED
+```
+
+Bir şubeyi dondurmak (`freeze_location`) bir ekip oturumu ve kişinin şifresi
+ister; API anahtarı `403 CREDENTIAL_NOT_ALLOWED` alır. Donuk şubede yeni kasa
+işlemi `409 LOCATION_FROZEN` ile reddedilir, her şube donukken işletme
+duraklar (`BUSINESS_FROZEN`); önceki işlemlerin geri alınması çalışır. Dondurma
+geçmişi `list_location_freezes` ile okunur, bir şubeyi `unfreeze_location` açar.
+`update_batch` bir kodu sonradan düzenler, `copy_program` hediye kartı, kupon ya
+da indirim kartının değeri değişik bir kopyasını oluşturur (sadakat kartı
+`422 NOT_AN_INSTRUMENT`), `extend_program_cards` var olan kartların süresini uzatır.
+
 ### `Idempotency-Key`
 
 `record_sale`, `pass_action`, `send_campaign` ve `refund_shop_redemption` bir
@@ -384,6 +462,14 @@ rewloy.test_webhook(yeni["webhook"]["id"])   # webhook.test olayı gönderir
 
 Adres herkese açık bir `https` adresi olmalıdır (test ortamında da);
 yerelde bir tünel kullanın.
+
+**API 1.3.0 olayları.** `pass.extended` (kartın bitiş günü ileri alındı:
+`reason` `merchant` ya da `branch_frozen`, `from`, `to`; `PassExtendedData`),
+`location.frozen`, `location.unfrozen`, `business.paused` ve
+`business.resumed` (kart olayı değildir, `card` ve `customer_id` `None`;
+`BranchEvent`). Var olan webhook'lar bunları yalnız seçerlerse alır
+(`create_webhook(body={"events": [...]})`). `WebhookEvent` artık
+`PassEvent | BranchEvent | WebhookTestEvent`: `event["type"]`la ayırın.
 
 **Sırrı yenilemek.** Kaybolan ya da sızan bir sır için `rotate_webhook_secret`
 webhook'a yeni bir sır verir (yeni `secret` yalnız o yanıtta döner); webhook'u
@@ -700,8 +786,12 @@ REWLOY_BASE_URL=https://dev.ornek.com REWLOY_API_KEY=rwk_test_… REWLOY_STAFF_T
 - Kapsam: meta ve işletme, programlar (damga, hediye kartı), kart verme, kasa
   görünümü, `record_sale`, `pass_action`, işlem listesi, `reverse_sale` ve
   `reverse_action`, müşteri arama, kod grupları (`list_all_batches`, bağlantı
-  gönderme ret durumları), webhook'lar, `Idempotency-Key`, `RateLimit-*`, hata
-  nesneleri, sayfalama, ve en sonda test ortamını sıfırlama. Alanlara göre
+  gönderme ret durumları, `update_batch`), webhook'lar (1.3.0 olaylarına abonelik
+  dahil), `Idempotency-Key`, `RateLimit-*`, hata nesneleri, sayfalama, kazanım
+  kuralları (ürün grubu, kurallar, `preview_earn`, `preview_sale`, fiş satırlı
+  `record_sale` ve `earn` dökümü, satır iadesi), şube QR'ı (herkese açık sayfa,
+  QR görüntüleri ve baskı, QR listesi, dondurma reddi, `copy_program`) ve en
+  sonda test ortamını sıfırlama. Alanlara göre
   geçen/kalan özeti basılır; bir testin hata vermesi çıkış kodunu sıfırdan farklı yapar.
 - Testler oluşturduklarını kaldırır (webhook silinir, kod kapatılır, programlar
   sıfırlamadan sonra silinir); sıfırlama günde en çok 5 kez yapılabilir.
@@ -838,6 +928,33 @@ print(voided["undone"], voided["restored"], voided["balance"])   # 'spend', 2500
   receipt number alone (fiscal receipt numbers restart after the Z report) but
   register + Z number + receipt number, or a UUID stored with the sale. The
   receipt number goes in `reference`.
+- **Receipt lines and earn rules (API 1.3.0).** `record_sale` takes `lines`
+  (up to 500) and, with them, `receiptDiscountMinor`. A programme with **earn
+  rules** classifies the lines into product groups and applies the rules;
+  a programme without rules, and a sale without lines, earn as before. The
+  answer of a sale sent with lines carries `earn`: each line's `status` and
+  share, what each rule did and the total step by step. `preview_sale` returns
+  what `record_sale` would answer now (`preview: True`) and writes nothing;
+  `preview_earn` does the same without a card, also with unsaved draft rules
+  (`ruleSet`). Groups and rules: `create_earn_group`, `put_earn_rules` (send the
+  `revision` you read, or `409 REVISION_CONFLICT`), `get_earn_rules`,
+  `list_earn_templates`, `list_seen_lines`. `reverse_sale(serial, body={"saleKey": key, "lines": [{"lineId": "1", "quantity": 1}]}, idempotency_key=…)`
+  refunds some lines and takes back only the difference (needs an
+  `Idempotency-Key`; the answer has `linesLeft`); `LINE_NOT_FOUND` and
+  `LINE_ALREADY_REFUNDED` refuse. The Turkish section above has a worked example.
+- **Branch QR and freeze (API 1.3.0).** Every branch has a permanent QR
+  (`branch["qr"]`: `code`, `url`, `state`). `public_branch(code)` needs no
+  credential; `location_qr_svg`, `location_qr_png` (`query={"size": 1024}`),
+  `location_qr_sheet_pdf` and `location_qr_sheet_svg` return `bytes`;
+  `get_location_qr_items` / `put_location_qr_items` (with the `version` you read:
+  `409 QR_LIST_CHANGED`) manage what the QR offers. `freeze_location` needs a
+  team session and the person's password (a key gets
+  `403 CREDENTIAL_NOT_ALLOWED`); a frozen branch's till refuses new work with
+  `409 LOCATION_FROZEN`, and a business whose every branch is frozen with
+  `BUSINESS_FROZEN`. `update_batch` edits a code after it was made;
+  `copy_program` copies a gift card, coupon or discount card with another value
+  (a loyalty card: `422 NOT_AN_INSTRUMENT`); `extend_program_cards` extends the
+  existing cards.
 - **Base URL.** `Rewloy(api_key=key, base_url="https://staging.example.com")`
   or `base_url="https://staging.example.com/v1"`: with or without a trailing
   `/v1` (and trailing slashes), the client appends `/v1/...` itself. Default
@@ -917,6 +1034,14 @@ archived programme.
 archived) refuse it and no mail goes; before 1.2.0 the last three were sent
 anyway. The codes are in the `rewloy.types.ErrorCode` values.
 
+Also in Rewloy 1.3.0 (library 0.3.0): the events `pass.extended` (a card's end
+moved later: `reason` `merchant` or `branch_frozen`, `from`, `to`: read `data`
+as `PassExtendedData`), `location.frozen`, `location.unfrozen`,
+`business.paused` and `business.resumed` (not about a card: `card` and
+`customer_id` are `None`: `BranchEvent`). An existing webhook gets them only if
+it selects them. `WebhookEvent` is now `PassEvent | BranchEvent | WebhookTestEvent`,
+so narrow on `event["type"]` before reading `event["data"]["unit"]`.
+
 ### Errors, retries, deprecations
 
 - **Errors.** Failures raise `RewloyError` with `status`, `code` (the API's
@@ -949,8 +1074,11 @@ REWLOY_BASE_URL=https://dev.example.com REWLOY_API_KEY=rwk_test_… REWLOY_STAFF
 - **Safety:** the run first asks `GET /v1/meta` without credentials and stops with exit code 3 unless it says `"environment": "dev"`
   (another value or a missing field stops it). Only an `rwk_test_` key is accepted, and the first answer must carry `Rewloy-Mode: test`.
 - Covers: meta and business, programs (stamp, gift card), issuing, the till view, `record_sale`, `pass_action`, the operations
-  list, `reverse_sale` and `reverse_action`, customer search, batches (`list_all_batches`, `send_batch_link` refusals), webhooks,
-  `Idempotency-Key`, `RateLimit-*`, error objects, pagination, and last the test reset. A passed/failed summary per area is
+  list, `reverse_sale` and `reverse_action`, customer search, batches (`list_all_batches`, `update_batch`, `send_batch_link`
+  refusals), webhooks (also subscribing to the 1.3.0 events), `Idempotency-Key`, `RateLimit-*`, error objects, pagination,
+  earn rules (a product group, saved rules and a stale revision, `preview_earn`, `preview_sale`, `record_sale` with
+  receipt lines and its `earn` explanation, a line refund and its refusals), the branch QR (public page, QR images and
+  print sheet, the QR list, the freeze refusal for a key, `copy_program`), and last the test reset. A passed/failed summary per area is
   printed, and any failure makes the exit code non-zero.
 - It removes what it creates (webhooks deleted, codes closed, programs deleted after the reset); a business may reset five times a day.
 - Not covered yet: [tests/live/TODO.md](tests/live/TODO.md).
