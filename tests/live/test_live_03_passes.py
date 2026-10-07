@@ -12,7 +12,8 @@ def _issue(world: World, program: Dict[str, Any], tag: str, **extra: Any) -> Dic
     issued = world.client.issue_pass(body=body)
     assert issued["created"] is True
     assert issued["serial"]
-    assert issued["cardUrl"].startswith(world.base_url.rstrip("/"))
+    # the card link is on the customer-facing site host, not the API host (by design)
+    assert issued["cardUrl"].startswith("https://") and issued["serial"] in issued["cardUrl"]
     return dict(issued)
 
 

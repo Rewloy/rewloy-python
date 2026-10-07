@@ -1,8 +1,9 @@
 """Webhooks: create, list, rotate the secret, delete.
 
-A webhook to an https address that does not resolve publicly is accepted in a TEST business (it says so in the
-docs: test deliveries are tried and fail harmlessly); a live business would refuse it. Either outcome is
-documented, so this checks that the answer is one of the two and, when created, runs the whole life cycle.
+The address rule is the same in a test and a live business (docs/API.md, Webhooks): a public https address that
+resolves; anything else is 422 BAD_WEBHOOK_URL. Only a non-live installation (development, staging) is looser.
+So the tests use a resolvable host (example.com, a path unique to the run) and run the whole life cycle on every
+server; deliveries to it are tried and fail harmlessly. A refusal is a failure, not a skip.
 """
 from __future__ import annotations
 
@@ -12,7 +13,6 @@ from rewloy import RewloyError
 
 from .conftest import World
 
-URL = "https://hooks.live-test.invalid/rewloy"
 
 
 def test_event_catalogue(world: World) -> None:
@@ -22,12 +22,13 @@ def test_event_catalogue(world: World) -> None:
     assert {"pass.extended", "location.frozen", "location.unfrozen", "business.paused", "business.resumed"} <= names  # 1.3.0
 
 
-def test_unresolvable_https_url_is_created_or_refused_as_documented(world: World) -> None:
-    try:
-        created = world.client.create_webhook(body={"url": URL, "events": ["pass.issued", "pass.activity"]})
-    except RewloyError as err:
-        assert 400 <= err.status < 500 and err.code, "a refusal must be a 4xx with a code"
-        pytest.skip(f"this server refuses the address ({err.status} {err.code}); the life cycle below needs a created webhook")
+def _url(world: World) -> str:
+    return f"https://example.com/rewloy-live-tests/{world.run}"
+
+
+def test_create_webhook_to_a_resolvable_https_url(world: World) -> None:
+    URL = _url(world)
+    created = world.client.create_webhook(body={"url": URL, "events": ["pass.issued", "pass.activity"]})
     hook = created["webhook"]
     world.webhook_ids.append(hook["id"])
     world.state["webhook"] = hook
@@ -43,7 +44,7 @@ def test_list_and_get(world: World) -> None:
         pytest.skip("no webhook was created")
     hook = world.state["webhook"]
     assert hook["id"] in [w["id"] for w in world.client.list_webhooks()]
-    assert world.client.get_webhook(hook["id"])["url"] == URL
+    assert world.client.get_webhook(hook["id"])["url"] == _url(world)
 
 
 def test_rotate_secret(world: World) -> None:
@@ -59,7 +60,7 @@ def test_subscribe_to_the_1_3_0_events(world: World) -> None:
     if "webhook" not in world.state:
         pytest.skip("no webhook was created")
     events = ["pass.extended", "location.frozen", "location.unfrozen", "business.paused", "business.resumed"]
-    created = world.client.create_webhook(body={"url": URL + "/branches", "events": events})
+    created = world.client.create_webhook(body={"url": _url(world) + "/branches", "events": events})
     world.webhook_ids.append(created["webhook"]["id"])
     assert sorted(created["webhook"]["events"]) == sorted(events)
     assert world.client.delete_webhook(created["webhook"]["id"]) is None
