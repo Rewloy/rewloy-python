@@ -285,7 +285,7 @@ regeneration workflow (24).
     check, on Python 3.13, at 06:17 UTC (Node's runs at 05:23, PHP's at 05:41,
     .NET's at 05:59).
 
-## 0.3.0 (API 1.3.0)
+## 0.3.0 (API 1.3.2)
 
 32. **The webhook event types are split, not widened.** The 1.3.0 events that
     are not about a card (`location.frozen`, `location.unfrozen`,

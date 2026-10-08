@@ -7,8 +7,8 @@ This library's releases. The API's own changes are listed at the link above.
 
 ## 0.3.0 (2026-10-07)
 
-Rewloy API 1.3.0'ı izler (API sürümü, `info.version`): 298 işlem (0.2.4'te 260),
-hiçbiri kaldırılmadı. Kazanım kuralları (ürün grupları, kurallar, önizleme),
+Rewloy API 1.3.2'yi izler (API sürümü, `info.version`; çekirdek etiketi v1.3.2): 298 işlem
+(0.2.4'te 260), hiçbiri kaldırılmadı. Kazanım kuralları (ürün grupları, kurallar, önizleme),
 fiş satırlı satış ve satır iadesi, şube QR'ı (herkese açık sayfa, görüntü ve
 baskı, QR listesi), şube dondurma, kodu düzenleme, kartın kopyası ve kartları
 uzatma; yeni webhook olayları (`pass.extended`, `location.frozen`,
@@ -18,8 +18,11 @@ ve öbürleri); `NOT_AN_INSTRUMENT` artık `copyProgram`da da döner.
 Beş kütüphane 0.3.0'da aynı sürüme gelir. Ayrıca `pytest -m live` (README,
 "Canlı testler / Live tests") kütüphaneyi bir Rewloy DEV sunucusuna karşı çalıştırır.
 
-Follows Rewloy API 1.3.0 (the product version in `info.version`): 298
-operations (260 in 0.2.4), none removed, and 31 new error codes. All five client
+Follows Rewloy API 1.3.2 (the product version in `info.version`; core tag
+v1.3.2): 298 operations (260 in 0.2.4), none removed, and 37 new error codes
+(the six that 1.3.2 added to the document's enum, `DPA_DRAFT`, `SUMMARY_REQUIRED`,
+`PREVIEW_CHANGED`, `DAY_CHANGED`, `NOTHING_TO_SEND` and `NOTICE_TOO_LATE`, are
+console-only codes that `/v1` never returns). All five client
 libraries are 0.3.0.
 Additive: every 0.2.4 method keeps its name, its parameters and its meaning
 (new keyword arguments are optional). The one change that a type checker can

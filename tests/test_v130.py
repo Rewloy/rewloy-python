@@ -62,7 +62,7 @@ def handle(c: Ctx) -> None:
 
 
 def test_knows_the_1_3_0_operations() -> None:
-    assert API_VERSION == "1.3.0"
+    assert API_VERSION == "1.3.2"
     assert len(OPERATIONS) == 298
     for op in (
         "createEarnGroup", "listEarnGroups", "getEarnGroup", "updateEarnGroup", "deleteEarnGroup", "listEarnSources", "listSeenLines",

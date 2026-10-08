@@ -1,6 +1,6 @@
 # Live tests: not covered yet
 
-The library is 0.3.0 (API 1.3.0). What the live suite cannot test, or cannot reach:
+The library is 0.3.0 (API 1.3.2). What the live suite cannot test, or cannot reach:
 
 - **Branch freeze**: `freeze_location`, `update_location_freeze`, `cancel_location_freeze` need a team session **and the
   person's password**, which the suite does not have (a key gets `403 CREDENTIAL_NOT_ALLOWED`, which `test_live_14_branch_qr`
