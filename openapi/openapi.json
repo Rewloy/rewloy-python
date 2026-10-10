@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Rewloy API",
-    "version": "1.3.2",
+    "version": "1.3.13",
     "description": "Rewloy platformunun tamamı: panelde yapılabilen her şey burada da yapılabilir. Yanıtlar `{ \"data\": … }`, sayfalı listeler ek olarak `meta` taşır; hatalar `{ \"error\": { code, message, requestId, status, docs, details? } }`. Hata kodlarının tamamı: https://rewloy.com/gelistiriciler/hatalar\n\n**Sürüm:** `version` Rewloy'nun ürün sürümüdür (`GET /v1/meta` ve her yanıtın `Rewloy-Version` başlığı ile aynı). API'nin yolu `/v1`'dir ve ürünün sürümünden bağımsızdır: geriye uymayan bir değişiklik ancak `/v2` ile gelir.\n\n**İstek sınırı:** kimlikli her yanıt `RateLimit-Limit` (dakikalık sınır), `RateLimit-Remaining` (bu dakikada kalan) ve `RateLimit-Reset` (sınırın yenilenmesine kalan saniye) başlıklarını taşır; sınır aşılınca `429 RATE_LIMITED` ve `Retry-After`.",
     "contact": {
       "name": "Rewloy geliştiriciler",
@@ -13977,7 +13977,7 @@
           "Kimlik"
         ],
         "summary": "İşletme hesabı aç",
-        "description": "Yeni bir işletme ve sahibinin hesabını açar, deneme süresi başlar (kart bilgisi istenmez) ve hemen bir oturum döndürür. E-posta doğrulama bağlantısı gönderilir.\n- `termsAccepted: true`: kişi [kullanım koşullarını](https://rewloy.com/kosullar) okuyup kabul etti (sürüm: `2026-10d`). Formunuzda bunu açıkça sorun. [Gizlilik bildirimini](https://rewloy.com/gizlilik) formunuzda bağlantıyla gösterin; onu bir onay olarak sormayın.\n- Şifre en az 10 karakter. Bu e-postayla hesap varsa `ACCOUNT_EXISTS`: giriş yapın ya da şifreyi sıfırlayın.\n- İsteğe bağlı `program`: web'deki \"kartınızı tasarlayın\" akışının taslağı; hesapla aynı işlemde oluşur ve panelin kurallarıyla normalleştirilir (aralık dışı sayılar kırpılır). Alan alan denetim için hesabı açtıktan sonra `POST /v1/programs` kullanın.\n- IP başına saatte 5 hesap.\n\n**Kimlik:** kimlik gerekmez.",
+        "description": "Yeni bir işletme ve sahibinin hesabını açar, deneme süresi başlar (kart bilgisi istenmez) ve hemen bir oturum döndürür. E-posta doğrulama bağlantısı gönderilir.\n- `termsAccepted: true`: kişi [kullanım koşullarını](https://rewloy.com/kosullar) ve eki [veri işleme sözleşmesini](https://rewloy.com/veri-isleme-sozlesmesi) okuyup kabul etti (sürümler: koşullar `2026-10f`, sözleşme `2026-10c`). Formunuzda bunu, iki metnin bağlantısıyla açıkça sorun. [Gizlilik bildirimini](https://rewloy.com/gizlilik) formunuzda bağlantıyla gösterin; onu bir onay olarak sormayın.\n- Şifre en az 10 karakter. Bu e-postayla hesap varsa `ACCOUNT_EXISTS`: giriş yapın ya da şifreyi sıfırlayın.\n- İsteğe bağlı `program`: web'deki \"kartınızı tasarlayın\" akışının taslağı; hesapla aynı işlemde oluşur ve panelin kurallarıyla normalleştirilir (aralık dışı sayılar kırpılır). Alan alan denetim için hesabı açtıktan sonra `POST /v1/programs` kullanın.\n- IP başına saatte 5 hesap.\n\n**Kimlik:** kimlik gerekmez.",
         "x-credentials": [
           "public"
         ],
@@ -91786,6 +91786,64 @@
                             "maxLength": 16
                           },
                           "description": "Hesabın doğrulanmış numaraları (E.164): katılımda biri de seçilebilir"
+                        },
+                        "prefill": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "enum": [
+                                  "firstName",
+                                  "lastName",
+                                  "birthday",
+                                  "phone"
+                                ]
+                              },
+                              "value": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "maxLength": 60
+                              },
+                              "required": {
+                                "type": "boolean"
+                              },
+                              "missing": {
+                                "type": "boolean",
+                                "description": "Zorunlu ve hiçbir yerden değeri yok: ekranınız bunu boş sorar"
+                              },
+                              "from": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "record",
+                                  "profile",
+                                  "account",
+                                  null
+                                ],
+                                "description": "1.3.8: değerin kaynağı. `record`: bu işletmenin kaydı (bir kez gösterin, yeniden sormayın); `profile`: kişinin Bilgilerim'i; `account`: hesabın doğrulanmış numarası ya da Google veya Apple'ın verdiği ad. `profile` ve `account` değerleri işletmeye yalnız ekranınızda gönderilirse gider: zorunlu alanı dolu ve değiştirilebilir gösterin (\"<İşletme> bunu istiyor; kartı alırsanız paylaşılır\"), isteğe bağlı olanı varsayılan \"Paylaşma\" ile sorun. Değer yoksa `null`."
+                              },
+                              "verified": {
+                                "type": "boolean",
+                                "description": "1.3.8: telefon, hesabın doğrulanmış numaralarından biri (\"Doğrulandı\")"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "value",
+                              "required",
+                              "missing",
+                              "from",
+                              "verified"
+                            ]
+                          },
+                          "description": "Kartın sorduğu alanlar ve ekranın onları neyle doldurduğu. Paylaşılan cihazda değerler hiç gönderilmez (`null`)."
                         }
                       },
                       "required": [
@@ -91802,7 +91860,8 @@
                         "joined",
                         "card",
                         "emails",
-                        "phones"
+                        "phones",
+                        "prefill"
                       ]
                     }
                   }
@@ -92115,6 +92174,21 @@
                     "minLength": 6,
                     "pattern": "^[A-Za-z0-9]{6}$",
                     "description": "1.3.0: okutulan şube QR'ının kodu (`rewloy.com/s/{code}`). Yalnız kayıt şubesini söyler: kart QR'da sunuluyor ve o şubede geçerliyse yeni kartın ana şubesi o şube olur; değilse sessizce yok sayılır, kart yine verilir."
+                  },
+                  "saveToProfile": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "firstName",
+                        "lastName",
+                        "phone",
+                        "birthday"
+                      ]
+                    },
+                    "uniqueItems": true,
+                    "maxItems": 4,
+                    "description": "1.3.8: bu alanların gönderilen değerleri kartla birlikte kişinin Bilgilerim'ine yazılır (varsa üzerine; o alandaki seçim bekleyen farklı değerler kalkar). Numarayla katılımda `phone` o numaradır. Paylaşılan cihaz oturumunda yok sayılır. İşletme bu değerleri, formu kişi doldurmuş gibi, yalnız bu katılımda gönderdiğinizden alır."
                   }
                 },
                 "required": [
@@ -92151,12 +92225,26 @@
                         "created": {
                           "type": "boolean",
                           "description": "true: yeni kart verildi (adresle katılımda bağlantısı adrese de gitti); false: hesabın bu programda zaten kartı vardı, o kart döndü"
+                        },
+                        "savedToProfile": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "firstName",
+                              "lastName",
+                              "phone",
+                              "birthday"
+                            ]
+                          },
+                          "description": "1.3.8: Bilgilerim'e yazılan alanlar (`saveToProfile`); değişmeyen ya da paylaşılan cihazda `[]`"
                         }
                       },
                       "required": [
                         "serial",
                         "merchantSlug",
-                        "created"
+                        "created",
+                        "savedToProfile"
                       ]
                     }
                   }
@@ -92190,12 +92278,26 @@
                         "created": {
                           "type": "boolean",
                           "description": "true: yeni kart verildi (adresle katılımda bağlantısı adrese de gitti); false: hesabın bu programda zaten kartı vardı, o kart döndü"
+                        },
+                        "savedToProfile": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "firstName",
+                              "lastName",
+                              "phone",
+                              "birthday"
+                            ]
+                          },
+                          "description": "1.3.8: Bilgilerim'e yazılan alanlar (`saveToProfile`); değişmeyen ya da paylaşılan cihazda `[]`"
                         }
                       },
                       "required": [
                         "serial",
                         "merchantSlug",
-                        "created"
+                        "created",
+                        "savedToProfile"
                       ]
                     }
                   }
@@ -92605,6 +92707,21 @@
                     "minLength": 6,
                     "pattern": "^[A-Za-z0-9]{6}$",
                     "description": "1.3.0: okutulan şube QR'ının kodu (`rewloy.com/s/{code}`). Yalnız kayıt şubesini söyler: kart QR'da sunuluyor ve o şubede geçerliyse yeni kartın ana şubesi o şube olur; değilse sessizce yok sayılır, kart yine verilir."
+                  },
+                  "saveToProfile": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "firstName",
+                        "lastName",
+                        "phone",
+                        "birthday"
+                      ]
+                    },
+                    "uniqueItems": true,
+                    "maxItems": 4,
+                    "description": "1.3.8: bu alanların gönderilen değerleri kartla birlikte kişinin Bilgilerim'ine yazılır (varsa üzerine; o alandaki seçim bekleyen farklı değerler kalkar). Numarayla katılımda `phone` o numaradır. Paylaşılan cihaz oturumunda yok sayılır. İşletme bu değerleri, formu kişi doldurmuş gibi, yalnız bu katılımda gönderdiğinizden alır."
                   }
                 },
                 "required": [
@@ -92641,12 +92758,26 @@
                         "created": {
                           "type": "boolean",
                           "description": "true: yeni kart verildi; false: kişinin bu koddan alabileceği kartlar alınmıştı, son kartı döndü"
+                        },
+                        "savedToProfile": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "firstName",
+                              "lastName",
+                              "phone",
+                              "birthday"
+                            ]
+                          },
+                          "description": "1.3.8: Bilgilerim'e yazılan alanlar (`saveToProfile`); değişmeyen ya da paylaşılan cihazda `[]`"
                         }
                       },
                       "required": [
                         "serial",
                         "merchantSlug",
-                        "created"
+                        "created",
+                        "savedToProfile"
                       ]
                     }
                   }
@@ -92680,12 +92811,26 @@
                         "created": {
                           "type": "boolean",
                           "description": "true: yeni kart verildi; false: kişinin bu koddan alabileceği kartlar alınmıştı, son kartı döndü"
+                        },
+                        "savedToProfile": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "firstName",
+                              "lastName",
+                              "phone",
+                              "birthday"
+                            ]
+                          },
+                          "description": "1.3.8: Bilgilerim'e yazılan alanlar (`saveToProfile`); değişmeyen ya da paylaşılan cihazda `[]`"
                         }
                       },
                       "required": [
                         "serial",
                         "merchantSlug",
-                        "created"
+                        "created",
+                        "savedToProfile"
                       ]
                     }
                   }
@@ -100651,6 +100796,2292 @@
         ]
       }
     },
+    "/v1/holder/account/profile": {
+      "get": {
+        "operationId": "holderOwnProfile",
+        "tags": [
+          "Kart sahibi"
+        ],
+        "summary": "Bilgilerim (Rewloy Cüzdan)",
+        "description": "1.3.8. Kişinin Rewloy Cüzdan'daki kendi bilgileri: ad, soyad, telefon, doğum günü — yeni bir işletmede kart alırken formu doldurmak için. Sorumlusu Rewloy'dur. Bir işletmeye yalnız kişi o işletmeden kart alırken ve kendi seçimiyle gider: zorunlu sorulan alan formda dolu gelir ve kart alınırsa paylaşılır; isteğe bağlı olan, kişi \"Paylaş\" demedikçe paylaşılmaz. İşletme paylaşılan değeri formu kişi doldurmuş gibi alır; burada sonradan yapılan değişiklik işletmenin kaydını değiştirmez. Her işletmenin tuttuğu bilgiler ayrıdır: `GET /v1/holder/profiles`. Paylaşılan cihaz oturumunda `403 SHARED_DEVICE`.\n\n**Kimlik:** kart sahibi oturumu.",
+        "x-credentials": [
+          "holder"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Tamam.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "fields": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "firstName": {
+                              "type": [
+                                "object",
+                                "null"
+                              ],
+                              "additionalProperties": false,
+                              "properties": {
+                                "value": {
+                                  "type": "string",
+                                  "maxLength": 60
+                                },
+                                "source": {
+                                  "type": "string",
+                                  "enum": [
+                                    "join",
+                                    "edit",
+                                    "backfill",
+                                    "merge"
+                                  ],
+                                  "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "source",
+                                "updatedAt"
+                              ]
+                            },
+                            "lastName": {
+                              "type": [
+                                "object",
+                                "null"
+                              ],
+                              "additionalProperties": false,
+                              "properties": {
+                                "value": {
+                                  "type": "string",
+                                  "maxLength": 60
+                                },
+                                "source": {
+                                  "type": "string",
+                                  "enum": [
+                                    "join",
+                                    "edit",
+                                    "backfill",
+                                    "merge"
+                                  ],
+                                  "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "source",
+                                "updatedAt"
+                              ]
+                            },
+                            "phone": {
+                              "type": [
+                                "object",
+                                "null"
+                              ],
+                              "additionalProperties": false,
+                              "properties": {
+                                "value": {
+                                  "type": "string",
+                                  "maxLength": 60
+                                },
+                                "source": {
+                                  "type": "string",
+                                  "enum": [
+                                    "join",
+                                    "edit",
+                                    "backfill",
+                                    "merge"
+                                  ],
+                                  "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "source",
+                                "updatedAt"
+                              ]
+                            },
+                            "birthday": {
+                              "type": [
+                                "object",
+                                "null"
+                              ],
+                              "additionalProperties": false,
+                              "properties": {
+                                "value": {
+                                  "type": "string",
+                                  "maxLength": 60
+                                },
+                                "source": {
+                                  "type": "string",
+                                  "enum": [
+                                    "join",
+                                    "edit",
+                                    "backfill",
+                                    "merge"
+                                  ],
+                                  "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "source",
+                                "updatedAt"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "firstName",
+                            "lastName",
+                            "phone",
+                            "birthday"
+                          ]
+                        },
+                        "phoneVerified": {
+                          "type": "boolean",
+                          "description": "Kayıtlı telefon, hesabın şu anki doğrulanmış numaralarından biri (\"Doğrulandı\"); her istekte yeniden bakılır"
+                        },
+                        "conflicts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "field": {
+                                "type": "string",
+                                "enum": [
+                                  "firstName",
+                                  "lastName",
+                                  "phone",
+                                  "birthday"
+                                ]
+                              },
+                              "candidates": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "maxLength": 60
+                                },
+                                "minItems": 2,
+                                "maxItems": 10
+                              },
+                              "source": {
+                                "type": "string",
+                                "enum": [
+                                  "backfill",
+                                  "merge"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "field",
+                              "candidates",
+                              "source"
+                            ]
+                          },
+                          "description": "Kaynakları farklı olduğu için boş bırakılan alanlar ve seçenekleri: kişi birini seçer (`PUT …/conflicts/{field}`) ya da hiçbirini (`DELETE …/conflicts/{field}`). Seçenekler yalnız kişiye gösterilir."
+                        },
+                        "introDue": {
+                          "type": "boolean",
+                          "description": "İlk doldurmanın tek seferlik kartı gösterilmeli: \"Bilgileriniz kartlarınızdan dolduruldu\" (gösterince `DELETE /v1/holder/account/profile/intro`)"
+                        }
+                      },
+                      "required": [
+                        "fields",
+                        "phoneVerified",
+                        "conflicts",
+                        "introDue"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`VALIDATION` — Gönderilen bilgiler geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "VALIDATION": {
+                    "summary": "Gönderilen bilgiler geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "VALIDATION",
+                        "message": "Gönderilen bilgiler geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#VALIDATION"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`UNAUTHENTICATED` — Kimlik gerekli<br>`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "summary": "Kimlik gerekli",
+                    "value": {
+                      "error": {
+                        "code": "UNAUTHENTICATED",
+                        "message": "Kimlik gerekli",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#UNAUTHENTICATED"
+                      }
+                    }
+                  },
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`SHARED_DEVICE` — Paylaşılan cihazda Bilgilerim açılmaz<br>`FORBIDDEN` — Yetki yok<br>`CREDENTIAL_NOT_ALLOWED` — Bu kimlik türü bu uç noktayı kullanamaz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "SHARED_DEVICE": {
+                    "summary": "Paylaşılan cihazda Bilgilerim açılmaz",
+                    "value": {
+                      "error": {
+                        "code": "SHARED_DEVICE",
+                        "message": "Paylaşılan cihazda Bilgilerim açılmaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#SHARED_DEVICE"
+                      }
+                    }
+                  },
+                  "FORBIDDEN": {
+                    "summary": "Yetki yok",
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Yetki yok",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#FORBIDDEN"
+                      }
+                    }
+                  },
+                  "CREDENTIAL_NOT_ALLOWED": {
+                    "summary": "Bu kimlik türü bu uç noktayı kullanamaz",
+                    "value": {
+                      "error": {
+                        "code": "CREDENTIAL_NOT_ALLOWED",
+                        "message": "Bu kimlik türü bu uç noktayı kullanamaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#CREDENTIAL_NOT_ALLOWED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 410,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`RATE_LIMITED` — İstek sınırı aşıldı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "RATE_LIMITED": {
+                    "summary": "İstek sınırı aşıldı",
+                    "value": {
+                      "error": {
+                        "code": "RATE_LIMITED",
+                        "message": "İstek sınırı aşıldı",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 429,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#RATE_LIMITED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`INTERNAL` — Beklenmeyen hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "INTERNAL": {
+                    "summary": "Beklenmeyen hata",
+                    "value": {
+                      "error": {
+                        "code": "INTERNAL",
+                        "message": "Beklenmeyen hata",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 500,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#INTERNAL"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "holderSession": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "updateHolderOwnProfile",
+        "tags": [
+          "Kart sahibi"
+        ],
+        "summary": "Bilgilerimi değiştir",
+        "description": "1.3.8. Gönderilen her alan yazılır; `null` ya da `\"\"` alanı siler. Yazılan alanın seçim bekleyen farklı değerleri kalkar. `changed`: gerçekten değişen alanlar. İşletmelerdeki kayıtlar değişmez. Hesabın izine yalnız alan adları yazılır. Saatte 30 değişiklik (web ile ortak).\n\n**Kimlik:** kart sahibi oturumu.",
+        "x-credentials": [
+          "holder"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "firstName": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 80,
+                    "description": "Ad"
+                  },
+                  "lastName": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 80,
+                    "description": "Soyad"
+                  },
+                  "phone": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 40,
+                    "description": "Ülke koduyla ya da 0 ile başlayarak"
+                  },
+                  "birthday": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 20,
+                    "description": "YYYY-AA-GG"
+                  }
+                },
+                "minProperties": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tamam.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "changed": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "firstName",
+                              "lastName",
+                              "phone",
+                              "birthday"
+                            ]
+                          }
+                        },
+                        "profile": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "fields": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "firstName": {
+                                  "type": [
+                                    "object",
+                                    "null"
+                                  ],
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "value": {
+                                      "type": "string",
+                                      "maxLength": 60
+                                    },
+                                    "source": {
+                                      "type": "string",
+                                      "enum": [
+                                        "join",
+                                        "edit",
+                                        "backfill",
+                                        "merge"
+                                      ],
+                                      "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                    },
+                                    "updatedAt": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "source",
+                                    "updatedAt"
+                                  ]
+                                },
+                                "lastName": {
+                                  "type": [
+                                    "object",
+                                    "null"
+                                  ],
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "value": {
+                                      "type": "string",
+                                      "maxLength": 60
+                                    },
+                                    "source": {
+                                      "type": "string",
+                                      "enum": [
+                                        "join",
+                                        "edit",
+                                        "backfill",
+                                        "merge"
+                                      ],
+                                      "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                    },
+                                    "updatedAt": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "source",
+                                    "updatedAt"
+                                  ]
+                                },
+                                "phone": {
+                                  "type": [
+                                    "object",
+                                    "null"
+                                  ],
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "value": {
+                                      "type": "string",
+                                      "maxLength": 60
+                                    },
+                                    "source": {
+                                      "type": "string",
+                                      "enum": [
+                                        "join",
+                                        "edit",
+                                        "backfill",
+                                        "merge"
+                                      ],
+                                      "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                    },
+                                    "updatedAt": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "source",
+                                    "updatedAt"
+                                  ]
+                                },
+                                "birthday": {
+                                  "type": [
+                                    "object",
+                                    "null"
+                                  ],
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "value": {
+                                      "type": "string",
+                                      "maxLength": 60
+                                    },
+                                    "source": {
+                                      "type": "string",
+                                      "enum": [
+                                        "join",
+                                        "edit",
+                                        "backfill",
+                                        "merge"
+                                      ],
+                                      "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                    },
+                                    "updatedAt": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "source",
+                                    "updatedAt"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "firstName",
+                                "lastName",
+                                "phone",
+                                "birthday"
+                              ]
+                            },
+                            "phoneVerified": {
+                              "type": "boolean",
+                              "description": "Kayıtlı telefon, hesabın şu anki doğrulanmış numaralarından biri (\"Doğrulandı\"); her istekte yeniden bakılır"
+                            },
+                            "conflicts": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "field": {
+                                    "type": "string",
+                                    "enum": [
+                                      "firstName",
+                                      "lastName",
+                                      "phone",
+                                      "birthday"
+                                    ]
+                                  },
+                                  "candidates": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "maxLength": 60
+                                    },
+                                    "minItems": 2,
+                                    "maxItems": 10
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "enum": [
+                                      "backfill",
+                                      "merge"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "field",
+                                  "candidates",
+                                  "source"
+                                ]
+                              },
+                              "description": "Kaynakları farklı olduğu için boş bırakılan alanlar ve seçenekleri: kişi birini seçer (`PUT …/conflicts/{field}`) ya da hiçbirini (`DELETE …/conflicts/{field}`). Seçenekler yalnız kişiye gösterilir."
+                            },
+                            "introDue": {
+                              "type": "boolean",
+                              "description": "İlk doldurmanın tek seferlik kartı gösterilmeli: \"Bilgileriniz kartlarınızdan dolduruldu\" (gösterince `DELETE /v1/holder/account/profile/intro`)"
+                            }
+                          },
+                          "required": [
+                            "fields",
+                            "phoneVerified",
+                            "conflicts",
+                            "introDue"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "changed",
+                        "profile"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`INVALID_PHONE` — Telefon geçersiz<br>`INVALID_BIRTHDAY` — Doğum tarihi geçersiz<br>`VALIDATION` — Gönderilen bilgiler geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "INVALID_PHONE": {
+                    "summary": "Telefon geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "INVALID_PHONE",
+                        "message": "Telefon geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#INVALID_PHONE"
+                      }
+                    }
+                  },
+                  "INVALID_BIRTHDAY": {
+                    "summary": "Doğum tarihi geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "INVALID_BIRTHDAY",
+                        "message": "Doğum tarihi geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#INVALID_BIRTHDAY"
+                      }
+                    }
+                  },
+                  "VALIDATION": {
+                    "summary": "Gönderilen bilgiler geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "VALIDATION",
+                        "message": "Gönderilen bilgiler geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#VALIDATION"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`UNAUTHENTICATED` — Kimlik gerekli<br>`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "summary": "Kimlik gerekli",
+                    "value": {
+                      "error": {
+                        "code": "UNAUTHENTICATED",
+                        "message": "Kimlik gerekli",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#UNAUTHENTICATED"
+                      }
+                    }
+                  },
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`SHARED_DEVICE` — Paylaşılan cihazda Bilgilerim açılmaz<br>`FORBIDDEN` — Yetki yok<br>`CREDENTIAL_NOT_ALLOWED` — Bu kimlik türü bu uç noktayı kullanamaz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "SHARED_DEVICE": {
+                    "summary": "Paylaşılan cihazda Bilgilerim açılmaz",
+                    "value": {
+                      "error": {
+                        "code": "SHARED_DEVICE",
+                        "message": "Paylaşılan cihazda Bilgilerim açılmaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#SHARED_DEVICE"
+                      }
+                    }
+                  },
+                  "FORBIDDEN": {
+                    "summary": "Yetki yok",
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Yetki yok",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#FORBIDDEN"
+                      }
+                    }
+                  },
+                  "CREDENTIAL_NOT_ALLOWED": {
+                    "summary": "Bu kimlik türü bu uç noktayı kullanamaz",
+                    "value": {
+                      "error": {
+                        "code": "CREDENTIAL_NOT_ALLOWED",
+                        "message": "Bu kimlik türü bu uç noktayı kullanamaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#CREDENTIAL_NOT_ALLOWED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 410,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`RATE_LIMITED` — İstek sınırı aşıldı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "RATE_LIMITED": {
+                    "summary": "İstek sınırı aşıldı",
+                    "value": {
+                      "error": {
+                        "code": "RATE_LIMITED",
+                        "message": "İstek sınırı aşıldı",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 429,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#RATE_LIMITED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`INTERNAL` — Beklenmeyen hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "INTERNAL": {
+                    "summary": "Beklenmeyen hata",
+                    "value": {
+                      "error": {
+                        "code": "INTERNAL",
+                        "message": "Beklenmeyen hata",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 500,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#INTERNAL"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "holderSession": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteHolderOwnProfile",
+        "tags": [
+          "Kart sahibi"
+        ],
+        "summary": "Bilgilerimin hepsini sil",
+        "description": "1.3.8. Bütün alanlar ve seçim bekleyen değerler hemen silinir; işletmelerdeki kayıtlar ve kartlar değişmez. `?confirm=true` ister.\n\n**Kimlik:** kart sahibi oturumu.",
+        "x-credentials": [
+          "holder"
+        ],
+        "parameters": [
+          {
+            "name": "confirm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "`true`: silmeyi onaylayın"
+            },
+            "description": "`true`: silmeyi onaylayın"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Tamam — gövde yok."
+          },
+          "400": {
+            "description": "`CONFIRM_REQUIRED` — Onay gerekli<br>`VALIDATION` — Gönderilen bilgiler geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "CONFIRM_REQUIRED": {
+                    "summary": "Onay gerekli",
+                    "value": {
+                      "error": {
+                        "code": "CONFIRM_REQUIRED",
+                        "message": "Onay gerekli",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#CONFIRM_REQUIRED"
+                      }
+                    }
+                  },
+                  "VALIDATION": {
+                    "summary": "Gönderilen bilgiler geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "VALIDATION",
+                        "message": "Gönderilen bilgiler geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#VALIDATION"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`UNAUTHENTICATED` — Kimlik gerekli<br>`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "summary": "Kimlik gerekli",
+                    "value": {
+                      "error": {
+                        "code": "UNAUTHENTICATED",
+                        "message": "Kimlik gerekli",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#UNAUTHENTICATED"
+                      }
+                    }
+                  },
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`SHARED_DEVICE` — Paylaşılan cihazda Bilgilerim açılmaz<br>`FORBIDDEN` — Yetki yok<br>`CREDENTIAL_NOT_ALLOWED` — Bu kimlik türü bu uç noktayı kullanamaz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "SHARED_DEVICE": {
+                    "summary": "Paylaşılan cihazda Bilgilerim açılmaz",
+                    "value": {
+                      "error": {
+                        "code": "SHARED_DEVICE",
+                        "message": "Paylaşılan cihazda Bilgilerim açılmaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#SHARED_DEVICE"
+                      }
+                    }
+                  },
+                  "FORBIDDEN": {
+                    "summary": "Yetki yok",
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Yetki yok",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#FORBIDDEN"
+                      }
+                    }
+                  },
+                  "CREDENTIAL_NOT_ALLOWED": {
+                    "summary": "Bu kimlik türü bu uç noktayı kullanamaz",
+                    "value": {
+                      "error": {
+                        "code": "CREDENTIAL_NOT_ALLOWED",
+                        "message": "Bu kimlik türü bu uç noktayı kullanamaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#CREDENTIAL_NOT_ALLOWED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 410,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`RATE_LIMITED` — İstek sınırı aşıldı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "RATE_LIMITED": {
+                    "summary": "İstek sınırı aşıldı",
+                    "value": {
+                      "error": {
+                        "code": "RATE_LIMITED",
+                        "message": "İstek sınırı aşıldı",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 429,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#RATE_LIMITED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`INTERNAL` — Beklenmeyen hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "INTERNAL": {
+                    "summary": "Beklenmeyen hata",
+                    "value": {
+                      "error": {
+                        "code": "INTERNAL",
+                        "message": "Beklenmeyen hata",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 500,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#INTERNAL"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "holderSession": []
+          }
+        ]
+      }
+    },
+    "/v1/holder/account/profile/{field}": {
+      "delete": {
+        "operationId": "deleteHolderOwnProfileField",
+        "tags": [
+          "Kart sahibi"
+        ],
+        "summary": "Bilgilerimden bir alanı sil",
+        "description": "1.3.8. Alanın değeri hemen silinir (seçim bekleyen farklı değerleri kalır). Alan yoksa da `204`. Bilinmeyen alan `400 VALIDATION`.\n\n**Kimlik:** kart sahibi oturumu.",
+        "x-credentials": [
+          "holder"
+        ],
+        "parameters": [
+          {
+            "name": "field",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "firstName",
+                "lastName",
+                "phone",
+                "birthday"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Tamam — gövde yok."
+          },
+          "400": {
+            "description": "`VALIDATION` — Gönderilen bilgiler geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "VALIDATION": {
+                    "summary": "Gönderilen bilgiler geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "VALIDATION",
+                        "message": "Gönderilen bilgiler geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#VALIDATION"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`UNAUTHENTICATED` — Kimlik gerekli<br>`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "summary": "Kimlik gerekli",
+                    "value": {
+                      "error": {
+                        "code": "UNAUTHENTICATED",
+                        "message": "Kimlik gerekli",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#UNAUTHENTICATED"
+                      }
+                    }
+                  },
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`SHARED_DEVICE` — Paylaşılan cihazda Bilgilerim açılmaz<br>`FORBIDDEN` — Yetki yok<br>`CREDENTIAL_NOT_ALLOWED` — Bu kimlik türü bu uç noktayı kullanamaz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "SHARED_DEVICE": {
+                    "summary": "Paylaşılan cihazda Bilgilerim açılmaz",
+                    "value": {
+                      "error": {
+                        "code": "SHARED_DEVICE",
+                        "message": "Paylaşılan cihazda Bilgilerim açılmaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#SHARED_DEVICE"
+                      }
+                    }
+                  },
+                  "FORBIDDEN": {
+                    "summary": "Yetki yok",
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Yetki yok",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#FORBIDDEN"
+                      }
+                    }
+                  },
+                  "CREDENTIAL_NOT_ALLOWED": {
+                    "summary": "Bu kimlik türü bu uç noktayı kullanamaz",
+                    "value": {
+                      "error": {
+                        "code": "CREDENTIAL_NOT_ALLOWED",
+                        "message": "Bu kimlik türü bu uç noktayı kullanamaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#CREDENTIAL_NOT_ALLOWED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 410,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`RATE_LIMITED` — İstek sınırı aşıldı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "RATE_LIMITED": {
+                    "summary": "İstek sınırı aşıldı",
+                    "value": {
+                      "error": {
+                        "code": "RATE_LIMITED",
+                        "message": "İstek sınırı aşıldı",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 429,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#RATE_LIMITED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`INTERNAL` — Beklenmeyen hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "INTERNAL": {
+                    "summary": "Beklenmeyen hata",
+                    "value": {
+                      "error": {
+                        "code": "INTERNAL",
+                        "message": "Beklenmeyen hata",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 500,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#INTERNAL"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "holderSession": []
+          }
+        ]
+      }
+    },
+    "/v1/holder/account/profile/conflicts/{field}": {
+      "put": {
+        "operationId": "chooseHolderProfileConflict",
+        "tags": [
+          "Kart sahibi"
+        ],
+        "summary": "Farklı değerlerden birini seç",
+        "description": "1.3.8. Seçim bekleyen alanın seçeneklerinden biri (`value`, `conflicts[].candidates` içinden, aynen) alanın değeri olur; seçenekler silinir. Seçeneklerden biri değilse `400 VALIDATION`; alanda seçim beklemiyorsa `404 CONFLICT_NOT_FOUND`.\n\n**Kimlik:** kart sahibi oturumu.",
+        "x-credentials": [
+          "holder"
+        ],
+        "parameters": [
+          {
+            "name": "field",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "firstName",
+                "lastName",
+                "phone",
+                "birthday"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "value": {
+                    "type": "string",
+                    "maxLength": 60
+                  }
+                },
+                "required": [
+                  "value"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tamam.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "fields": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "firstName": {
+                              "type": [
+                                "object",
+                                "null"
+                              ],
+                              "additionalProperties": false,
+                              "properties": {
+                                "value": {
+                                  "type": "string",
+                                  "maxLength": 60
+                                },
+                                "source": {
+                                  "type": "string",
+                                  "enum": [
+                                    "join",
+                                    "edit",
+                                    "backfill",
+                                    "merge"
+                                  ],
+                                  "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "source",
+                                "updatedAt"
+                              ]
+                            },
+                            "lastName": {
+                              "type": [
+                                "object",
+                                "null"
+                              ],
+                              "additionalProperties": false,
+                              "properties": {
+                                "value": {
+                                  "type": "string",
+                                  "maxLength": 60
+                                },
+                                "source": {
+                                  "type": "string",
+                                  "enum": [
+                                    "join",
+                                    "edit",
+                                    "backfill",
+                                    "merge"
+                                  ],
+                                  "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "source",
+                                "updatedAt"
+                              ]
+                            },
+                            "phone": {
+                              "type": [
+                                "object",
+                                "null"
+                              ],
+                              "additionalProperties": false,
+                              "properties": {
+                                "value": {
+                                  "type": "string",
+                                  "maxLength": 60
+                                },
+                                "source": {
+                                  "type": "string",
+                                  "enum": [
+                                    "join",
+                                    "edit",
+                                    "backfill",
+                                    "merge"
+                                  ],
+                                  "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "source",
+                                "updatedAt"
+                              ]
+                            },
+                            "birthday": {
+                              "type": [
+                                "object",
+                                "null"
+                              ],
+                              "additionalProperties": false,
+                              "properties": {
+                                "value": {
+                                  "type": "string",
+                                  "maxLength": 60
+                                },
+                                "source": {
+                                  "type": "string",
+                                  "enum": [
+                                    "join",
+                                    "edit",
+                                    "backfill",
+                                    "merge"
+                                  ],
+                                  "description": "`join`: bir katılım formunda kaydedildi; `edit`: kişi yazdı ya da seçti; `backfill`: işletmelerdeki kendi kayıtlarından bir kez dolduruldu; `merge`: iki hesabın birleşmesinden geldi"
+                                },
+                                "updatedAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "source",
+                                "updatedAt"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "firstName",
+                            "lastName",
+                            "phone",
+                            "birthday"
+                          ]
+                        },
+                        "phoneVerified": {
+                          "type": "boolean",
+                          "description": "Kayıtlı telefon, hesabın şu anki doğrulanmış numaralarından biri (\"Doğrulandı\"); her istekte yeniden bakılır"
+                        },
+                        "conflicts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "field": {
+                                "type": "string",
+                                "enum": [
+                                  "firstName",
+                                  "lastName",
+                                  "phone",
+                                  "birthday"
+                                ]
+                              },
+                              "candidates": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "maxLength": 60
+                                },
+                                "minItems": 2,
+                                "maxItems": 10
+                              },
+                              "source": {
+                                "type": "string",
+                                "enum": [
+                                  "backfill",
+                                  "merge"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "field",
+                              "candidates",
+                              "source"
+                            ]
+                          },
+                          "description": "Kaynakları farklı olduğu için boş bırakılan alanlar ve seçenekleri: kişi birini seçer (`PUT …/conflicts/{field}`) ya da hiçbirini (`DELETE …/conflicts/{field}`). Seçenekler yalnız kişiye gösterilir."
+                        },
+                        "introDue": {
+                          "type": "boolean",
+                          "description": "İlk doldurmanın tek seferlik kartı gösterilmeli: \"Bilgileriniz kartlarınızdan dolduruldu\" (gösterince `DELETE /v1/holder/account/profile/intro`)"
+                        }
+                      },
+                      "required": [
+                        "fields",
+                        "phoneVerified",
+                        "conflicts",
+                        "introDue"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`VALIDATION` — Gönderilen bilgiler geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "VALIDATION": {
+                    "summary": "Gönderilen bilgiler geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "VALIDATION",
+                        "message": "Gönderilen bilgiler geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#VALIDATION"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`UNAUTHENTICATED` — Kimlik gerekli<br>`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "summary": "Kimlik gerekli",
+                    "value": {
+                      "error": {
+                        "code": "UNAUTHENTICATED",
+                        "message": "Kimlik gerekli",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#UNAUTHENTICATED"
+                      }
+                    }
+                  },
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`SHARED_DEVICE` — Paylaşılan cihazda Bilgilerim açılmaz<br>`FORBIDDEN` — Yetki yok<br>`CREDENTIAL_NOT_ALLOWED` — Bu kimlik türü bu uç noktayı kullanamaz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "SHARED_DEVICE": {
+                    "summary": "Paylaşılan cihazda Bilgilerim açılmaz",
+                    "value": {
+                      "error": {
+                        "code": "SHARED_DEVICE",
+                        "message": "Paylaşılan cihazda Bilgilerim açılmaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#SHARED_DEVICE"
+                      }
+                    }
+                  },
+                  "FORBIDDEN": {
+                    "summary": "Yetki yok",
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Yetki yok",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#FORBIDDEN"
+                      }
+                    }
+                  },
+                  "CREDENTIAL_NOT_ALLOWED": {
+                    "summary": "Bu kimlik türü bu uç noktayı kullanamaz",
+                    "value": {
+                      "error": {
+                        "code": "CREDENTIAL_NOT_ALLOWED",
+                        "message": "Bu kimlik türü bu uç noktayı kullanamaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#CREDENTIAL_NOT_ALLOWED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`CONFLICT_NOT_FOUND` — Bu alanda seçim beklemiyor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "CONFLICT_NOT_FOUND": {
+                    "summary": "Bu alanda seçim beklemiyor",
+                    "value": {
+                      "error": {
+                        "code": "CONFLICT_NOT_FOUND",
+                        "message": "Bu alanda seçim beklemiyor",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 404,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#CONFLICT_NOT_FOUND"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 410,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`RATE_LIMITED` — İstek sınırı aşıldı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "RATE_LIMITED": {
+                    "summary": "İstek sınırı aşıldı",
+                    "value": {
+                      "error": {
+                        "code": "RATE_LIMITED",
+                        "message": "İstek sınırı aşıldı",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 429,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#RATE_LIMITED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`INTERNAL` — Beklenmeyen hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "INTERNAL": {
+                    "summary": "Beklenmeyen hata",
+                    "value": {
+                      "error": {
+                        "code": "INTERNAL",
+                        "message": "Beklenmeyen hata",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 500,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#INTERNAL"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "holderSession": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "dismissHolderProfileConflict",
+        "tags": [
+          "Kart sahibi"
+        ],
+        "summary": "Farklı değerlerin hiçbirini seçme",
+        "description": "1.3.8. \"Hiçbiri, boş kalsın\": seçenekler silinir, alan boş kalır. Alanda seçim beklemiyorsa `404 CONFLICT_NOT_FOUND`.\n\n**Kimlik:** kart sahibi oturumu.",
+        "x-credentials": [
+          "holder"
+        ],
+        "parameters": [
+          {
+            "name": "field",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "firstName",
+                "lastName",
+                "phone",
+                "birthday"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Tamam — gövde yok."
+          },
+          "400": {
+            "description": "`VALIDATION` — Gönderilen bilgiler geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "VALIDATION": {
+                    "summary": "Gönderilen bilgiler geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "VALIDATION",
+                        "message": "Gönderilen bilgiler geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#VALIDATION"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`UNAUTHENTICATED` — Kimlik gerekli<br>`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "summary": "Kimlik gerekli",
+                    "value": {
+                      "error": {
+                        "code": "UNAUTHENTICATED",
+                        "message": "Kimlik gerekli",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#UNAUTHENTICATED"
+                      }
+                    }
+                  },
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`SHARED_DEVICE` — Paylaşılan cihazda Bilgilerim açılmaz<br>`FORBIDDEN` — Yetki yok<br>`CREDENTIAL_NOT_ALLOWED` — Bu kimlik türü bu uç noktayı kullanamaz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "SHARED_DEVICE": {
+                    "summary": "Paylaşılan cihazda Bilgilerim açılmaz",
+                    "value": {
+                      "error": {
+                        "code": "SHARED_DEVICE",
+                        "message": "Paylaşılan cihazda Bilgilerim açılmaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#SHARED_DEVICE"
+                      }
+                    }
+                  },
+                  "FORBIDDEN": {
+                    "summary": "Yetki yok",
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Yetki yok",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#FORBIDDEN"
+                      }
+                    }
+                  },
+                  "CREDENTIAL_NOT_ALLOWED": {
+                    "summary": "Bu kimlik türü bu uç noktayı kullanamaz",
+                    "value": {
+                      "error": {
+                        "code": "CREDENTIAL_NOT_ALLOWED",
+                        "message": "Bu kimlik türü bu uç noktayı kullanamaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#CREDENTIAL_NOT_ALLOWED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`CONFLICT_NOT_FOUND` — Bu alanda seçim beklemiyor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "CONFLICT_NOT_FOUND": {
+                    "summary": "Bu alanda seçim beklemiyor",
+                    "value": {
+                      "error": {
+                        "code": "CONFLICT_NOT_FOUND",
+                        "message": "Bu alanda seçim beklemiyor",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 404,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#CONFLICT_NOT_FOUND"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 410,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`RATE_LIMITED` — İstek sınırı aşıldı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "RATE_LIMITED": {
+                    "summary": "İstek sınırı aşıldı",
+                    "value": {
+                      "error": {
+                        "code": "RATE_LIMITED",
+                        "message": "İstek sınırı aşıldı",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 429,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#RATE_LIMITED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`INTERNAL` — Beklenmeyen hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "INTERNAL": {
+                    "summary": "Beklenmeyen hata",
+                    "value": {
+                      "error": {
+                        "code": "INTERNAL",
+                        "message": "Beklenmeyen hata",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 500,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#INTERNAL"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "holderSession": []
+          }
+        ]
+      }
+    },
+    "/v1/holder/account/profile/intro": {
+      "delete": {
+        "operationId": "dismissHolderProfileIntro",
+        "tags": [
+          "Kart sahibi"
+        ],
+        "summary": "İlk doldurma kartı görüldü",
+        "description": "1.3.8. \"Bilgileriniz kartlarınızdan dolduruldu\" kartı gösterildi: `introDue` bundan sonra `false`.\n\n**Kimlik:** kart sahibi oturumu.",
+        "x-credentials": [
+          "holder"
+        ],
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Tamam — gövde yok."
+          },
+          "400": {
+            "description": "`VALIDATION` — Gönderilen bilgiler geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "VALIDATION": {
+                    "summary": "Gönderilen bilgiler geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "VALIDATION",
+                        "message": "Gönderilen bilgiler geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 400,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#VALIDATION"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`UNAUTHENTICATED` — Kimlik gerekli<br>`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "summary": "Kimlik gerekli",
+                    "value": {
+                      "error": {
+                        "code": "UNAUTHENTICATED",
+                        "message": "Kimlik gerekli",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#UNAUTHENTICATED"
+                      }
+                    }
+                  },
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 401,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`SHARED_DEVICE` — Paylaşılan cihazda Bilgilerim açılmaz<br>`FORBIDDEN` — Yetki yok<br>`CREDENTIAL_NOT_ALLOWED` — Bu kimlik türü bu uç noktayı kullanamaz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "SHARED_DEVICE": {
+                    "summary": "Paylaşılan cihazda Bilgilerim açılmaz",
+                    "value": {
+                      "error": {
+                        "code": "SHARED_DEVICE",
+                        "message": "Paylaşılan cihazda Bilgilerim açılmaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#SHARED_DEVICE"
+                      }
+                    }
+                  },
+                  "FORBIDDEN": {
+                    "summary": "Yetki yok",
+                    "value": {
+                      "error": {
+                        "code": "FORBIDDEN",
+                        "message": "Yetki yok",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#FORBIDDEN"
+                      }
+                    }
+                  },
+                  "CREDENTIAL_NOT_ALLOWED": {
+                    "summary": "Bu kimlik türü bu uç noktayı kullanamaz",
+                    "value": {
+                      "error": {
+                        "code": "CREDENTIAL_NOT_ALLOWED",
+                        "message": "Bu kimlik türü bu uç noktayı kullanamaz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 403,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#CREDENTIAL_NOT_ALLOWED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "`TOKEN_INVALID` — Oturum ya da bağlantı geçersiz",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "TOKEN_INVALID": {
+                    "summary": "Oturum ya da bağlantı geçersiz",
+                    "value": {
+                      "error": {
+                        "code": "TOKEN_INVALID",
+                        "message": "Oturum ya da bağlantı geçersiz",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 410,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#TOKEN_INVALID"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`RATE_LIMITED` — İstek sınırı aşıldı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "RATE_LIMITED": {
+                    "summary": "İstek sınırı aşıldı",
+                    "value": {
+                      "error": {
+                        "code": "RATE_LIMITED",
+                        "message": "İstek sınırı aşıldı",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 429,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#RATE_LIMITED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`INTERNAL` — Beklenmeyen hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "INTERNAL": {
+                    "summary": "Beklenmeyen hata",
+                    "value": {
+                      "error": {
+                        "code": "INTERNAL",
+                        "message": "Beklenmeyen hata",
+                        "requestId": "0192f7c1-8b2e-7a31-9c1d-2e4f5a6b7c8d",
+                        "status": 500,
+                        "docs": "https://rewloy.com/gelistiriciler/hatalar#INTERNAL"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "holderSession": []
+          }
+        ]
+      }
+    },
     "/v1/holder/consents": {
       "get": {
         "operationId": "holderConsents",
@@ -100929,7 +103360,7 @@
                         },
                         "account": {
                           "type": "object",
-                          "description": "Rewloy Cüzdan hesabı: createdAt, lastSeenAt, flaggedAt (hesap işaretlendiyse ne zaman: bir değişiklik ya da kurtarma talebi \"Bu değişikliği ben yapmadım\" ile iptal edildi ya da ekip işaretledi), emails, phones (doğrulanmış numaralar: phone, provenAt, lastProvenAt), passkeys, signIns, devices (her biri keySetAt ve lastRenewedAt ile: cihaz anahtarı, web), cardsAddedByLink, favorites (serial, business, program, position, starredAt), hiddenCards (listeden kaldırılan kartlar: serial, business, program, hiddenAt), identityChanges (giriş yolu değişiklikleri: kind, from ve to — maskeli —, state, requestedAt, dueAt, settledAt), recoveryRequests (hesap için açılan kurtarma talepleri: number, oldIdentifier ve newIdentifier — maskeli —, state, requestedAt, dueAt, appliedAt, cancelledAt), trail; bildirimler açıkken ya da kayıtları dururken notifications (transactionNotifications, devices: cihaz, platform — web, apns ya da fcm —, servis, ne zamandan beri, son kabul; sent: tür, işletme, kart, başlık, metin, zaman, her cihazın platformu ve sonucu; bildirim adresleri, anahtarlar ve belirteçler yazılmaz)"
+                          "description": "Rewloy Cüzdan hesabı: profile ve profileConflicts (1.3.8, Bilgilerim: her alanın değeri, kaynağı ve değişme zamanı; seçim bekleyen değerler), createdAt, lastSeenAt, flaggedAt (hesap işaretlendiyse ne zaman: bir değişiklik ya da kurtarma talebi \"Bu değişikliği ben yapmadım\" ile iptal edildi ya da ekip işaretledi), emails, phones (doğrulanmış numaralar: phone, provenAt, lastProvenAt), passkeys, signIns, devices (her biri keySetAt ve lastRenewedAt ile: cihaz anahtarı, web), cardsAddedByLink, favorites (serial, business, program, position, starredAt), hiddenCards (listeden kaldırılan kartlar: serial, business, program, hiddenAt), identityChanges (giriş yolu değişiklikleri: kind, from ve to — maskeli —, state, requestedAt, dueAt, settledAt), recoveryRequests (hesap için açılan kurtarma talepleri: number, oldIdentifier ve newIdentifier — maskeli —, state, requestedAt, dueAt, appliedAt, cancelledAt), trail; bildirimler açıkken ya da kayıtları dururken notifications (transactionNotifications, devices: cihaz, platform — web, apns ya da fcm —, servis, ne zamandan beri, son kabul; sent: tür, işletme, kart, başlık, metin, zaman, her cihazın platformu ve sonucu; bildirim adresleri, anahtarlar ve belirteçler yazılmaz)"
                         },
                         "addresses": {
                           "type": "array",
@@ -104897,17 +107328,36 @@
                                   },
                                   "missing": {
                                     "type": "boolean",
-                                    "description": "Zorunlu ve işletmenin kaydında yanıtı yok: ekranınız yalnız bunu sorar"
+                                    "description": "Zorunlu ve hiçbir yerden değeri yok: ekranınız bunu boş sorar"
+                                  },
+                                  "from": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ],
+                                    "enum": [
+                                      "record",
+                                      "profile",
+                                      "account",
+                                      null
+                                    ],
+                                    "description": "1.3.8: değerin kaynağı. `record`: bu işletmenin kaydı (bir kez gösterin, yeniden sormayın); `profile`: kişinin Bilgilerim'i; `account`: hesabın doğrulanmış numarası ya da Google veya Apple'ın verdiği ad. `profile` ve `account` değerleri işletmeye yalnız ekranınızda gönderilirse gider: zorunlu alanı dolu ve değiştirilebilir gösterin (\"<İşletme> bunu istiyor; kartı alırsanız paylaşılır\"), isteğe bağlı olanı varsayılan \"Paylaşma\" ile sorun. Değer yoksa `null`."
+                                  },
+                                  "verified": {
+                                    "type": "boolean",
+                                    "description": "1.3.8: telefon, hesabın doğrulanmış numaralarından biri (\"Doğrulandı\")"
                                   }
                                 },
                                 "required": [
                                   "id",
                                   "value",
                                   "required",
-                                  "missing"
+                                  "missing",
+                                  "from",
+                                  "verified"
                                 ]
                               },
-                              "description": "Kartın sorduğu alanlar: işletmenin bu kişi için tuttuğu yanıt (`value`) ya da eksik olduğu. Paylaşılan cihazda değerler hiç gönderilmez (`null`)."
+                              "description": "Kartın sorduğu alanlar ve ekranın onları neyle doldurduğu. Paylaşılan cihazda değerler hiç gönderilmez (`null`)."
                             }
                           },
                           "required": [
@@ -105068,17 +107518,36 @@
                                     },
                                     "missing": {
                                       "type": "boolean",
-                                      "description": "Zorunlu ve işletmenin kaydında yanıtı yok: ekranınız yalnız bunu sorar"
+                                      "description": "Zorunlu ve hiçbir yerden değeri yok: ekranınız bunu boş sorar"
+                                    },
+                                    "from": {
+                                      "type": [
+                                        "string",
+                                        "null"
+                                      ],
+                                      "enum": [
+                                        "record",
+                                        "profile",
+                                        "account",
+                                        null
+                                      ],
+                                      "description": "1.3.8: değerin kaynağı. `record`: bu işletmenin kaydı (bir kez gösterin, yeniden sormayın); `profile`: kişinin Bilgilerim'i; `account`: hesabın doğrulanmış numarası ya da Google veya Apple'ın verdiği ad. `profile` ve `account` değerleri işletmeye yalnız ekranınızda gönderilirse gider: zorunlu alanı dolu ve değiştirilebilir gösterin (\"<İşletme> bunu istiyor; kartı alırsanız paylaşılır\"), isteğe bağlı olanı varsayılan \"Paylaşma\" ile sorun. Değer yoksa `null`."
+                                    },
+                                    "verified": {
+                                      "type": "boolean",
+                                      "description": "1.3.8: telefon, hesabın doğrulanmış numaralarından biri (\"Doğrulandı\")"
                                     }
                                   },
                                   "required": [
                                     "id",
                                     "value",
                                     "required",
-                                    "missing"
+                                    "missing",
+                                    "from",
+                                    "verified"
                                   ]
                                 },
-                                "description": "Kartın sorduğu alanlar: işletmenin bu kişi için tuttuğu yanıt (`value`) ya da eksik olduğu. Paylaşılan cihazda değerler hiç gönderilmez (`null`)."
+                                "description": "Kartın sorduğu alanlar ve ekranın onları neyle doldurduğu. Paylaşılan cihazda değerler hiç gönderilmez (`null`)."
                               }
                             },
                             "required": [
@@ -105517,6 +107986,21 @@
                   "kvkkConsent": {
                     "const": true,
                     "description": "Kişi, adresinin ya da numarasının ve verdiği bilgilerin bu işletmedeki kart için işlenmesini onayladı (ekranınızda açıkça sorun)"
+                  },
+                  "saveToProfile": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "firstName",
+                        "lastName",
+                        "phone",
+                        "birthday"
+                      ]
+                    },
+                    "uniqueItems": true,
+                    "maxItems": 4,
+                    "description": "1.3.8: bu alanların gönderilen değerleri kartla birlikte kişinin Bilgilerim'ine yazılır (varsa üzerine; o alandaki seçim bekleyen farklı değerler kalkar). Numarayla katılımda `phone` o numaradır. Paylaşılan cihaz oturumunda yok sayılır. İşletme bu değerleri, formu kişi doldurmuş gibi, yalnız bu katılımda gönderdiğinizden alır."
                   }
                 },
                 "required": [
@@ -105552,12 +108036,26 @@
                         "created": {
                           "type": "boolean",
                           "description": "true: yeni kart verildi; false: hesabın bu kartı zaten vardı, o kart döndü"
+                        },
+                        "savedToProfile": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "firstName",
+                              "lastName",
+                              "phone",
+                              "birthday"
+                            ]
+                          },
+                          "description": "1.3.8: Bilgilerim'e yazılan alanlar (`saveToProfile`); değişmeyen ya da paylaşılan cihazda `[]`"
                         }
                       },
                       "required": [
                         "serial",
                         "merchantSlug",
-                        "created"
+                        "created",
+                        "savedToProfile"
                       ]
                     }
                   }
@@ -105590,12 +108088,26 @@
                         "created": {
                           "type": "boolean",
                           "description": "true: yeni kart verildi; false: hesabın bu kartı zaten vardı, o kart döndü"
+                        },
+                        "savedToProfile": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "firstName",
+                              "lastName",
+                              "phone",
+                              "birthday"
+                            ]
+                          },
+                          "description": "1.3.8: Bilgilerim'e yazılan alanlar (`saveToProfile`); değişmeyen ya da paylaşılan cihazda `[]`"
                         }
                       },
                       "required": [
                         "serial",
                         "merchantSlug",
-                        "created"
+                        "created",
+                        "savedToProfile"
                       ]
                     }
                   }
@@ -134271,6 +136783,7 @@
                   "PROVIDER_UNAVAILABLE",
                   "DEVICE_RENEWAL",
                   "DEVICE_RENEWAL_REFUSED",
+                  "SHARED_DEVICE",
                   "DEVICE_PROOF",
                   "DEVICE_KEY_REFUSED",
                   "MERGE_REQUIRED",
@@ -134296,6 +136809,8 @@
                   "LIMIT",
                   "PROGRAM_NOT_FOUND",
                   "PASS_NOT_FOUND",
+                  "PROFILE_CHANGED",
+                  "CONFLICT_NOT_FOUND",
                   "CUSTOMER_NOT_FOUND",
                   "SEGMENT_NOT_FOUND",
                   "CAMPAIGN_NOT_FOUND",
@@ -134447,6 +136962,7 @@
                   "INCIDENT_INCOMPLETE",
                   "INTELLIGENCE_DISABLED",
                   "CLAUSE_NOT_PUBLISHED",
+                  "INQUIRY_STATE",
                   "DPA_DRAFT",
                   "SUMMARY_REQUIRED",
                   "PREVIEW_CHANGED",
